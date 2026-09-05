@@ -1,0 +1,174 @@
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  border-right: 1px solid #e9edf2;
+}
+
+.sidebar-logo {
+  height: 100px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-logo img {
+  width: 155px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px 14px;
+
+  gap: 5px;
+}
+
+.sidebar-item {
+  width: 100%;
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 0 12px;
+
+  border-radius: 8px;
+
+  text-decoration: none;
+
+  color: #6f747c;
+
+  font-size: 14px;
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  background: #f5f6f8;
+}
+
+.sidebar-item.active {
+  background: #f0f2f5;
+  color: #304a6d;
+}
+
+.sidebar-button {
+  font-family: inherit;
+  text-align: left;
+}
+
+.sidebar-button svg:last-child {
+  margin-left: auto;
+}
+
+.sidebar-submenu {
+  margin-left: 20px;
+  padding-left: 22px;
+
+  border-left: 2px solid #d7dbe0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.sidebar-submenu a {
+  padding: 6px 0;
+
+  color: #73777d;
+
+  text-decoration: none;
+
+  font-size: 12px;
+}
+
+.sidebar-submenu a:hover {
+  color: #304a6d;
+}
+
+.sidebar-submenu a.active {
+  color: #304a6d;
+  font-weight: 500;
+}
+
+.sidebar-title {
+  margin-top: 20px;
+  margin-left: 12px;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  color: #304a6d;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+
+  padding: 15px;
+
+  border-top: 1px solid #edf0f3;
+}
+
+.sidebar-user {
+  display: flex;
+  flex-direction: column;
+
+  margin-bottom: 12px;
+
+  padding: 8px 10px;
+}
+
+.sidebar-user span {
+  font-size: 13px;
+  color: #40464f;
+}
+
+.sidebar-user small {
+  margin-top: 3px;
+
+  font-size: 11px;
+
+  color: #8b9199;
+
+  text-transform: capitalize;
+}
+
+.logout-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 9px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #777d84;
+
+  cursor: pointer;
+
+  border-radius: 7px;
+}
+
+.logout-button:hover {
+  background: #f5f6f8;
+}
