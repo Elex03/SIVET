@@ -10,17 +10,41 @@
   border-right: 1px solid #e9edf2;
 }
 
-.sidebar-logo {
-  height: 100px;
+/* ================================================= */
+/*                 LOGOS Y CONTENEDOR                */
+/* ================================================= */
 
+.sidebar-logo-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 18px 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.sidebar-logo img {
-  width: 155px;
+.logo-una {
+  height: 84px;
+  width: auto;
+  object-fit: contain;
 }
+
+.sidebar-logo-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-sivet {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+  object-position: left;
+  margin-bottom: 3px;
+}
+
+/* ================================================= */
 
 .sidebar-menu {
   display: flex;
@@ -57,10 +81,6 @@
   cursor: pointer;
 }
 
-.sidebar-item:hover {
-  background: #f5f6f8;
-}
-
 .sidebar-item.active {
   background: #f0f2f5;
   color: #304a6d;
@@ -88,17 +108,14 @@
 }
 
 .sidebar-submenu a {
-  padding: 6px 0;
+  padding: 6px 8px;
+  border-radius: 6px;
 
   color: #73777d;
 
   text-decoration: none;
 
   font-size: 12px;
-}
-
-.sidebar-submenu a:hover {
-  color: #304a6d;
 }
 
 .sidebar-submenu a.active {
@@ -171,4 +188,125 @@
 
 .logout-button:hover {
   background: #f5f6f8;
+}
+
+/* ================================================= */
+/*          HOVER AZUL PERSONALIZADO (#178BF7)       */
+/* ================================================= */
+
+.sidebar-item:hover,
+.sidebar-submenu a:hover {
+  background-color: #178BF7 !important;
+  color: #ffffff !important;
+}
+
+.sidebar-item:hover svg,
+.sidebar-submenu a:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+/* ================================================= */
+/*             SECCIÓN DE USUARIO Y SALIDA           */
+/* ================================================= */
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 16px 14px;
+  background-color: transparent;
+  border-top: 2px solid #cbd5e1;
+  /* Línea superior gris sutil */
+}
+
+.sidebar-user {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #edf2f7;
+}
+
+.sidebar-user span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sidebar-user small {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.logout-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #ef4444 !important;
+  /* Hover rojo destacado */
+  color: #ffffff !important;
+}
+
+.logout-button:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+/* ================================================= */
+/*               ESTADOS DE COLAPSO                  */
+/* ================================================= */
+
+.sidebar {
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.sidebar.sidebar-collapsed {
+  width: 76px !important;
+}
+
+.sidebar.sidebar-collapsed .sidebar-logo-container {
+  justify-content: center;
+  padding: 18px 8px;
+}
+
+.sidebar.sidebar-collapsed .logo-una {
+  height: 42px;
+}
+
+.sidebar.sidebar-collapsed .sidebar-item {
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebar.sidebar-collapsed .sidebar-button svg:last-child {
+  display: none;
+}
+
+.sidebar.sidebar-collapsed .sidebar-bottom {
+  padding: 16px 8px;
+  align-items: center;
+}
+
+.sidebar.sidebar-collapsed .logout-button {
+  justify-content: center;
+  padding: 9px 0;
 }

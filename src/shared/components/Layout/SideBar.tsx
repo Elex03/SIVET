@@ -2,6 +2,8 @@ import {
   Bell,
   Boxes,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   ClipboardList,
   FileText,
@@ -14,6 +16,8 @@ import {
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import UNALogo from "../../assets/images/UNA.png";
+import SIVETLogo from "../../assets/images/SIVET.png";
 
 import { useAuth } from "../../context/AuthContext";
 
@@ -21,11 +25,11 @@ import "./sidebar.css";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-
   const { user, logout } = useAuth();
 
   const [bodegaOpen, setBodegaOpen] = useState(true);
   const [pharmacyOpen, setPharmacyOpen] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (!user) {
     return null;
@@ -41,298 +45,233 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? "sidebar-collapsed" : ""}`}>
+      {/* Botón para colapsar / expandir */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-6 bg-[#304a6d] text-white p-1 rounded-full shadow-md hover:bg-[#23354d] transition-colors z-10"
+        title={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+      >
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
 
       {/* ================= LOGO ================= */}
-
-      <div className="sidebar-logo">
-        <img
-          src="/logo-sivet.png"
-          alt="SIVET"
-        />
+      <div className="sidebar-logo-container">
+        <img src={UNALogo} alt="UNA" className="logo-una" />
+        {!isCollapsed && (
+          <div className="sidebar-logo-right">
+            <img src={SIVETLogo} alt="SIVET" className="logo-sivet" />
+            <span className="text-[10px] font-bold tracking-[0.2px] text-[#304a6d] leading-tight text-center">
+              Sistema de Inventario Veterinario
+            </span>
+          </div>
+        )}
       </div>
 
-      <nav className="sidebar-menu">
-
-        {/* ================================================= */}
-        {/*                    ADMINISTRADOR                  */}
-        {/* ================================================= */}
-
+      <nav className="sidebar-menu overflow-y-auto flex-1">
+        {/* ================= ADMINISTRADOR ================= */}
         {isAdmin && (
           <>
-            {/* Dashboard */}
-
-            <NavLink
-              to="/dashboard"
-              className="sidebar-item"
-            >
+            <NavLink to="/dashboard" className="sidebar-item" title="Dashboard">
               <Grid2X2 size={18} />
-              <span>Dashboard</span>
+              {!isCollapsed && <span>Dashboard</span>}
             </NavLink>
-
-
-            {/* Inventario */}
 
             <NavLink
               to="/inventario"
               className="sidebar-item"
+              title="Inventario"
             >
               <Boxes size={18} />
-              <span>Inventario</span>
+              {!isCollapsed && <span>Inventario</span>}
             </NavLink>
-
 
             {/* ================= BODEGA ================= */}
-
             <div className="sidebar-section">
-
               <button
                 className="sidebar-item sidebar-button"
-                onClick={() =>
-                  setBodegaOpen(!bodegaOpen)
-                }
+                onClick={() => setBodegaOpen(!bodegaOpen)}
+                title="Bodega"
               >
                 <Store size={18} />
-
-                <span>Bodega</span>
-
-                {bodegaOpen ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
+                {!isCollapsed && (
+                  <>
+                    <span>Bodega</span>
+                    {bodegaOpen ? (
+                      <ChevronUp size={16} />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
+                  </>
                 )}
               </button>
 
-
-              {bodegaOpen && (
+              {bodegaOpen && !isCollapsed && (
                 <div className="sidebar-submenu">
-
-                  <NavLink to="/bodega/solicitudes">
-                    Solicitudes
-                  </NavLink>
-
-                  <NavLink to="/bodega/estanteria">
-                    Estantería
-                  </NavLink>
-
-                  <NavLink to="/bodega/catalogos">
-                    Catálogos
-                  </NavLink>
-
-                  <NavLink to="/bodega/pedidos">
-                    Pedidos
-                  </NavLink>
-
+                  <NavLink to="/bodega/solicitudes">Solicitudes</NavLink>
+                  <NavLink to="/bodega/estanteria">Estantería</NavLink>
+                  <NavLink to="/bodega/catalogos">Catálogos</NavLink>
+                  <NavLink to="/bodega/pedidos">Pedidos</NavLink>
                 </div>
               )}
-
             </div>
-
 
             {/* ================= FARMACIA ================= */}
-
             <div className="sidebar-section">
-
               <button
                 className="sidebar-item sidebar-button"
-                onClick={() =>
-                  setPharmacyOpen(!pharmacyOpen)
-                }
+                onClick={() => setPharmacyOpen(!pharmacyOpen)}
+                title="Farmacia"
               >
                 <ShoppingCart size={18} />
-
-                <span>Farmacia</span>
-
-                {pharmacyOpen ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
+                {!isCollapsed && (
+                  <>
+                    <span>Farmacia</span>
+                    {pharmacyOpen ? (
+                      <ChevronUp size={16} />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
+                  </>
                 )}
               </button>
 
-
-              {pharmacyOpen && (
+              {pharmacyOpen && !isCollapsed && (
                 <div className="sidebar-submenu">
-
-                  <NavLink to="/farmacia/solicitudes">
-                    Solicitudes
-                  </NavLink>
-
-                  <NavLink to="/farmacia/catalogos">
-                    Catálogos
-                  </NavLink>
-
-                  <NavLink to="/farmacia/pedidos">
-                    Pedidos
-                  </NavLink>
-
+                  <NavLink to="/farmacia/solicitudes">Solicitudes</NavLink>
+                  <NavLink to="/farmacia/catalogos">Catálogos</NavLink>
+                  <NavLink to="/farmacia/pedidos">Pedidos</NavLink>
                 </div>
               )}
-
             </div>
 
-
-            {/* ================= ADMINISTRACIÓN ================= */}
-
-            <NavLink
-              to="/reportes"
-              className="sidebar-item"
-            >
+            <NavLink to="/reportes" className="sidebar-item" title="Reportes">
               <FileText size={18} />
-              <span>Reportes</span>
+              {!isCollapsed && <span>Reportes</span>}
             </NavLink>
 
-
-            <NavLink
-              to="/catalogos"
-              className="sidebar-item"
-            >
+            <NavLink to="/catalogos" className="sidebar-item" title="Catálogos">
               <ClipboardList size={18} />
-              <span>Catálogos</span>
+              {!isCollapsed && <span>Catálogos</span>}
             </NavLink>
 
-
-            <div className="sidebar-title">
-              Configuración
-            </div>
-
+            {!isCollapsed && <div className="sidebar-title">Configuración</div>}
 
             <NavLink
               to="/notificaciones"
               className="sidebar-item"
+              title="Notificaciones"
             >
               <Bell size={18} />
-              <span>Notificaciones</span>
+              {!isCollapsed && <span>Notificaciones</span>}
             </NavLink>
-
 
             <NavLink
               to="/configuracion"
               className="sidebar-item"
+              title="Configuración"
             >
               <Settings size={18} />
-              <span>Configuración</span>
+              {!isCollapsed && <span>Configuración</span>}
             </NavLink>
           </>
         )}
 
-
-        {/* ================================================= */}
-        {/*                       BODEGA                      */}
-        {/* ================================================= */}
-
+        {/* ================= BODEGA ROL ================= */}
         {isBodega && (
           <>
-            <NavLink
-              to="/bodega"
-              className="sidebar-item"
-            >
+            <NavLink to="/bodega" className="sidebar-item" title="Bodega">
               <Store size={18} />
-              <span>Bodega</span>
+              {!isCollapsed && <span>Bodega</span>}
             </NavLink>
-
             <NavLink
               to="/bodega/solicitudes"
               className="sidebar-item"
+              title="Solicitudes"
             >
               <ClipboardList size={18} />
-              <span>Solicitudes</span>
+              {!isCollapsed && <span>Solicitudes</span>}
             </NavLink>
-
             <NavLink
               to="/bodega/estanteria"
               className="sidebar-item"
+              title="Estantería"
             >
               <Boxes size={18} />
-              <span>Estantería</span>
+              {!isCollapsed && <span>Estantería</span>}
             </NavLink>
-
             <NavLink
               to="/bodega/catalogos"
               className="sidebar-item"
+              title="Catálogos"
             >
               <ClipboardList size={18} />
-              <span>Catálogos</span>
+              {!isCollapsed && <span>Catálogos</span>}
             </NavLink>
-
             <NavLink
               to="/bodega/pedidos"
               className="sidebar-item"
+              title="Pedidos"
             >
               <ShoppingCart size={18} />
-              <span>Pedidos</span>
+              {!isCollapsed && <span>Pedidos</span>}
             </NavLink>
           </>
         )}
 
-
-        {/* ================================================= */}
-        {/*                      FARMACIA                     */}
-        {/* ================================================= */}
-
+        {/* ================= FARMACIA ROL ================= */}
         {isFarmacia && (
           <>
-            <NavLink
-              to="/farmacia"
-              className="sidebar-item"
-            >
+            <NavLink to="/farmacia" className="sidebar-item" title="Farmacia">
               <ShoppingCart size={18} />
-              <span>Farmacia</span>
+              {!isCollapsed && <span>Farmacia</span>}
             </NavLink>
-
             <NavLink
               to="/farmacia/solicitudes"
               className="sidebar-item"
+              title="Solicitudes"
             >
               <ClipboardList size={18} />
-              <span>Solicitudes</span>
+              {!isCollapsed && <span>Solicitudes</span>}
             </NavLink>
-
             <NavLink
               to="/farmacia/catalogos"
               className="sidebar-item"
+              title="Catálogos"
             >
               <ClipboardList size={18} />
-              <span>Catálogos</span>
+              {!isCollapsed && <span>Catálogos</span>}
             </NavLink>
-
             <NavLink
               to="/farmacia/pedidos"
               className="sidebar-item"
+              title="Pedidos"
             >
               <ShoppingCart size={18} />
-              <span>Pedidos</span>
+              {!isCollapsed && <span>Pedidos</span>}
             </NavLink>
           </>
         )}
-
       </nav>
 
-
       {/* ================= USUARIO ================= */}
-
       <div className="sidebar-bottom">
-
-        <div className="sidebar-user">
-          <span>{user.username}</span>
-
-          <small>
-            {user.role}
-          </small>
-        </div>
-
+        {!isCollapsed && (
+          <div className="sidebar-user">
+            <span className="sidebar-username">{user.username}</span>
+            <small className="sidebar-role">{user.role}</small>
+          </div>
+        )}
 
         <button
           className="logout-button"
           onClick={handleLogout}
+          title="Cerrar sesión"
         >
           <LogOut size={17} />
-
-          Cerrar sesión
+          {!isCollapsed && <span>Cerrar sesión</span>}
         </button>
-
       </div>
-
     </aside>
   );
 };
