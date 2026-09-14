@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Bell,
   Boxes,
@@ -15,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import UNALogo from "../../assets/images/UNA.png";
 import SIVETLogo from "../../assets/images/SIVET.png";
 
@@ -23,13 +23,14 @@ import { useAuth } from "../../context/AuthContext";
 
 import "./sidebar.css";
 
-const Sidebar = () => {
+type SubmenuType = "bodega" | "farmacia" | null;
+
+const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const [bodegaOpen, setBodegaOpen] = useState(true);
-  const [pharmacyOpen, setPharmacyOpen] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<SubmenuType>(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   if (!user) {
     return null;
@@ -39,237 +40,255 @@ const Sidebar = () => {
   const isBodega = user.role === "bodega";
   const isFarmacia = user.role === "farmacia";
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     logout();
     navigate("/login");
   };
 
-  return (
-    <aside className={`sidebar ${isCollapsed ? "sidebar-collapsed" : ""}`}>
-      {/* Botón para colapsar / expandir */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-6 bg-[#304a6d] text-white p-1 rounded-full shadow-md hover:bg-[#23354d] transition-colors z-10"
-        title={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-      >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+  const toggleMenu = (menu: "bodega" | "farmacia"): void => {
+    if (!isCollapsed) {
+      setOpenSubmenu((prev) => (prev === menu ? null : menu));
+    }
+  };
 
-      {/* ================= LOGO ================= */}
-      <div className="sidebar-logo-container">
-        <img src={UNALogo} alt="UNA" className="logo-una" />
+  return (
+    <aside
+      className={`sidebar h-screen flex flex-col sticky top-0 transition-all duration-300 ${
+        isCollapsed ? "sidebar-collapsed w-20" : "w-64"
+      }`}
+    >
+      {/* ================= HEADER Y LOGO ================= */}
+      <div className="relative flex flex-col items-center justify-center py-4 pt-8">
+        
+        {/* Botón para colapsar (Visible solo cuando está abierto) */}
         {!isCollapsed && (
-          <div className="sidebar-logo-right">
-            <img src={SIVETLogo} alt="SIVET" className="logo-sivet" />
-            <span className="text-[10px] font-bold tracking-[0.2px] text-[#304a6d] leading-tight text-center">
-              Sistema de Inventario Veterinario
-            </span>
-          </div>
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-[#304a6d] hover:bg-gray-100 rounded-md transition-colors z-20"
+            title="Colapsar menú"
+          >
+            <ChevronLeft size={18} />
+          </button>
         )}
+
+        {/* Contenedor del logo interactivo (Hover al estar colapsado) */}
+        <div 
+          className={`relative flex flex-col items-center w-full px-2 transition-all duration-300 ${
+            isCollapsed ? "cursor-pointer group" : ""
+          }`}
+          onClick={() => {
+            if (isCollapsed) setIsCollapsed(false);
+          }}
+          title={isCollapsed ? "Expandir menú" : ""}
+        >
+          {/* Overlay que aparece en hover solo si está colapsado */}
+          {isCollapsed && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-md z-10 m-2">
+              <div className="bg-white/80 p-1.5 rounded-full shadow-sm text-[#304a6d]">
+                <ChevronRight size={22} />
+              </div>
+            </div>
+          )}
+
+          {/* Logos con efecto de atenuación en hover si está colapsado */}
+          <div className={`flex flex-col items-center w-full transition-opacity duration-300 ${
+            isCollapsed ? "group-hover:opacity-40" : ""
+          }`}>
+            <img src={UNALogo} alt="UNA" className="logo-una mx-auto" />
+            {!isCollapsed ? (
+              <div className="sidebar-logo-right mt-2 flex flex-col items-center">
+                <img src={SIVETLogo} alt="SIVET" className="logo-sivet" />
+                <span className="text-[14px] font-normal tracking-[0.2px] text-[#304a6d] leading-tight text-center mt-1">
+                  Sistema de Inventario
+                </span>
+                <span className="text-[14px] font-normal tracking-[0.2px] text-[#304a6d] leading-tight text-center mt-1">
+                  Veterinario
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
 
-      <nav className="sidebar-menu overflow-y-auto flex-1">
+      <nav className="sidebar-menu overflow-y-auto flex-1 mt-2">
         {/* ================= ADMINISTRADOR ================= */}
-        {isAdmin && (
+        {isAdmin ? (
           <>
             <NavLink to="/dashboard" className="sidebar-item" title="Dashboard">
               <Grid2X2 size={18} />
-              {!isCollapsed && <span>Dashboard</span>}
+              {!isCollapsed ? <span>Dashboard</span> : null}
             </NavLink>
 
-            <NavLink
-              to="/inventario"
-              className="sidebar-item"
-              title="Inventario"
-            >
+            <NavLink to="/inventario" className="sidebar-item" title="Inventario">
               <Boxes size={18} />
-              {!isCollapsed && <span>Inventario</span>}
+              {!isCollapsed ? <span>Inventario</span> : null}
             </NavLink>
 
             {/* ================= BODEGA ================= */}
             <div className="sidebar-section">
               <button
-                className="sidebar-item sidebar-button"
-                onClick={() => setBodegaOpen(!bodegaOpen)}
+                className="sidebar-item w-full border-none text-left flex items-center"
+                onClick={() => toggleMenu("bodega")}
                 title="Bodega"
               >
                 <Store size={18} />
-                {!isCollapsed && (
-                  <>
-                    <span>Bodega</span>
-                    {bodegaOpen ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    )}
-                  </>
-                )}
+                {!isCollapsed ? <span className="flex-1 ml-2">Bodega</span> : null}
+                
+                {!isCollapsed ? (
+                  openSubmenu === "bodega" ? (
+                    <ChevronUp size={16} />
+                  ) : (
+                    <ChevronDown size={16} />
+                  )
+                ) : null}
               </button>
 
-              {bodegaOpen && !isCollapsed && (
-                <div className="sidebar-submenu">
-                  <NavLink to="/bodega/solicitudes">Solicitudes</NavLink>
-                  <NavLink to="/bodega/estanteria">Estantería</NavLink>
-                  <NavLink to="/bodega/catalogos">Catálogos</NavLink>
-                  <NavLink to="/bodega/pedidos">Pedidos</NavLink>
+              {openSubmenu === "bodega" && !isCollapsed ? (
+                <div className="sidebar-submenu flex flex-col pl-6 mt-1">
+                  <NavLink to="/bodega/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
+                  <NavLink to="/bodega/estanteria" className="text-sm py-1">Estantería</NavLink>
+                  <NavLink to="/bodega/catalogos" className="text-sm py-1">Catálogos</NavLink>
+                  <NavLink to="/bodega/pedidos" className="text-sm py-1">Pedidos</NavLink>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* ================= FARMACIA ================= */}
             <div className="sidebar-section">
               <button
-                className="sidebar-item sidebar-button"
-                onClick={() => setPharmacyOpen(!pharmacyOpen)}
+                className="sidebar-item w-full border-none text-left flex items-center"
+                onClick={() => toggleMenu("farmacia")}
                 title="Farmacia"
               >
                 <ShoppingCart size={18} />
-                {!isCollapsed && (
-                  <>
-                    <span>Farmacia</span>
-                    {pharmacyOpen ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    )}
-                  </>
-                )}
+                {!isCollapsed ? <span className="flex-1 ml-2">Farmacia</span> : null}
+
+                {!isCollapsed ? (
+                  openSubmenu === "farmacia" ? (
+                    <ChevronUp size={16} />
+                  ) : (
+                    <ChevronDown size={16} />
+                  )
+                ) : null}
               </button>
 
-              {pharmacyOpen && !isCollapsed && (
-                <div className="sidebar-submenu">
-                  <NavLink to="/farmacia/solicitudes">Solicitudes</NavLink>
-                  <NavLink to="/farmacia/catalogos">Catálogos</NavLink>
-                  <NavLink to="/farmacia/pedidos">Pedidos</NavLink>
+              {openSubmenu === "farmacia" && !isCollapsed ? (
+                <div className="sidebar-submenu flex flex-col pl-6 mt-1">
+                  <NavLink to="/farmacia/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
+                  <NavLink to="/farmacia/catalogos" className="text-sm py-1">Catálogos</NavLink>
+                  <NavLink to="/farmacia/pedidos" className="text-sm py-1">Pedidos</NavLink>
                 </div>
-              )}
+              ) : null}
             </div>
 
             <NavLink to="/reportes" className="sidebar-item" title="Reportes">
               <FileText size={18} />
-              {!isCollapsed && <span>Reportes</span>}
+              {!isCollapsed ? <span>Reportes</span> : null}
             </NavLink>
 
             <NavLink to="/catalogos" className="sidebar-item" title="Catálogos">
               <ClipboardList size={18} />
-              {!isCollapsed && <span>Catálogos</span>}
+              {!isCollapsed ? <span>Catálogos</span> : null}
             </NavLink>
 
-            {!isCollapsed && <div className="sidebar-title">Configuración</div>}
+            {!isCollapsed ? (
+              <div className="sidebar-title mt-4 mb-2 text-xs font-semibold uppercase text-gray-500">
+                Configuración
+              </div>
+            ) : null}
 
-            <NavLink
-              to="/notificaciones"
-              className="sidebar-item"
-              title="Notificaciones"
-            >
+            <NavLink to="/notificaciones" className="sidebar-item" title="Notificaciones">
               <Bell size={18} />
-              {!isCollapsed && <span>Notificaciones</span>}
+              {!isCollapsed ? <span>Notificaciones</span> : null}
             </NavLink>
 
-            <NavLink
-              to="/configuracion"
-              className="sidebar-item"
-              title="Configuración"
-            >
+            <NavLink to="/configuracion" className="sidebar-item" title="Configuración">
               <Settings size={18} />
-              {!isCollapsed && <span>Configuración</span>}
+              {!isCollapsed ? <span>Configuración</span> : null}
             </NavLink>
           </>
-        )}
+        ) : null}
 
         {/* ================= BODEGA ROL ================= */}
-        {isBodega && (
+        {isBodega ? (
           <>
             <NavLink to="/bodega" className="sidebar-item" title="Bodega">
               <Store size={18} />
-              {!isCollapsed && <span>Bodega</span>}
+              {!isCollapsed ? <span>Bodega</span> : null}
             </NavLink>
-            <NavLink
-              to="/bodega/solicitudes"
-              className="sidebar-item"
-              title="Solicitudes"
-            >
+            <NavLink to="/bodega/solicitudes" className="sidebar-item" title="Solicitudes">
               <ClipboardList size={18} />
-              {!isCollapsed && <span>Solicitudes</span>}
+              {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
-            <NavLink
-              to="/bodega/estanteria"
-              className="sidebar-item"
-              title="Estantería"
-            >
+            <NavLink to="/bodega/estanteria" className="sidebar-item" title="Estantería">
               <Boxes size={18} />
-              {!isCollapsed && <span>Estantería</span>}
+              {!isCollapsed ? <span>Estantería</span> : null}
             </NavLink>
-            <NavLink
-              to="/bodega/catalogos"
-              className="sidebar-item"
-              title="Catálogos"
-            >
+            <NavLink to="/bodega/catalogos" className="sidebar-item" title="Catálogos">
               <ClipboardList size={18} />
-              {!isCollapsed && <span>Catálogos</span>}
+              {!isCollapsed ? <span>Catálogos</span> : null}
             </NavLink>
-            <NavLink
-              to="/bodega/pedidos"
-              className="sidebar-item"
-              title="Pedidos"
-            >
+            <NavLink to="/bodega/pedidos" className="sidebar-item" title="Pedidos">
               <ShoppingCart size={18} />
-              {!isCollapsed && <span>Pedidos</span>}
+              {!isCollapsed ? <span>Pedidos</span> : null}
             </NavLink>
           </>
-        )}
+        ) : null}
 
         {/* ================= FARMACIA ROL ================= */}
-        {isFarmacia && (
+        {isFarmacia ? (
           <>
             <NavLink to="/farmacia" className="sidebar-item" title="Farmacia">
               <ShoppingCart size={18} />
-              {!isCollapsed && <span>Farmacia</span>}
+              {!isCollapsed ? <span>Farmacia</span> : null}
             </NavLink>
-            <NavLink
-              to="/farmacia/solicitudes"
-              className="sidebar-item"
-              title="Solicitudes"
-            >
+            <NavLink to="/farmacia/solicitudes" className="sidebar-item" title="Solicitudes">
               <ClipboardList size={18} />
-              {!isCollapsed && <span>Solicitudes</span>}
+              {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
-            <NavLink
-              to="/farmacia/catalogos"
-              className="sidebar-item"
-              title="Catálogos"
-            >
+            <NavLink to="/farmacia/catalogos" className="sidebar-item" title="Catálogos">
               <ClipboardList size={18} />
-              {!isCollapsed && <span>Catálogos</span>}
+              {!isCollapsed ? <span>Catálogos</span> : null}
             </NavLink>
-            <NavLink
-              to="/farmacia/pedidos"
-              className="sidebar-item"
-              title="Pedidos"
-            >
+            <NavLink to="/farmacia/pedidos" className="sidebar-item" title="Pedidos">
               <ShoppingCart size={18} />
-              {!isCollapsed && <span>Pedidos</span>}
+              {!isCollapsed ? <span>Pedidos</span> : null}
             </NavLink>
           </>
-        )}
+        ) : null}
       </nav>
 
       {/* ================= USUARIO ================= */}
-      <div className="sidebar-bottom">
-        {!isCollapsed && (
-          <div className="sidebar-user">
-            <span className="sidebar-username">{user.username}</span>
-            <small className="sidebar-role">{user.role}</small>
+    <div className="sidebar-bottom mt-auto border-t p-4 flex flex-col gap-3">
+        {/* Tarjeta de perfil alineada a la izquierda */}
+        <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-start gap-3"} bg-gray-50 p-2 rounded-lg border border-gray-100`}>
+          {/* Círculo con inicial */}
+          <div className="w-8 h-8 rounded-full bg-[#64748b] flex items-center justify-center text-white font-semibold flex-shrink-0">
+            {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
           </div>
-        )}
+          
+          {/* Nombre y Rol (Oculto cuando está colapsado) */}
+          {!isCollapsed && (
+            <div className="flex flex-col items-start text-left overflow-hidden flex-1">
+              <span className="font-semibold text-sm text-[#304a6d] truncate leading-tight w-full">
+                {user?.username || "Usuario"}
+              </span>
+              <span className="text-xs text-gray-500 capitalize truncate w-full mt-0.5">
+                {user?.role || "Rol"}
+              </span>
+            </div>
+          )}
+        </div>
 
         <button
-          className="logout-button"
+          className={`logout-button w-full flex items-center ${
+            isCollapsed ? "justify-center" : "justify-start px-3"
+          } gap-3 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-md transition-colors`}
           onClick={handleLogout}
           title="Cerrar sesión"
         >
           <LogOut size={17} />
-          {!isCollapsed && <span>Cerrar sesión</span>}
+          {!isCollapsed ? <span>Cerrar sesión</span> : null}
         </button>
       </div>
     </aside>

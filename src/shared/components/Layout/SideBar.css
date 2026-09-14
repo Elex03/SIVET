@@ -91,9 +91,6 @@
   text-align: left;
 }
 
-.sidebar-button svg:last-child {
-  margin-left: auto;
-}
 
 .sidebar-submenu {
   margin-left: 20px;
@@ -295,10 +292,6 @@
 .sidebar.sidebar-collapsed .sidebar-item {
   justify-content: center;
   padding: 0;
-}
-
-.sidebar.sidebar-collapsed .sidebar-button svg:last-child {
-  display: none;
 }
 
 .sidebar.sidebar-collapsed .sidebar-bottom {
