@@ -45,8 +45,13 @@ const Sidebar: React.FC = () => {
     navigate("/login");
   };
 
-  const toggleMenu = (menu: "bodega" | "farmacia"): void => {
-    if (!isCollapsed) {
+  // Modificamos toggleMenu para recibir la ruta por defecto
+  const toggleMenu = (menu: "bodega" | "farmacia", defaultPath: string): void => {
+    if (isCollapsed) {
+      // Si está colapsado, navegamos a la ruta principal
+      navigate(defaultPath);
+    } else {
+      // Si está abierto, alternamos el submenú
       setOpenSubmenu((prev) => (prev === menu ? null : menu));
     }
   };
@@ -59,8 +64,6 @@ const Sidebar: React.FC = () => {
     >
       {/* ================= HEADER Y LOGO ================= */}
       <div className="relative flex flex-col items-center justify-center py-4 pt-8">
-        
-        {/* Botón para colapsar (Visible solo cuando está abierto) */}
         {!isCollapsed && (
           <button
             onClick={() => setIsCollapsed(true)}
@@ -71,7 +74,6 @@ const Sidebar: React.FC = () => {
           </button>
         )}
 
-        {/* Contenedor del logo interactivo (Hover al estar colapsado) */}
         <div 
           className={`relative flex flex-col items-center w-full px-2 transition-all duration-300 ${
             isCollapsed ? "cursor-pointer group" : ""
@@ -81,7 +83,6 @@ const Sidebar: React.FC = () => {
           }}
           title={isCollapsed ? "Expandir menú" : ""}
         >
-          {/* Overlay que aparece en hover solo si está colapsado */}
           {isCollapsed && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-md z-10 m-2">
               <div className="bg-white/80 p-1.5 rounded-full shadow-sm text-[#304a6d]">
@@ -90,7 +91,6 @@ const Sidebar: React.FC = () => {
             </div>
           )}
 
-          {/* Logos con efecto de atenuación en hover si está colapsado */}
           <div className={`flex flex-col items-center w-full transition-opacity duration-300 ${
             isCollapsed ? "group-hover:opacity-40" : ""
           }`}>
@@ -128,7 +128,7 @@ const Sidebar: React.FC = () => {
             <div className="sidebar-section">
               <button
                 className="sidebar-item w-full border-none text-left flex items-center"
-                onClick={() => toggleMenu("bodega")}
+                onClick={() => toggleMenu("bodega", "/bodega")}
                 title="Bodega"
               >
                 <Store size={18} />
@@ -157,7 +157,7 @@ const Sidebar: React.FC = () => {
             <div className="sidebar-section">
               <button
                 className="sidebar-item w-full border-none text-left flex items-center"
-                onClick={() => toggleMenu("farmacia")}
+                onClick={() => toggleMenu("farmacia", "/farmacia")}
                 title="Farmacia"
               >
                 <ShoppingCart size={18} />
@@ -259,15 +259,12 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* ================= USUARIO ================= */}
-    <div className="sidebar-bottom mt-auto border-t p-4 flex flex-col gap-3">
-        {/* Tarjeta de perfil alineada a la izquierda */}
+      <div className="sidebar-bottom mt-auto border-t p-4 flex flex-col gap-3">
         <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-start gap-3"} bg-gray-50 p-2 rounded-lg border border-gray-100`}>
-          {/* Círculo con inicial */}
           <div className="w-8 h-8 rounded-full bg-[#64748b] flex items-center justify-center text-white font-semibold flex-shrink-0">
             {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
           </div>
           
-          {/* Nombre y Rol (Oculto cuando está colapsado) */}
           {!isCollapsed && (
             <div className="flex flex-col items-start text-left overflow-hidden flex-1">
               <span className="font-semibold text-sm text-[#304a6d] truncate leading-tight w-full">

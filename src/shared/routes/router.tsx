@@ -7,8 +7,8 @@ import {
 
 import { lazy, Suspense } from "react";
 
-import ProtectedRoute from "./ProtectedRoute";
-import MainLayout from "../components/Layout/MainLayout";
+import ProtectedRoute from "../pages/ProtectedRoute";
+import MainLayout from "../pages/MainLayout";
 
 import CircularIndeterminate from "../components/progress/CircularIndeterminate";
 
@@ -30,19 +30,28 @@ const Inventory = lazy(
 
 // ======== BODEGA COMPONENTS ========
 const Bodega = lazy(
-  () => import("../../features/Bodega/Bodega")
+  () => import("../../features/Bodega/pages/Bodega")
+);
+
+const DetallePedidoBodeda = lazy(
+  () => import("../../features/Bodega/pages/DetallePedidos")
 );
 const SolicitudesBodega = lazy(
-  () => import("../../features/Bodega/Bodega") // Ajusta la ruta a tu archivo real
+  () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
 );
 const EstanteriaBodega = lazy(
-  () => import("../../features/Bodega/Bodega") // Ajusta la ruta a tu archivo real
+  () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
 );
 const CatalogosBodega = lazy(
-  () => import("../../features/Bodega/Bodega") // Ajusta la ruta a tu archivo real
+  () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
 );
-const PedidosBodega = lazy(
-  () => import("../../features/Bodega/Bodega") // Ajusta la ruta a tu archivo real
+
+// Nuevas rutas de Pedidos
+const ListadoPedidosBodega = lazy(
+  () => import("../../features/Bodega/pages/ListadoPedidos") 
+);
+const RecepcionPedidosBodega = lazy(
+  () => import("../../features/Bodega/pages/RecepcionPedidos") 
 );
 
 // ======== FARMACIA COMPONENTS ========
@@ -91,7 +100,10 @@ const AppRouter = () => {
                 <Route path="/bodega/solicitudes" element={<SolicitudesBodega />} />
                 <Route path="/bodega/estanteria" element={<EstanteriaBodega />} />
                 <Route path="/bodega/catalogos" element={<CatalogosBodega />} />
-                <Route path="/bodega/pedidos" element={<PedidosBodega />} />
+                
+                {/* Rutas de Pedidos actualizadas */}
+                <Route path="/bodega/pedidos" element={<ListadoPedidosBodega />} />
+                <Route path="/bodega/pedidos/recepcion" element={<RecepcionPedidosBodega />} />
               </Route>
 
               {/* ============ FARMACIA ============ */}
@@ -129,6 +141,10 @@ const AppRouter = () => {
                   element={<div>Configuración</div>}
                 />
               </Route>
+              
+              <Route path="/bodega/pedidos/:id"
+              element={<DetallePedidoBodeda/>
+            } />
 
             </Route>
           </Route>
