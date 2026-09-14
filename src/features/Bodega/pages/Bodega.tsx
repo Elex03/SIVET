@@ -148,6 +148,8 @@ const Bodega: React.FC = () => {
             data={inventoryData} 
             onView={handleViewDetails}
             onEdit={handleEdit}
+            exportTitle="Tabla"
+            exportSubtitle="tabla"
           />
           
         </div>

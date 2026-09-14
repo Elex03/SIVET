@@ -24,9 +24,9 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
 
   return (
     <div className="flex gap-3 relative">
-      {/* Línea conectora vertical */}
+      {/* Línea conectora vertical (se oculta en el último elemento) */}
       {!isLast && (
-        <div className="absolute left-[15px] top-8 bottom-[-16px] w-[2px] bg-gray-100"></div>
+        <div className="absolute left-[15px] top-8 bottom-[-16px] w-[2px] bg-gray-100 z-0"></div>
       )}
       
       {/* Círculo con Ícono */}
@@ -34,8 +34,8 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
         {icon}
       </div>
       
-      {/* Contenido */}
-      <div className="flex flex-col pb-4">
+      {/* Contenido (Fecha y Descripción) */}
+      <div className="flex flex-col pb-5">
         <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{time}</span>
         <span className="text-sm text-gray-700 mt-0.5 leading-snug">{description}</span>
       </div>
