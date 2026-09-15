@@ -11,6 +11,7 @@ import ProtectedRoute from "../pages/ProtectedRoute";
 import MainLayout from "../pages/MainLayout";
 
 import CircularIndeterminate from "../components/progress/CircularIndeterminate";
+import Inventario from "../../features/Inventario/Inventario";
 
 
 const Login = lazy(
@@ -32,7 +33,7 @@ const Catalogos = lazy(
 );
 
 const Inventory = lazy(
-  () => import("../../features/Farmacia/Farmacia")
+  () => import("../../features/Inventario/Inventario")
 );
 
 // ======== BODEGA COMPONENTS ========
@@ -123,6 +124,7 @@ const AppRouter = () => {
                 <Route path="/farmacia/solicitudes" element={<Solicitudes />} />
                 <Route path="/farmacia/catalogos" element={<CatalogosFarmacia />} />
                 <Route path="/farmacia/pedidos" element={<Pedidos />} />
+                <Route path="/farmacia/inventario" element={<Pedidos />} />
               </Route>
 
               {/* ============ SOLO ADMINISTRADOR ============ */}
@@ -146,6 +148,10 @@ const AppRouter = () => {
                 <Route
                   path="/configuracion"
                   element={<div>Configuración</div>}
+                />
+                <Route
+                  path="/inventario"
+                  element={<Inventario/>}
                 />
               </Route>
 
