@@ -12,6 +12,7 @@ import MainLayout from "../pages/MainLayout";
 
 import CircularIndeterminate from "../components/progress/CircularIndeterminate";
 
+
 const Login = lazy(
   () => import("../../features/Login/Login")
 );
@@ -22,6 +23,12 @@ const Unauthorized = lazy(
 
 const Dashboard = lazy(
   () => import("../../features/Dashboard/Dashboard")
+);
+const Reportes = lazy(
+  () => import("../../features/Reportes/Reportes")
+);
+const Catalogos = lazy(
+  () => import("../../features/Catalogos/Catalogos")
 );
 
 const Inventory = lazy(
@@ -126,11 +133,11 @@ const AppRouter = () => {
               >
                 <Route
                   path="/reportes"
-                  element={<div>Reportes</div>}
+                  element={<Reportes/>}
                 />
                 <Route
                   path="/catalogos"
-                  element={<div>Catálogos</div>}
+                  element={<Catalogos/>}
                 />
                 <Route
                   path="/notificaciones"

@@ -1,9 +1,125 @@
-
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import unaLogoPath from '../assets/images/UNA.png';
 
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 
+export const downloadCompleteReport = async (elementId: string, filename: string, subtitle?: string) => {
+  const element = document.getElementById(elementId);
+  
+  if (!element) {
+    console.error("No se encontró el elemento para el PDF");
+    return;
+  }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-NI', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' });
+
+  const buttons = element.querySelectorAll('button');
+  const originalButtonDisplays: string[] = [];
+  buttons.forEach(btn => {
+    originalButtonDisplays.push(btn.style.display);
+    btn.style.display = 'none';
+  });
+
+  const dropzone = element.querySelector('.border-dashed') as HTMLElement;
+  let originalDropzoneDisplay = '';
+  let originalDropzoneBorder = '';
+  
+  if (dropzone) {
+    originalDropzoneDisplay = dropzone.style.display;
+    originalDropzoneBorder = dropzone.style.border;
+    
+    const hasCharts = dropzone.querySelectorAll('.recharts-wrapper').length > 0;
+    
+    if (!hasCharts) {
+      dropzone.style.display = 'none';
+    } else {
+      dropzone.style.border = 'none';
+    }
+  }
+
+  const oldHeader = element.querySelector('.pdf-only-header') as HTMLElement;
+  let originalOldHeaderDisplay = '';
+  if (oldHeader) {
+    originalOldHeaderDisplay = oldHeader.style.display;
+    oldHeader.style.display = 'none';
+  }
+
+  const headerDiv = document.createElement('div');
+  headerDiv.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #304a6d; padding-bottom: 20px; margin-bottom: 30px;">
+      <div style="flex-shrink: 0;">
+        <img src="${unaLogoPath}" style="height: 75px; object-fit: contain;" alt="Logo UNA" />
+      </div>
+      <div style="text-align: right;">
+        <h1 style="margin: 0; font-size: 26px; color: #304a6d; font-family: sans-serif; font-weight: 900; letter-spacing: 1px;">SIVET</h1>
+        <h2 style="margin: 4px 0 0 0; font-size: 15px; color: #64748b; font-family: sans-serif; font-weight: 500;">Sistema de Inventario Veterinario</h2>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 13px; color: #475569; font-family: sans-serif;">
+      <div>
+        <strong style="color: #304a6d;">Documento:</strong> ${filename.toUpperCase()}<br/>
+        ${subtitle ? `<strong style="color: #304a6d;">Filtros:</strong> ${subtitle}` : ''}
+      </div>
+      <div style="text-align: right;">
+        <strong style="color: #304a6d;">Fecha:</strong> ${dateStr}<br/>
+        <strong style="color: #304a6d;">Hora:</strong> ${timeStr}
+      </div>
+    </div>
+  `;
+  element.insertBefore(headerDiv, element.firstChild);
+
+  try {
+    const dataUrl = await toPng(element, { 
+      quality: 1, 
+      pixelRatio: 2, 
+      backgroundColor: '#ffffff'
+    });
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const imgProps = pdf.getImageProperties(dataUrl);
+    const margin = 10;
+    const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2);
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    // Incrustar imagen principal
+    pdf.addImage(dataUrl, 'PNG', margin, margin, pdfWidth, pdfHeight);
+    
+    // Agregar Pie de Página oficial directo en el PDF
+    pdf.setFontSize(8);
+    pdf.setTextColor(150, 150, 150); // Gris claro
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    pdf.text(`Generado automáticamente por SIVET - Universidad Nacional Agraria © ${now.getFullYear()}`, pageWidth / 2, pageHeight - 6, { align: 'center' });
+
+    pdf.save(`${filename.replace(/\s+/g, '_')}_${dateStr.replace(/\s+/g, '')}.pdf`);
+    
+  } catch (error) {
+    console.error("Error al generar el PDF: ", error);
+  } finally {
+    // --- LIMPIEZA Y RESTAURACIÓN DEL DOM ---
+    headerDiv.remove(); // Eliminamos el encabezado inyectado
+    
+    if (oldHeader) oldHeader.style.display = originalOldHeaderDisplay;
+    
+    buttons.forEach((btn, i) => {
+      btn.style.display = originalButtonDisplays[i];
+    });
+
+    if (dropzone) {
+      dropzone.style.display = originalDropzoneDisplay;
+      dropzone.style.border = originalDropzoneBorder;
+    }
+  }
+};
+
+
+// ==========================================
+// 2. EXPORTADOR DE TABLA A PDF (Clásico)
+// ==========================================
 export interface PrintData {
   title: string;
   subtitle: string;
@@ -12,25 +128,19 @@ export interface PrintData {
 }
 
 export const generatePDFTemplate = (printData: PrintData) => {
-  // Obtener fecha y hora actual formateada
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-NI', { year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' });
-
-  // URL del logo de la UNA (PNG transparente ideal para reportes)
   const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Logo_UNA_Nicaragua.png/240px-Logo_UNA_Nicaragua.png"; 
 
-  // Construir filas de la tabla
   const tableRows = printData.data.map(row => `
     <tr>
       ${row.map(cell => `<td>${cell}</td>`).join('')}
     </tr>
   `).join('');
 
-  // Construir encabezados
   const tableHeaders = printData.columns.map(col => `<th>${col}</th>`).join('');
 
-  // Plantilla HTML con CSS inyectado (Optimizada para la hoja A4 de impresión)
   const htmlTemplate = `
     <!DOCTYPE html>
     <html lang="es">
@@ -94,13 +204,10 @@ export const generatePDFTemplate = (printData: PrintData) => {
     </html>
   `;
 
-  // Crear ventana invisible e imprimir
   const printWindow = window.open('', '_blank');
   if (printWindow) {
     printWindow.document.write(htmlTemplate);
     printWindow.document.close();
-    
-    // Esperar un breve instante para que la imagen (logo) cargue antes de llamar a print()
     setTimeout(() => {
       printWindow.focus();
       printWindow.print();
@@ -109,6 +216,10 @@ export const generatePDFTemplate = (printData: PrintData) => {
   }
 };
 
+
+// ==========================================
+// 3. EXPORTADOR A EXCEL
+// ==========================================
 export interface ExportData {
   title: string;
   subtitle?: string;
@@ -116,7 +227,6 @@ export interface ExportData {
   data: (string | number)[][];
 }
 
-// Función auxiliar para convertir una imagen local (path) a Buffer o Base64 para ExcelJS
 const fetchImageAsBase64 = async (imagePath: string): Promise<string | null> => {
   try {
     const response = await fetch(imagePath);
@@ -133,41 +243,36 @@ const fetchImageAsBase64 = async (imagePath: string): Promise<string | null> => 
 };
 
 export const generateExcel = async (exportData: ExportData) => {
-  // 1. Crear el libro de trabajo y la hoja
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'SIVET - UNA';
   workbook.created = new Date();
   
   const worksheet = workbook.addWorksheet('Reporte', {
-    views: [{ showGridLines: false }] // Oculta las líneas de cuadrícula para un look más formal
+    views: [{ showGridLines: false }]
   });
 
-  // 2. Definir anchos de columna automáticos basados en el contenido
   const columnWidths = exportData.columns.map((col, i) => {
     const maxDataLength = Math.max(...exportData.data.map(row => String(row[i] || '').length));
-    return { width: Math.max(col.length, maxDataLength) + 6 }; // Margen de holgura
+    return { width: Math.max(col.length, maxDataLength) + 6 };
   });
   worksheet.columns = columnWidths;
 
-  // 3. Crustar el logo de la UNA local de manera dinámica
   const base64Logo = await fetchImageAsBase64(unaLogoPath);
   if (base64Logo) {
     const logoId = workbook.addImage({
       base64: base64Logo,
       extension: 'png',
     });
-    // Se posiciona elegantemente ocupando el bloque superior izquierdo (Col A-B, Filas 1 a 3)
     worksheet.addImage(logoId, {
       tl: { col: 0, row: 0 },
       ext: { width: 75, height: 75 }
     });
   }
 
-  // 4. Encabezados Institucionales (Diseño corporativo UNA)
   worksheet.mergeCells('C1', 'F1');
   const titleCell = worksheet.getCell('C1');
   titleCell.value = 'UNIVERSIDAD NACIONAL AGRARIA';
-  titleCell.font = { name: 'Arial', size: 13, bold: true, color: { argb: 'FF304A6D' } }; // Azul institucional SIVET
+  titleCell.font = { name: 'Arial', size: 13, bold: true, color: { argb: 'FF304A6D' } };
   titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
 
   worksheet.mergeCells('C2', 'F2');
@@ -184,22 +289,15 @@ export const generateExcel = async (exportData: ExportData) => {
     subtitleCell.alignment = { vertical: 'middle', horizontal: 'left' };
   }
 
-  // Fecha y hora de emisión al pie del encabezado
   worksheet.getCell('A5').value = `Emitido el: ${new Date().toLocaleString()}`;
   worksheet.getCell('A5').font = { size: 9, italic: true, color: { argb: 'FF9CA3AF' } };
 
-  // Fila vacía de separación
   worksheet.addRow([]);
 
-  // 6. Cabecera de la Tabla (Estilo Sólido con fuente blanca)
   const headerRow = worksheet.addRow(exportData.columns);
   headerRow.height = 26;
   headerRow.eachCell((cell) => {
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF304A6D' } // Azul corporativo SIVET
-    };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF304A6D' } };
     cell.font = { name: 'Arial', color: { argb: 'FFFFFFFF' }, bold: true, size: 10.5 };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
     cell.border = {
@@ -210,18 +308,13 @@ export const generateExcel = async (exportData: ExportData) => {
     };
   });
 
-  // 7. Filas de Datos con formato cebra (alternando blancos y grises muy suaves)
   exportData.data.forEach((rowData, index) => {
     const row = worksheet.addRow(rowData);
     row.height = 20;
     const isEven = index % 2 === 0;
     
     row.eachCell((cell) => {
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: isEven ? 'FFFFFFFF' : 'FFF9FAFB' } 
-      };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isEven ? 'FFFFFFFF' : 'FFF9FAFB' } };
       cell.font = { name: 'Arial', size: 10, color: { argb: 'FF374151' } };
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
       cell.border = {
@@ -232,7 +325,6 @@ export const generateExcel = async (exportData: ExportData) => {
     });
   });
 
-  // 8. Generar y disparar la descarga del archivo Excel
   const buffer = await workbook.xlsx.writeBuffer();
   const dateStr = new Date().toISOString().split('T')[0];
   const safeTitle = exportData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
