@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { 
-  Package, AlertTriangle, Clock, TrendingUp, 
+import {
+  Package, AlertTriangle, Clock, TrendingUp,
   RefreshCw, Calendar, Building2, Layers, ArrowDownToLine
 } from "lucide-react";
-import { 
-  BarChart, Bar, XAxis, YAxis, 
+import {
+  BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell // Nuevos componentes para la gráfica de Dono
 } from 'recharts';
@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
   const [dateFilter, setDateFilter] = useState("30");
   const [fechaInicio, setFechaInicio] = useState("2026-08-14");
   const [fechaFin, setFechaFin] = useState("2026-09-14");
-  
+
   const [bodega, setBodega] = useState("todas");
   const [categoria, setCategoria] = useState("todas");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
   // ==========================================
   const [catData, setCatData] = useState([...BASE_CATEGORIAS]);
   const [terapeuticaData, setTerapeuticaData] = useState([...BASE_TERAPEUTICA]);
-  
+
   const [kpis, setKpis] = useState({
     totalSku: 482,
     ingresos: 1580,
@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
   // ==========================================
   const handleRecargar = () => {
     setIsRefreshing(true);
-    
+
     setTimeout(() => {
       let multiplicador = 1;
       if (bodega === "central") multiplicador = 1.3;
@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
       })).sort((a, b) => b.cantidad - a.cantidad); // Ordenamos para que el gráfico quede estético
 
       setKpis({
-        totalSku: Math.floor(482 * (categoria !== "todas" ? 0.5 : 1)), 
+        totalSku: Math.floor(482 * (categoria !== "todas" ? 0.5 : 1)),
         ingresos: Math.floor(1580 * multiplicador),
         alertas: Math.floor(12 * multiplicador * (Math.random() + 0.5)),
         vencimientos: Math.floor(8 * multiplicador * (Math.random() + 0.5))
@@ -95,8 +95,8 @@ const Dashboard: React.FC = () => {
       setCatData(nuevasCategorias);
       setTerapeuticaData(nuevasTerapeuticas);
       setIsRefreshing(false);
-      
-    }, 800); 
+
+    }, 800);
   };
 
   // ==========================================
@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
     { id: "medicamento", label: "Producto" },
     { id: "stock_actual", label: "Stock actual", render: (row) => <span className="font-bold text-slate-700">{row.stock_actual}</span> },
     { id: "minimo", label: "Mínimo", render: (row) => <span className="text-slate-500">{row.minimo}</span> },
-    { 
+    {
       id: "estado", label: "Estado",
       render: () => <span className="px-2.5 py-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-100 rounded-md uppercase tracking-wider">Crítico</span>
     }
@@ -134,21 +134,21 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6 pb-10">
-      
+
       {/* CABECERA */}
-      <PageHeader 
-        header="Dashboard de Inventario" 
-        sub="Monitoreo en tiempo real de existencias, flujo de suministros y alertas tempranas." 
+      <PageHeader
+        header="Dashboard de Inventario"
+        sub="Monitoreo en tiempo real de existencias, flujo de suministros y alertas tempranas."
       />
 
       {/* BARRA DE FILTROS SUPERIOR */}
       <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100">
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-          
+
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-sm transition-all">
             <Calendar size={16} className="text-[#304a6d]" />
-            <select 
-              value={dateFilter} 
+            <select
+              value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               className="bg-transparent outline-none cursor-pointer font-medium text-xs text-slate-700"
             >
@@ -160,12 +160,12 @@ const Dashboard: React.FC = () => {
 
             {dateFilter === "custom" && (
               <div className="flex items-center gap-1.5 ml-1 pl-3 border-l border-slate-200 animate-in fade-in slide-in-from-left-2 duration-200">
-                <input 
+                <input
                   type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)}
                   className="bg-transparent outline-none cursor-pointer font-medium text-xs text-slate-700 w-[105px]"
                 />
                 <span className="text-slate-400 text-xs font-semibold">a</span>
-                <input 
+                <input
                   type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)}
                   className="bg-transparent outline-none cursor-pointer font-medium text-xs text-slate-700 w-[105px]"
                 />
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
 
           <div className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-200 px-3 py-2 rounded-xl text-sm">
             <Building2 size={16} className="text-[#304a6d]" />
-            <select 
+            <select
               value={bodega} onChange={(e) => setBodega(e.target.value)}
               className="bg-transparent outline-none cursor-pointer font-medium text-xs text-slate-700"
             >
@@ -187,7 +187,7 @@ const Dashboard: React.FC = () => {
 
           <div className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-200 px-3 py-2 rounded-xl text-sm">
             <Layers size={16} className="text-[#304a6d]" />
-            <select 
+            <select
               value={categoria} onChange={(e) => setCategoria(e.target.value)}
               className="bg-transparent outline-none cursor-pointer font-medium text-xs text-slate-700"
             >
@@ -198,7 +198,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <button 
+        <button
           onClick={handleRecargar}
           disabled={isRefreshing}
           className="flex items-center justify-center gap-2 bg-[#304a6d] hover:bg-[#233854] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md disabled:opacity-70 w-full xl:w-auto"
@@ -258,27 +258,27 @@ const Dashboard: React.FC = () => {
       {/* ZONA DE GRÁFICAS */}
       {/* Usamos grid-cols-10 para crear la proporción exacta 70% (col-span-7) y 30% (col-span-3) */}
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        
+
         {/* GRÁFICA 1: EJE Y CATEGORÍAS (70% del ancho -> col-span-7) */}
         <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex flex-col">
           <div className="mb-6">
             <h3 className="text-base font-bold text-[#304a6d]">Flujo por Categorías</h3>
             <p className="text-xs text-slate-400 mt-1">Comparativa directa de Entradas vs Salidas agrupado por familia.</p>
           </div>
-          
+
           <div className="flex-1 w-full min-h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={catData} margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                 <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <YAxis dataKey="categoria" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#475569', fontWeight: 600 }} width={100} />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: '#f8fafc' }}
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px -3px rgba(0,0,0,0.1)' }}
                   labelStyle={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '4px' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                
+
                 <Bar dataKey="entradas" name="Total Entradas" fill="#304a6d" radius={[0, 4, 4, 0]} barSize={16} />
                 <Bar dataKey="salidas" name="Total Salidas" fill="#94a3b8" radius={[0, 4, 4, 0]} barSize={16} />
               </BarChart>
@@ -292,7 +292,7 @@ const Dashboard: React.FC = () => {
             <h3 className="text-base font-bold text-[#304a6d]">Acción Terapéutica</h3>
             <p className="text-xs text-slate-400 mt-1">Distribución del inventario.</p>
           </div>
-          
+
           <div className="flex-1 w-full min-h-[320px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -300,7 +300,7 @@ const Dashboard: React.FC = () => {
                   data={terapeuticaData}
                   cx="50%" // Centrado exacto
                   cy="45%" // Un poco hacia arriba para hacer espacio a la leyenda abajo
-                  innerRadius={75} 
+                  innerRadius={75}
                   outerRadius={105}
                   paddingAngle={3}
                   dataKey="cantidad"
@@ -311,7 +311,7 @@ const Dashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS_TERAPEUTICA[index % COLORS_TERAPEUTICA.length]} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => {
                     const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
                     return [`${formattedValue} Unds`, 'Stock Actual'];
@@ -320,20 +320,20 @@ const Dashboard: React.FC = () => {
                   itemStyle={{ fontWeight: 'bold', color: '#304a6d' }}
                 />
                 {/* Pasamos la leyenda a la parte inferior para que se acomode al 30% del ancho */}
-                <Legend 
-                  layout="horizontal" 
-                  verticalAlign="bottom" 
+                <Legend
+                  layout="horizontal"
+                  verticalAlign="bottom"
                   align="center"
                   iconType="circle"
                   wrapperStyle={{ fontSize: '11.5px', color: '#475569', fontWeight: 500, paddingTop: '20px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
-            
+
             {/* Texto centrado del dono */}
-            <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+            <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mt-1">
               <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total</span>
-              <span className="block text-xl font-black text-[#304a6d]">
+              <span className="block text-xl font-black text-[#304a6d] leading-none mt-0.5">
                 {terapeuticaData.reduce((acc, curr) => acc + curr.cantidad, 0).toLocaleString()}
               </span>
             </div>

@@ -9,7 +9,6 @@ import {
 // Importamos nuestras utilidades
 import { generatePDFTemplate, generateExcel } from "../../utils/printUtils";
 
-
 export interface TableColumn {
   id: string;
   label: string;
@@ -24,7 +23,7 @@ interface TableProps {
   onDownload?: (row: any) => void;
   
   // Exportación interna
-  enableExport?: boolean; // Por defecto ahora será true
+  enableExport?: boolean;
   exportTitle?: string;
   exportSubtitle?: string;
 }
@@ -35,7 +34,7 @@ const Table: React.FC<TableProps> = ({
   onView, 
   onEdit, 
   onDownload,
-  enableExport = true, // <--- CAMBIO AQUÍ: Ahora siempre está activo por defecto
+  enableExport = true,
   exportTitle = "Reporte General",
   exportSubtitle = "Listado de registros del sistema"
 }) => {
@@ -45,15 +44,19 @@ const Table: React.FC<TableProps> = ({
   // ESTADOS DE PAGINACIÓN
   // ==========================================
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // Cambiamos el tipo para que acepte número o el string "all"
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [data.length, itemsPerPage]);
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  // Si itemsPerPage es "all", el total de elementos por página es la longitud total de la data
+  const effectiveItemsPerPage = itemsPerPage === "all" ? (data.length > 0 ? data.length : 1) : itemsPerPage;
+  const totalPages = Math.ceil(data.length / effectiveItemsPerPage);
+  
+  const startIndex = (currentPage - 1) * effectiveItemsPerPage;
+  const endIndex = itemsPerPage === "all" ? data.length : startIndex + effectiveItemsPerPage;
   const currentData = data.slice(startIndex, endIndex);
 
   // ==========================================
@@ -72,14 +75,10 @@ const Table: React.FC<TableProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Funciones internas que mapean la data de la tabla para los generadores
   const getExportData = () => {
     const exportColumns = columns.map(c => c.label);
     const exportRows = data.map(row => 
-      columns.map(c => {
-        // Extraemos el valor crudo en texto
-        return row[c.id] || "";
-      })
+      columns.map(c => row[c.id] || "")
     );
     return { columns: exportColumns, data: exportRows };
   };
@@ -123,7 +122,6 @@ const Table: React.FC<TableProps> = ({
                 </th>
               )}
 
-              {/* AHORA ESTO SIEMPRE SE RENDERIZA POR DEFECTO */}
               {enableExport && (
                 <th ref={menuRef} className="px-3 py-4 w-12 text-center relative">
                   <button 
@@ -189,7 +187,6 @@ const Table: React.FC<TableProps> = ({
                     </td>
                   )}
 
-                  {/* CELDA VACÍA PARA MANTENER LA ESTRUCTURA */}
                   {enableExport && <td className="px-3 py-3 whitespace-nowrap"></td>}
                 </tr>
               ))
@@ -214,13 +211,15 @@ const Table: React.FC<TableProps> = ({
           <span>Mostrar</span>
           <select 
             value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            // Parseamos a número si no es "all"
+            onChange={(e) => setItemsPerPage(e.target.value === "all" ? "all" : Number(e.target.value))}
             className="border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#3b82f6] text-slate-700 cursor-pointer"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={20}>20</option>
             <option value={50}>50</option>
+            <option value="all">Todos</option> {/* <--- OPCIÓN AÑADIDA AQUÍ */}
           </select>
           <span>registros</span>
         </div>

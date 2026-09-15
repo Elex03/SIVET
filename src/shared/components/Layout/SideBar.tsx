@@ -126,6 +126,7 @@ const Sidebar: React.FC = () => {
 
             {/* ================= BODEGA ================= */}
             <div className="sidebar-section">
+              
               <button
                 className="sidebar-item w-full border-none text-left flex items-center"
                 onClick={() => toggleMenu("bodega", "/bodega")}
@@ -145,8 +146,8 @@ const Sidebar: React.FC = () => {
 
               {openSubmenu === "bodega" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
+                  <NavLink to="/bodega/estanteria" className="text-sm py-1">Inventario</NavLink>
                   <NavLink to="/bodega/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
-                  <NavLink to="/bodega/estanteria" className="text-sm py-1">Estantería</NavLink>
                   <NavLink to="/bodega/catalogos" className="text-sm py-1">Catálogos</NavLink>
                   <NavLink to="/bodega/pedidos" className="text-sm py-1">Pedidos</NavLink>
                 </div>
@@ -174,6 +175,7 @@ const Sidebar: React.FC = () => {
 
               {openSubmenu === "farmacia" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
+                  <NavLink to="/farmacia/estanteria" className="text-sm py-1">Inventario</NavLink>
                   <NavLink to="/farmacia/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
                   <NavLink to="/farmacia/catalogos" className="text-sm py-1">Catálogos</NavLink>
                   <NavLink to="/farmacia/pedidos" className="text-sm py-1">Pedidos</NavLink>
@@ -216,14 +218,15 @@ const Sidebar: React.FC = () => {
               <Store size={18} />
               {!isCollapsed ? <span>Bodega</span> : null}
             </NavLink>
+             <NavLink to="/bodega/estanteria" className="sidebar-item" title="Estantería">
+              <Boxes size={18} />
+              {!isCollapsed ? <span>Inventario</span> : null}
+            </NavLink>
             <NavLink to="/bodega/solicitudes" className="sidebar-item" title="Solicitudes">
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
-            <NavLink to="/bodega/estanteria" className="sidebar-item" title="Estantería">
-              <Boxes size={18} />
-              {!isCollapsed ? <span>Estantería</span> : null}
-            </NavLink>
+           
             <NavLink to="/bodega/catalogos" className="sidebar-item" title="Catálogos">
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Catálogos</span> : null}

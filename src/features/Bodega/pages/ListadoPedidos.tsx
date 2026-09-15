@@ -33,11 +33,13 @@ const ListadoPedidos: React.FC = () => {
     { 
       id: "estado", 
       label: "Estado",
+      /*
       render: (row) => {
         if (row.estado === "Completado") return <span className="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md text-xs font-bold">✅ Completado</span>;
         if (row.estado === "Borrador") return <span className="bg-amber-100 text-amber-700 px-2.5 py-1 rounded-md text-xs font-bold">⏳ En Progreso</span>;
         return <span className="bg-red-100 text-red-700 px-2.5 py-1 rounded-md text-xs font-bold">❌ Cancelado</span>;
       }
+        */
     },
   ];
 

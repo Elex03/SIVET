@@ -44,7 +44,7 @@ const DetallePedidoBodeda = lazy(
   () => import("../../features/Bodega/pages/DetallePedidos")
 );
 const SolicitudesBodega = lazy(
-  () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
+  () => import("../../features/Bodega/pages/Solicitudes") // Ajusta la ruta
 );
 const EstanteriaBodega = lazy(
   () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
@@ -55,10 +55,10 @@ const CatalogosBodega = lazy(
 
 // Nuevas rutas de Pedidos
 const ListadoPedidosBodega = lazy(
-  () => import("../../features/Bodega/pages/ListadoPedidos") 
+  () => import("../../features/Bodega/pages/ListadoPedidos")
 );
 const RecepcionPedidosBodega = lazy(
-  () => import("../../features/Bodega/pages/RecepcionPedidos") 
+  () => import("../../features/Bodega/pages/RecepcionPedidos")
 );
 
 // ======== FARMACIA COMPONENTS ========
@@ -107,7 +107,7 @@ const AppRouter = () => {
                 <Route path="/bodega/solicitudes" element={<SolicitudesBodega />} />
                 <Route path="/bodega/estanteria" element={<EstanteriaBodega />} />
                 <Route path="/bodega/catalogos" element={<CatalogosBodega />} />
-                
+
                 {/* Rutas de Pedidos actualizadas */}
                 <Route path="/bodega/pedidos" element={<ListadoPedidosBodega />} />
                 <Route path="/bodega/pedidos/recepcion" element={<RecepcionPedidosBodega />} />
@@ -133,11 +133,11 @@ const AppRouter = () => {
               >
                 <Route
                   path="/reportes"
-                  element={<Reportes/>}
+                  element={<Reportes />}
                 />
                 <Route
                   path="/catalogos"
-                  element={<Catalogos/>}
+                  element={<Catalogos />}
                 />
                 <Route
                   path="/notificaciones"
@@ -148,10 +148,10 @@ const AppRouter = () => {
                   element={<div>Configuración</div>}
                 />
               </Route>
-              
+
               <Route path="/bodega/pedidos/:id"
-              element={<DetallePedidoBodeda/>
-            } />
+                element={<DetallePedidoBodeda />
+                } />
 
             </Route>
           </Route>
