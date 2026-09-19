@@ -51,7 +51,7 @@ const EstanteriaBodega = lazy(
   () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
 );
 const CatalogosBodega = lazy(
-  () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
+  () => import("../../features/Catalogos/Catalogos") // Ajusta la ruta
 );
 
 // Nuevas rutas de Pedidos

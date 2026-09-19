@@ -7,6 +7,8 @@ import DocumentUploader from "../components/DocumentUploader";
 import ProductSearch from "../../../shared/components/inputs/ProductSearch";
 import ReceptionTable from "../components/ReceptionTable"; 
 
+import ModalMedicamento from "../../Catalogos/components/ModalMedicamento"; 
+
 import type { ProductItem } from "../../../shared/components/inputs/ProductSearch";
 import type { ReceptionProduct } from "../components/ReceptionTable";
 
@@ -23,6 +25,11 @@ const CATALOGO_PRUEBA: ProductItem[] = [
 const RecepcionPedidos: React.FC = () => {
   const navigate = useNavigate();
   const [productos, setProductos] = useState<ReceptionProduct[]>([]);
+  
+  // ==========================================
+  // ESTADO PARA EL MODAL DE NUEVO PRODUCTO
+  // ==========================================
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Función al seleccionar un producto del buscador
   const handleSelectProduct = (item: ProductItem) => {
@@ -62,7 +69,7 @@ const RecepcionPedidos: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto flex flex-col h-[calc(100vh-2rem)] pb-4">
+    <div className="w-full max-w-[1600px] mx-auto flex flex-col h-[calc(100vh-2rem)] pb-4 relative">
       <PageHeader
         header="Recepción de Pedidos"
         sub="Registra el ingreso verificando presentación, UXE y caducidad del producto."
@@ -70,9 +77,10 @@ const RecepcionPedidos: React.FC = () => {
 
       <div className="flex flex-col xl:flex-row gap-6 w-full flex-1 min-h-0">
         
-        {/* COLUMNA IZQUIERDA (70%) - Forzada a ocupar todo el alto disponible */}
+        {/* COLUMNA IZQUIERDA (70%) */}
         <div className="flex-[7] flex flex-col min-w-0 gap-4 h-full">
           
+          {/* INFORMACIÓN DE LA FACTURA */}
           <div className="bg-white p-4 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex-shrink-0">
             <h3 className="text-sm font-semibold text-[#304a6d] mb-3 flex items-center gap-2">
               <FileText size={18} /> Información de la Factura / Orden
@@ -102,19 +110,24 @@ const RecepcionPedidos: React.FC = () => {
             </div>
           </div>
 
+          {/* BUSCADOR Y BOTÓN NUEVO PRODUCTO */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 flex-shrink-0">
             <ProductSearch
               catalog={CATALOGO_PRUEBA}
               onSelect={handleSelectProduct}
             />
 
-            <button className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm flex-shrink-0">
+            {/* AQUI CONECTAMOS EL BOTÓN CON EL ESTADO DEL MODAL */}
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm flex-shrink-0"
+            >
               <Plus size={16} className="text-[#3b82f6]" />
               <span>Nuevo Producto</span>
             </button>
           </div>
 
-          {/* TABLA DE RECEPCIÓN: flex-1 y min-h-0 le permiten estirarse y hacer scroll interno */}
+          {/* TABLA DE RECEPCIÓN */}
           <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 overflow-hidden">
             <ReceptionTable 
               productos={productos}
@@ -125,7 +138,7 @@ const RecepcionPedidos: React.FC = () => {
           
         </div>
 
-        {/* COLUMNA DERECHA (30%) */}
+        {/* COLUMNA DERECHA (30%) - RESUMEN */}
         <div className="w-full xl:w-[320px] 2xl:w-[380px] flex flex-col gap-4 flex-shrink-0">
           
           <div className="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100">
@@ -181,6 +194,15 @@ const RecepcionPedidos: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ========================================== */}
+      {/* RENDERIZADO DEL MODAL */}
+      {/* ========================================== */}
+      <ModalMedicamento 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
+
     </div>
   );
 };
