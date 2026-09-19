@@ -177,8 +177,6 @@ const Sidebar: React.FC = () => {
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
                   <NavLink to="/farmacia/estanteria" className="text-sm py-1">Inventario</NavLink>
                   <NavLink to="/farmacia/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
-                  <NavLink to="/farmacia/catalogos" className="text-sm py-1">Catálogos</NavLink>
-                  <NavLink to="/farmacia/pedidos" className="text-sm py-1">Pedidos</NavLink>
                 </div>
               ) : null}
             </div>
@@ -249,14 +247,7 @@ const Sidebar: React.FC = () => {
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
-            <NavLink to="/farmacia/catalogos" className="sidebar-item" title="Catálogos">
-              <ClipboardList size={18} />
-              {!isCollapsed ? <span>Catálogos</span> : null}
-            </NavLink>
-            <NavLink to="/farmacia/pedidos" className="sidebar-item" title="Pedidos">
-              <ShoppingCart size={18} />
-              {!isCollapsed ? <span>Pedidos</span> : null}
-            </NavLink>
+
           </>
         ) : null}
       </nav>
