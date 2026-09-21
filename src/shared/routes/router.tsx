@@ -18,6 +18,8 @@ const Login = lazy(
   () => import("../../features/Login/Login")
 );
 
+const UnderConstruction = lazy(() => import("../pages/UnderConstruction"));
+
 const Unauthorized = lazy(
   () => import("../pages/Unauthorized")
 );
@@ -120,11 +122,9 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador", "farmacia"]} />
                 }
               >
-                <Route path="/farmacia" element={<Pharmacy />} />
-                <Route path="/farmacia/solicitudes" element={<Solicitudes />} />
-                <Route path="/farmacia/catalogos" element={<CatalogosFarmacia />} />
-                <Route path="/farmacia/pedidos" element={<Pedidos />} />
-                <Route path="/farmacia/inventario" element={<Pedidos />} />
+                <Route path="/farmacia" element={<UnderConstruction />} />
+                <Route path="/farmacia/solicitudes" element={<UnderConstruction />} />
+                <Route path="/farmacia/inventario" element={<UnderConstruction />} />
               </Route>
 
               {/* ============ SOLO ADMINISTRADOR ============ */}

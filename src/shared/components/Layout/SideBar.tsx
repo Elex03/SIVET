@@ -175,7 +175,7 @@ const Sidebar: React.FC = () => {
 
               {openSubmenu === "farmacia" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
-                  <NavLink to="/farmacia/estanteria" className="text-sm py-1">Inventario</NavLink>
+                  <NavLink to="/farmacia/inventario" className="text-sm py-1">Inventario</NavLink>
                   <NavLink to="/farmacia/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
                 </div>
               ) : null}
