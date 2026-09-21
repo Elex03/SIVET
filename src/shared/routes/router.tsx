@@ -64,19 +64,7 @@ const RecepcionPedidosBodega = lazy(
   () => import("../../features/Bodega/pages/RecepcionPedidos")
 );
 
-// ======== FARMACIA COMPONENTS ========
-const Pharmacy = lazy(
-  () => import("../../features/Farmacia/Farmacia")
-);
-const Solicitudes = lazy(
-  () => import("../../features/Farmacia/Farmacia")
-);
-const CatalogosFarmacia = lazy(
-  () => import("../../features/Farmacia/Farmacia")
-);
-const Pedidos = lazy(
-  () => import("../../features/Farmacia/Farmacia")
-);
+
 
 const AppRouter = () => {
   return (
