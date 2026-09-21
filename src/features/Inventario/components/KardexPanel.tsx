@@ -112,7 +112,7 @@ const KardexPanel: React.FC<KardexPanelProps> = ({ product, onClose }) => {
             </h4>
             
             <div className="relative border-l-2 border-slate-100 ml-2.5 pl-5 py-1 flex flex-col gap-6">
-              {mockMovimientos.slice(0, 3).map((mov, i) => (
+              {mockMovimientos.slice(0, 3).map((mov, __i) => (
                 <div key={mov.id} className="relative group">
                   {/* Círculo indicador */}
                   <div className={`absolute -left-[27px] top-1 w-3 h-3 rounded-full ring-4 ring-white ${mov.tipo === 'ENTRADA' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>

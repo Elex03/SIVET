@@ -307,7 +307,7 @@ const Dashboard: React.FC = () => {
                   nameKey="accion"
                   stroke="none"
                 >
-                  {terapeuticaData.map((entry, index) => (
+                  {terapeuticaData.map((__entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS_TERAPEUTICA[index % COLORS_TERAPEUTICA.length]} />
                   ))}
                 </Pie>

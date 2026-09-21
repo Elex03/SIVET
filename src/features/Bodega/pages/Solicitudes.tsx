@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Eye, Package, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
+import { Search, Package, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
 import PageHeader from "../../../shared/components/Layout/PageHeader";
 import Table from "../../../shared/components/Table/Table";
 import type  { TableColumn } from "../../../shared/components/Table/Table";
