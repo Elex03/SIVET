@@ -21,7 +21,7 @@ import SIVETLogo from "../../assets/images/SIVET.png";
 
 import { useAuth } from "../../context/AuthContext";
 
-import "./Sidebar.css";
+import "./SideBar.css";
 
 type SubmenuType = "bodega" | "farmacia" | null;
 
