@@ -29,70 +29,70 @@ interface Solicitud {
 const mockSolicitudes: Solicitud[] = [
   {
     id: 1,
-    solicitud: "#SOL-0001",
-    area: "Farmacia",
-    fecha: "21 de Agosto 2026",
-    productos: 3,
-    solicitante: "Ana López",
+    solicitud: "#SOL-F001",
+    area: "Consulta Externa",
+    fecha: "26 de Septiembre 2026",
+    productos: 5,
+    solicitante: "Dr. Benavides",
     estado: "Pendiente",
   },
   {
     id: 2,
-    solicitud: "#SOL-0002",
-    area: "Quirófano",
-    fecha: "21 de Agosto 2026",
-    productos: 12,
-    solicitante: "Dr. Martínez",
+    solicitud: "#SOL-F002",
+    area: "Emergencias",
+    fecha: "26 de Septiembre 2026",
+    productos: 14,
+    solicitante: "Dra. Rizo",
     estado: "En proceso",
   },
   {
     id: 3,
-    solicitud: "#SOL-0003",
-    area: "Farmacia",
-    fecha: "20 de Agosto 2026",
-    productos: 5,
-    solicitante: "Ana López",
+    solicitud: "#SOL-F003",
+    area: "Hospitalización",
+    fecha: "25 de Septiembre 2026",
+    productos: 8,
+    solicitante: "Enf. Morales",
     estado: "Atendida",
   },
   {
     id: 4,
-    solicitud: "#SOL-0004",
-    area: "Hospitalización",
-    fecha: "20 de Agosto 2026",
-    productos: 2,
-    solicitante: "Enf. Ramírez",
+    solicitud: "#SOL-F004",
+    area: "Pediatría",
+    fecha: "25 de Septiembre 2026",
+    productos: 3,
+    solicitante: "Lic. Vargas",
     estado: "Rechazada",
   },
   {
     id: 5,
-    solicitud: "#SOL-0005",
-    area: "Farmacia",
-    fecha: "19 de Agosto 2026",
-    productos: 8,
-    solicitante: "Ana López",
+    solicitud: "#SOL-F005",
+    area: "Consulta Externa",
+    fecha: "24 de Septiembre 2026",
+    productos: 6,
+    solicitante: "Dr. Benavides",
     estado: "Pendiente",
   },
   {
     id: 6,
-    solicitud: "#SOL-0006",
-    area: "Farmacia",
-    fecha: "19 de Agosto 2026",
-    productos: 1,
-    solicitante: "Ana López",
+    solicitud: "#SOL-F006",
+    area: "Laboratorio",
+    fecha: "24 de Septiembre 2026",
+    productos: 2,
+    solicitante: "Lic. Gómez",
     estado: "Pendiente",
   },
   {
     id: 7,
-    solicitud: "#SOL-0007",
-    area: "Laboratorio",
-    fecha: "18 de Agosto 2026",
-    productos: 4,
-    solicitante: "Lic. Gómez",
+    solicitud: "#SOL-F007",
+    area: "Emergencias",
+    fecha: "23 de Septiembre 2026",
+    productos: 10,
+    solicitante: "Dra. Rizo",
     estado: "Atendida",
   },
 ];
 
-const Solicitudes: React.FC = () => {
+const SolicitudesFarmacia: React.FC = () => {
   const [activeTab, setActiveTab] = useState<EstadoSolicitud | "Todas">(
     "Pendiente",
   );
@@ -129,7 +129,7 @@ const Solicitudes: React.FC = () => {
     },
     {
       id: "area",
-      label: "Área",
+      label: "Área Solicitante",
       render: (row: Solicitud) => (
         <span className="text-slate-600">{row.area}</span>
       ),
@@ -176,8 +176,8 @@ const Solicitudes: React.FC = () => {
   return (
     <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6 pb-10 h-full">
       <PageHeader
-        header="Bodega / Solicitudes"
-        sub="Controla el ingreso, almacenamiento y transferencia de medicamentos hacia farmacia."
+        header="Farmacia / Solicitudes"
+        sub="Controla y gestiona las solicitudes de dispensación y despacho de medicamentos."
       />
 
       {/* ========================================== */}
@@ -208,7 +208,7 @@ const Solicitudes: React.FC = () => {
           </span>
           <div className="flex items-center gap-1.5 mt-auto">
             <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 text-[10px] font-bold flex items-center gap-1">
-              <TrendingUp size={10} strokeWidth={3} /> 2
+              <TrendingUp size={10} strokeWidth={3} /> 1
             </span>
             <span className="text-[11px] text-slate-400 font-medium">
               más que ayer
@@ -272,7 +272,7 @@ const Solicitudes: React.FC = () => {
           </span>
           <div className="flex items-center gap-1.5 mt-auto">
             <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[10px] font-bold flex items-center gap-1">
-              <TrendingUp size={10} strokeWidth={3} /> 12%
+              <TrendingUp size={10} strokeWidth={3} /> 9%
             </span>
             <span className="text-[11px] text-slate-400 font-medium">
               aumento vs mes anterior
@@ -304,7 +304,7 @@ const Solicitudes: React.FC = () => {
           </span>
           <div className="flex items-center gap-1.5 mt-auto">
             <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[10px] font-bold flex items-center gap-1">
-              <TrendingDown size={10} strokeWidth={3} /> 3
+              <TrendingDown size={10} strokeWidth={3} /> 2
             </span>
             <span className="text-[11px] text-slate-400 font-medium">
               menos que el mes anterior
@@ -343,8 +343,10 @@ const Solicitudes: React.FC = () => {
                 className="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg px-2 py-2 outline-none cursor-pointer focus:border-[#304a6d] shadow-sm"
               >
                 <option value="Todas">Todas</option>
-                <option value="Farmacia">Farmacia</option>
-                <option value="Quirófano">Quirófano</option>
+                <option value="Consulta Externa">Consulta Externa</option>
+                <option value="Emergencias">Emergencias</option>
+                <option value="Hospitalización">Hospitalización</option>
+                <option value="Pediatría">Pediatría</option>
                 <option value="Laboratorio">Laboratorio</option>
               </select>
             </div>
@@ -375,4 +377,4 @@ const Solicitudes: React.FC = () => {
   );
 };
 
-export default Solicitudes;
+export default SolicitudesFarmacia;

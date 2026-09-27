@@ -46,7 +46,10 @@ const Sidebar: React.FC = () => {
   };
 
   // Modificamos toggleMenu para recibir la ruta por defecto
-  const toggleMenu = (menu: "bodega" | "farmacia", defaultPath: string): void => {
+  const toggleMenu = (
+    menu: "bodega" | "farmacia",
+    defaultPath: string,
+  ): void => {
     if (isCollapsed) {
       // Si está colapsado, navegamos a la ruta principal
       navigate(defaultPath);
@@ -74,7 +77,7 @@ const Sidebar: React.FC = () => {
           </button>
         )}
 
-        <div 
+        <div
           className={`relative flex flex-col items-center w-full px-2 transition-all duration-300 ${
             isCollapsed ? "cursor-pointer group" : ""
           }`}
@@ -91,9 +94,11 @@ const Sidebar: React.FC = () => {
             </div>
           )}
 
-          <div className={`flex flex-col items-center w-full transition-opacity duration-300 ${
-            isCollapsed ? "group-hover:opacity-40" : ""
-          }`}>
+          <div
+            className={`flex flex-col items-center w-full transition-opacity duration-300 ${
+              isCollapsed ? "group-hover:opacity-40" : ""
+            }`}
+          >
             <img src={UNALogo} alt="UNA" className="logo-una mx-auto" />
             {!isCollapsed ? (
               <div className="sidebar-logo-right mt-2 flex flex-col items-center">
@@ -119,22 +124,27 @@ const Sidebar: React.FC = () => {
               {!isCollapsed ? <span>Dashboard</span> : null}
             </NavLink>
 
-            <NavLink to="/inventario" className="sidebar-item" title="Inventario">
+            <NavLink
+              to="/inventario"
+              className="sidebar-item"
+              title="Inventario"
+            >
               <Boxes size={18} />
               {!isCollapsed ? <span>Inventario</span> : null}
             </NavLink>
 
             {/* ================= BODEGA ================= */}
             <div className="sidebar-section">
-              
               <button
                 className="sidebar-item w-full border-none text-left flex items-center"
                 onClick={() => toggleMenu("bodega", "/bodega")}
                 title="Bodega"
               >
                 <Store size={18} />
-                {!isCollapsed ? <span className="flex-1 ml-2">Bodega</span> : null}
-                
+                {!isCollapsed ? (
+                  <span className="flex-1 ml-2">Bodega</span>
+                ) : null}
+
                 {!isCollapsed ? (
                   openSubmenu === "bodega" ? (
                     <ChevronUp size={16} />
@@ -146,10 +156,18 @@ const Sidebar: React.FC = () => {
 
               {openSubmenu === "bodega" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
-                  <NavLink to="/bodega/estanteria" className="text-sm py-1">Inventario</NavLink>
-                  <NavLink to="/bodega/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
-                  <NavLink to="/bodega/catalogos" className="text-sm py-1">Catálogos</NavLink>
-                  <NavLink to="/bodega/pedidos" className="text-sm py-1">Pedidos</NavLink>
+                  <NavLink to="/bodega/estanteria" className="text-sm py-1">
+                    Inventario
+                  </NavLink>
+                  <NavLink to="/bodega/solicitudes" className="text-sm py-1">
+                    Solicitudes
+                  </NavLink>
+                  <NavLink to="/bodega/catalogos" className="text-sm py-1">
+                    Catálogos
+                  </NavLink>
+                  <NavLink to="/bodega/pedidos" className="text-sm py-1">
+                    Pedidos
+                  </NavLink>
                 </div>
               ) : null}
             </div>
@@ -162,7 +180,9 @@ const Sidebar: React.FC = () => {
                 title="Farmacia"
               >
                 <ShoppingCart size={18} />
-                {!isCollapsed ? <span className="flex-1 ml-2">Farmacia</span> : null}
+                {!isCollapsed ? (
+                  <span className="flex-1 ml-2">Farmacia</span>
+                ) : null}
 
                 {!isCollapsed ? (
                   openSubmenu === "farmacia" ? (
@@ -175,8 +195,12 @@ const Sidebar: React.FC = () => {
 
               {openSubmenu === "farmacia" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
-                  <NavLink to="/farmacia/estanteria" className="text-sm py-1">Inventario</NavLink>
-                  <NavLink to="/farmacia/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
+                  <NavLink to="/farmacia/inventario" className="text-sm py-1">
+                    Inventario
+                  </NavLink>
+                  <NavLink to="/farmacia/solicitudes" className="text-sm py-1">
+                    Solicitudes
+                  </NavLink>
                 </div>
               ) : null}
             </div>
@@ -197,12 +221,20 @@ const Sidebar: React.FC = () => {
               </div>
             ) : null}
 
-            <NavLink to="/notificaciones" className="sidebar-item" title="Notificaciones">
+            <NavLink
+              to="/notificaciones"
+              className="sidebar-item"
+              title="Notificaciones"
+            >
               <Bell size={18} />
               {!isCollapsed ? <span>Notificaciones</span> : null}
             </NavLink>
 
-            <NavLink to="/configuracion" className="sidebar-item" title="Configuración">
+            <NavLink
+              to="/configuracion"
+              className="sidebar-item"
+              title="Configuración"
+            >
               <Settings size={18} />
               {!isCollapsed ? <span>Configuración</span> : null}
             </NavLink>
@@ -216,20 +248,36 @@ const Sidebar: React.FC = () => {
               <Store size={18} />
               {!isCollapsed ? <span>Bodega</span> : null}
             </NavLink>
-             <NavLink to="/bodega/estanteria" className="sidebar-item" title="Estantería">
+            <NavLink
+              to="/bodega/estanteria"
+              className="sidebar-item"
+              title="Estantería"
+            >
               <Boxes size={18} />
               {!isCollapsed ? <span>Inventario</span> : null}
             </NavLink>
-            <NavLink to="/bodega/solicitudes" className="sidebar-item" title="Solicitudes">
+            <NavLink
+              to="/bodega/solicitudes"
+              className="sidebar-item"
+              title="Solicitudes"
+            >
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
-           
-            <NavLink to="/bodega/catalogos" className="sidebar-item" title="Catálogos">
+
+            <NavLink
+              to="/bodega/catalogos"
+              className="sidebar-item"
+              title="Catálogos"
+            >
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Catálogos</span> : null}
             </NavLink>
-            <NavLink to="/bodega/pedidos" className="sidebar-item" title="Pedidos">
+            <NavLink
+              to="/bodega/pedidos"
+              className="sidebar-item"
+              title="Pedidos"
+            >
               <ShoppingCart size={18} />
               {!isCollapsed ? <span>Pedidos</span> : null}
             </NavLink>
@@ -243,22 +291,27 @@ const Sidebar: React.FC = () => {
               <ShoppingCart size={18} />
               {!isCollapsed ? <span>Farmacia</span> : null}
             </NavLink>
-            <NavLink to="/farmacia/solicitudes" className="sidebar-item" title="Solicitudes">
+            <NavLink
+              to="/farmacia/solicitudes"
+              className="sidebar-item"
+              title="Solicitudes"
+            >
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
-
           </>
         ) : null}
       </nav>
 
       {/* ================= USUARIO ================= */}
       <div className="sidebar-bottom mt-auto border-t p-4 flex flex-col gap-3">
-        <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-start gap-3"} bg-gray-50 p-2 rounded-lg border border-gray-100`}>
+        <div
+          className={`flex items-center ${isCollapsed ? "justify-center" : "justify-start gap-3"} bg-gray-50 p-2 rounded-lg border border-gray-100`}
+        >
           <div className="w-8 h-8 rounded-full bg-[#64748b] flex items-center justify-center text-white font-semibold flex-shrink-0">
             {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
           </div>
-          
+
           {!isCollapsed && (
             <div className="flex flex-col items-start text-left overflow-hidden flex-1">
               <span className="font-semibold text-sm text-[#304a6d] truncate leading-tight w-full">
