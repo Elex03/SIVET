@@ -54,6 +54,7 @@ const ModalMedicamento: React.FC<ModalMedicamentoProps> = ({ isOpen, onClose }) 
             </div>
             <div className="flex items-center md:mt-6">
               <label className="flex items-center gap-3 cursor-pointer group">
+                {/*
                 <div className="relative flex items-center justify-center w-5 h-5 border-2 border-slate-300 rounded-md group-hover:border-[#3b82f6] transition-colors">
                   <input type="checkbox" className="peer sr-only" />
                   <div className="w-5 h-5 rounded-md peer-checked:bg-[#3b82f6] peer-checked:border-[#3b82f6] absolute flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-all">
@@ -61,6 +62,7 @@ const ModalMedicamento: React.FC<ModalMedicamentoProps> = ({ isOpen, onClose }) 
                   </div>
                 </div>
                 <span className="text-sm font-medium text-slate-700">Requiere prescripción médica</span>
+                */}
               </label>
             </div>
           </div>

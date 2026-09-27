@@ -10,6 +10,8 @@ import Inventario from "../../features/Inventario/Inventario";
 
 const Login = lazy(() => import("../../features/Login/Login"));
 
+const UnderConstruction = lazy(() => import("../pages/UnderConstruction"));
+
 const Unauthorized = lazy(() => import("../pages/Unauthorized"));
 
 const Dashboard = lazy(() => import("../../features/Dashboard/Dashboard"));
@@ -115,6 +117,15 @@ const AppRouter = () => {
                 <Route
                   path="/farmacia/solicitudes"
                   element={<FarmaciaSolicitudes />}
+                />
+                <Route path="/farmacia" element={<UnderConstruction />} />
+                <Route
+                  path="/farmacia/solicitudes"
+                  element={<UnderConstruction />}
+                />
+                <Route
+                  path="/farmacia/inventario"
+                  element={<UnderConstruction />}
                 />
               </Route>
 
