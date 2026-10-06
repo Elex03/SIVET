@@ -11,14 +11,18 @@ import ProtectedRoute from "../pages/ProtectedRoute";
 import MainLayout from "../pages/MainLayout";
 
 import CircularIndeterminate from "../components/progress/CircularIndeterminate";
-import Inventario from "../../features/Inventario/Inventario";
 
 
+
+const UsersPage = lazy(() => import('../pages/UsersPage'));
 const Login = lazy(
   () => import("../../features/Login/Login")
 );
 
-const UnderConstruction = lazy(() => import("../pages/UnderConstruction"));
+const Salidas = lazy(() => import('../../features/Farmacia/Salidas'));
+const Farmacia = lazy(() => import("../../features/Farmacia/Solicitudes"));
+const SystemPage = lazy(() => import("../pages/SystemPage"));
+const NotificationsPage = lazy(() => import('../../features/Farmacia/NotificationsPage'));
 
 const Unauthorized = lazy(
   () => import("../pages/Unauthorized")
@@ -31,37 +35,35 @@ const Reportes = lazy(
   () => import("../../features/Reportes/Reportes")
 );
 const Catalogos = lazy(
-  () => import("../../features/Catalogos/Catalogos")
+  () => import("../../features/Catalogos/CatalogManager")
 );
 
 const Inventory = lazy(
-  () => import("../../features/Inventario/Inventario")
+  () => import("../../features/Inventario/InventoryPage")
 );
 
 // ======== BODEGA COMPONENTS ========
 const Bodega = lazy(
-  () => import("../../features/Bodega/pages/Bodega")
+  () => import("../../features/Inventario/InventoryPage")
 );
 
-const DetallePedidoBodeda = lazy(
-  () => import("../../features/Bodega/pages/DetallePedidos")
-);
+
 const SolicitudesBodega = lazy(
-  () => import("../../features/Bodega/pages/Solicitudes") // Ajusta la ruta
+  () => import("../../features/Farmacia/Solicitudes") // Ajusta la ruta
 );
 const EstanteriaBodega = lazy(
-  () => import("../../features/Bodega/pages/Bodega") // Ajusta la ruta
+  () => import("../../features/Inventario/InventoryPage") // Ajusta la ruta
 );
 const CatalogosBodega = lazy(
-  () => import("../../features/Catalogos/Catalogos") // Ajusta la ruta
+  () => import("../../features/Catalogos/CatalogManager") // Ajusta la ruta
 );
 
 // Nuevas rutas de Pedidos
 const ListadoPedidosBodega = lazy(
-  () => import("../../features/Bodega/pages/ListadoPedidos")
+  () => import("../../features/Bodega/pages/Pedidos")
 );
 const RecepcionPedidosBodega = lazy(
-  () => import("../../features/Bodega/pages/RecepcionPedidos")
+  () => import("../../features/Bodega/pages/Pedidos")
 );
 
 
@@ -77,6 +79,7 @@ const AppRouter = () => {
           {/* ================= RUTAS PROTEGIDAS ================= */}
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
+              <Route path="/configuracion" element={<SystemPage settings />} />
 
               {/* ============ ADMINISTRADOR ============ */}
               <Route
@@ -84,7 +87,7 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador"]} />
                 }
               >
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/usuarios" element={<UsersPage />} /><Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/inventario" element={<Inventory />} />
               </Route>
 
@@ -94,9 +97,10 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador", "bodega"]} />
                 }
               >
-                <Route path="/bodega" element={<Bodega />} />
-                <Route path="/bodega/solicitudes" element={<SolicitudesBodega />} />
-                <Route path="/bodega/estanteria" element={<EstanteriaBodega />} />
+                <Route path="/bodega" element={<Bodega location="Bodega Central" />} />
+                <Route path="/bodega/solicitudes" element={<SolicitudesBodega bodega />} />
+                <Route path="/bodega/notificaciones" element={<NotificationsPage bodega />} />
+                <Route path="/bodega/estanteria" element={<EstanteriaBodega location="Bodega Central" />} />
                 <Route path="/bodega/catalogos" element={<CatalogosBodega />} />
 
                 {/* Rutas de Pedidos actualizadas */}
@@ -110,9 +114,12 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador", "farmacia"]} />
                 }
               >
-                <Route path="/farmacia" element={<UnderConstruction />} />
-                <Route path="/farmacia/solicitudes" element={<UnderConstruction />} />
-                <Route path="/farmacia/inventario" element={<UnderConstruction />} />
+                <Route path="/farmacia/catalogos" element={<Catalogos locationsOnly />} />
+                <Route path="/farmacia" element={<Farmacia />} />
+                <Route path="/farmacia/salidas" element={<Salidas />} />
+                <Route path="/farmacia/solicitudes" element={<Farmacia />} />
+                <Route path="/farmacia/notificaciones" element={<NotificationsPage />} />
+                <Route path="/farmacia/inventario" element={<Inventory location="Farmacia" />} />
               </Route>
 
               {/* ============ SOLO ADMINISTRADOR ============ */}
@@ -131,21 +138,10 @@ const AppRouter = () => {
                 />
                 <Route
                   path="/notificaciones"
-                  element={<div>Notificaciones</div>}
+                  element={<SystemPage />}
                 />
-                <Route
-                  path="/configuracion"
-                  element={<div>Configuración</div>}
-                />
-                <Route
-                  path="/inventario"
-                  element={<Inventario/>}
-                />
-              </Route>
 
-              <Route path="/bodega/pedidos/:id"
-                element={<DetallePedidoBodeda />
-                } />
+              </Route>
 
             </Route>
           </Route>

@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/auth";
 import type { Role } from "../types/auth";
 
 interface ProtectedRouteProps {
@@ -10,7 +10,9 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({
   allowedRoles,
 }: ProtectedRouteProps) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, ready } = useAuth();
+
+  if (!ready) return <div role="status" className="p-8 text-center">Validando sesión…</div>;
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;

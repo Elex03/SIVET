@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from 'react';
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../shared/context/AuthContext";
+import { useAuth } from "../../shared/context/auth";
 import type { Role } from "../../shared/types/auth";
 import UNA from "../../shared/assets/images/UNA.png";
 import { User, Lock, ShieldAlert, LogIn, ChevronDown } from "lucide-react";
@@ -15,9 +15,10 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role | "">("");
 
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -26,7 +27,10 @@ const Login = () => {
       return;
     }
 
-    const success = login(username, password, role);
+    if (submitting) return;
+    setSubmitting(true);
+    const success = await login(username, password, role);
+    setSubmitting(false);
 
     if (!success) {
       setError("Credenciales incorrectas. Verifique e intente nuevamente.");
@@ -146,7 +150,7 @@ const Login = () => {
 
           {/* Botón de Submit - Azul Marino Institucional */}
           <button 
-            type="submit"
+            type="submit" disabled={submitting}
             className="w-full mt-2 bg-[#304a6d] hover:bg-[#233854] text-white font-bold py-3.5 rounded-xl shadow-md shadow-[#304a6d]/20 transition-all flex items-center justify-center gap-2 group"
           >
             <span>Iniciar Sesión</span>

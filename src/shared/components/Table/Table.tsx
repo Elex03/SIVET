@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Eye, Edit2, Download, 
-  ChevronLeft, ChevronRight, 
+import {
+  Eye, Edit2, Download,
+  ChevronLeft, ChevronRight,
   FileText, FileSpreadsheet, Inbox,
   MoreVertical, Check, Columns
 } from "lucide-react";
@@ -11,11 +11,12 @@ import { generatePDFTemplate, generateExcel } from "../../utils/printUtils";
 export interface TableColumn {
   id: string;
   label: string;
-  render?: (row: any) => React.ReactNode; 
+  render?: (row: any) => React.ReactNode;
 }
 
 interface TableProps {
   columns: TableColumn[];
+  pageSize?: number;
   data: Record<string, any>[];
   onView?: (row: any) => void;
   onEdit?: (row: any) => void;
@@ -25,11 +26,12 @@ interface TableProps {
   exportSubtitle?: string;
 }
 
-const Table: React.FC<TableProps> = ({ 
-  columns, 
-  data, 
-  onView, 
-  onEdit, 
+const Table: React.FC<TableProps> = ({
+  columns,
+  pageSize = 10,
+  data,
+  onView,
+  onEdit,
   onDownload,
   enableExport = true,
   exportTitle = "Reporte General",
@@ -38,16 +40,13 @@ const Table: React.FC<TableProps> = ({
   const hasActions = Boolean(onView || onEdit || onDownload);
 
   // ==========================================
-  // ESTADO DE VISIBILIDAD DE COLUMNAS 
+  // ESTADO DE VISIBILIDAD DE COLUMNAS
   // ==========================================
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(columns.map(col => col.id));
-
-  useEffect(() => {
-    setVisibleColumns(columns.map(col => col.id));
-  }, [columns]);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const visibleColumns = columns.map(col => col.id).filter(id => !hiddenColumns.includes(id));
 
   const toggleColumn = (colId: string) => {
-    setVisibleColumns(prev => 
+    setHiddenColumns(prev =>
       prev.includes(colId) ? prev.filter(id => id !== colId) : [...prev, colId]
     );
   };
@@ -57,16 +56,14 @@ const Table: React.FC<TableProps> = ({
   // ==========================================
   // ESTADOS DE PAGINACIÓN
   // ==========================================
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
+  const [requestedPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(pageSize);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [data.length, itemsPerPage]);
 
   const effectiveItemsPerPage = itemsPerPage === "all" ? (data.length > 0 ? data.length : 1) : itemsPerPage;
   const totalPages = Math.ceil(data.length / effectiveItemsPerPage);
-  
+  const currentPage = Math.min(requestedPage, Math.max(1, totalPages));
+
   const startIndex = (currentPage - 1) * effectiveItemsPerPage;
   const endIndex = itemsPerPage === "all" ? data.length : startIndex + effectiveItemsPerPage;
   const currentData = data.slice(startIndex, endIndex);
@@ -89,8 +86,8 @@ const Table: React.FC<TableProps> = ({
 
   const getExportData = () => {
     const exportColumns = activeColumnsForTable.map(c => c.label);
-    const exportRows = data.map(row => 
-      activeColumnsForTable.map(c => row[c.id] || "")
+    const exportRows = data.map(row =>
+      activeColumnsForTable.map(c => Array.isArray(row[c.id]) ? row[c.id].join(', ') : row[c.id] ?? "")
     );
     return { columns: exportColumns, data: exportRows };
   };
@@ -106,25 +103,25 @@ const Table: React.FC<TableProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex-1 flex flex-col min-h-0 relative overflow-hidden">
-      
+    <div className="data-table bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex-1 flex flex-col min-h-0 relative overflow-hidden">
+
       {/* CONTENEDOR HORIZONTAL (Controla el overflow si hay demasiadas columnas) */}
-      <div className="w-full flex-1 overflow-x-auto custom-scrollbar">
-        
+      <div tabIndex={0} role="region" aria-label={`Tabla: ${exportTitle}`} className="table-scroll w-full flex-1 min-h-0 overflow-auto custom-scrollbar">
+
         {/* LA TABLA AHORA ES UN FLEX CONTAINER PARA QUE EL TBODY SE ESTIRE */}
-        <table className="min-w-[900px] w-full h-full flex flex-col border-collapse text-left">
-          
-          {/* THEAD: Estático, fuera del scroll vertical. 
+        <table className="w-full table-auto border-collapse text-left">
+
+          {/* THEAD: Estático, fuera del scroll vertical.
               El pr-[6px] compensa visualmente el ancho del scrollbar que tendrá el tbody */}
-          <thead className="w-full flex-shrink-0 table table-fixed bg-slate-50 border-b border-slate-200 z-20 pr-[6px]">
+          <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="w-full">
-              
+
               {activeColumnsForTable.map((col) => (
-                <th key={col.id} className="px-5 py-4 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider truncate">
+                <th key={col.id} className="px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
                   {col.label}
                 </th>
               ))}
-              
+
               {hasActions && (
                 <th className="w-28 px-5 py-4 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider text-right flex-shrink-0">
                   Acciones
@@ -133,7 +130,7 @@ const Table: React.FC<TableProps> = ({
 
               {enableExport && (
                 <th ref={menuRef} className="w-14 px-3 py-4 text-center relative flex-shrink-0">
-                  <button 
+                  <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className={`p-1.5 rounded-lg transition-all ${isMenuOpen ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:bg-slate-200 hover:text-slate-700'}`}
                     title="Opciones de Tabla"
@@ -144,7 +141,7 @@ const Table: React.FC<TableProps> = ({
                   {/* MENÚ CASCADA (Exportar y Columnas) */}
                   {isMenuOpen && (
                     <div className="absolute right-6 top-full mt-1 w-48 bg-white border border-slate-100 rounded-xl shadow-[0_4px_20px_-3px_rgba(0,0,0,0.1)] z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150 text-left font-normal">
-                      
+
                       <div className="relative group">
                         <button className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
                           <div className="flex items-center gap-2.5">
@@ -153,7 +150,7 @@ const Table: React.FC<TableProps> = ({
                           </div>
                           <ChevronRight size={14} className="text-slate-400" />
                         </button>
-                        
+
                         <div className="absolute right-[98%] top-0 mr-1 w-48 bg-white border border-slate-100 rounded-xl shadow-[0_4px_20px_-3px_rgba(0,0,0,0.1)] py-1.5 hidden group-hover:block animate-in fade-in slide-in-from-right-2 duration-150">
                           <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors">
                             <FileSpreadsheet size={15} className="text-emerald-500" /> Exportar Excel
@@ -183,9 +180,9 @@ const Table: React.FC<TableProps> = ({
                             {columns.map(col => (
                               <label key={col.id} className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 cursor-pointer transition-colors group/item">
                                 <div className="relative flex items-center justify-center w-3.5 h-3.5 border-2 border-slate-300 rounded-[4px] group-hover/item:border-[#3b82f6] transition-colors">
-                                  <input 
-                                    type="checkbox" 
-                                    className="peer sr-only" 
+                                  <input
+                                    type="checkbox"
+                                    className="peer sr-only"
                                     checked={visibleColumns.includes(col.id)}
                                     onChange={() => toggleColumn(col.id)}
                                   />
@@ -206,19 +203,19 @@ const Table: React.FC<TableProps> = ({
               )}
             </tr>
           </thead>
-          
+
           {/* TBODY: Flex-1 y Block. ESTE es el único elemento que hará scroll vertical */}
-          <tbody className="w-full flex-1 block overflow-y-auto custom-scrollbar divide-y divide-slate-100/80 bg-white">
+          <tbody className="divide-y divide-slate-100/80 bg-white">
             {currentData.length > 0 ? (
               currentData.map((row, index) => (
-                <tr key={row.id || index} className="w-full table table-fixed group/row hover:bg-slate-50/60 transition-colors">
-                  
+                <tr key={row.id || index} className="group/row hover:bg-slate-50/60 transition-colors">
+
                   {activeColumnsForTable.map((col) => (
-                    <td key={col.id} className="px-5 py-4 text-sm text-slate-600 group-hover/row:text-slate-900 truncate">
+                    <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900 break-words">
                       {col.render ? col.render(row) : row[col.id]}
                     </td>
                   ))}
-                  
+
                   {hasActions && (
                     <td className="w-28 px-5 py-3 text-right flex-shrink-0">
                       <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover/row:opacity-100 transition-opacity">
@@ -247,8 +244,8 @@ const Table: React.FC<TableProps> = ({
                 </tr>
               ))
             ) : (
-              <tr className="w-full flex items-center justify-center min-h-[300px]">
-                <td className="w-full py-16 text-center border-none">
+              <tr >
+                <td colSpan={activeColumnsForTable.length + Number(hasActions) + Number(enableExport)} className="py-16 text-center border-none">
                   <div className="flex flex-col items-center justify-center text-slate-400">
                     <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                       <Inbox size={24} className="text-slate-300" />
@@ -266,13 +263,13 @@ const Table: React.FC<TableProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-3 border-t border-slate-100 bg-white gap-4 flex-shrink-0 z-30">
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <span>Mostrar</span>
-          <select 
+          <select
             value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(e.target.value === "all" ? "all" : Number(e.target.value))}
+            onChange={(e) => { setItemsPerPage(e.target.value === "all" ? "all" : Number(e.target.value)); setCurrentPage(1); }}
             className="border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#3b82f6] text-slate-700 cursor-pointer"
           >
             <option value={5}>5</option>
-            <option value={10}>10</option>
+            <option value={8}>8</option><option value={10}>10</option>
             <option value={20}>20</option>
             <option value={50}>50</option>
             <option value="all">Todos</option>
@@ -284,16 +281,16 @@ const Table: React.FC<TableProps> = ({
           <span className="text-sm text-slate-500">
             Página <strong className="text-slate-800 font-semibold">{currentPage}</strong> de <strong className="text-slate-800 font-semibold">{totalPages || 1}</strong>
           </span>
-          
+
           <div className="flex items-center gap-1.5">
-            <button 
+            <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={18} />
             </button>
-            <button 
+            <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
               className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"

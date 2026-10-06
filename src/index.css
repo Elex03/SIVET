@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+:root {
+  --toastify-color-success: #059669;
+  --toastify-color-error: #e11d48;
+  --toastify-color-info: #304a6d;
+  --toastify-font-family: inherit;
+  --toastify-z-index: 20000;
+}
+.Toastify__toast { border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; }
+button:disabled { cursor: not-allowed; }
+
 html,
 body,
 #root {
@@ -35,3 +45,113 @@ body,
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8; /* Gris un poco más oscuro al pasar el mouse */
 }
+
+/* The application owns the viewport; long content scrolls inside its region. */
+.screen-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+  gap: 1rem;
+}
+.screen-page > * { flex-shrink: 0; margin-block: 0; }
+.screen-page > :first-child { margin-top: 0; }
+.screen-body {
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: auto;
+  padding-right: .25rem;
+  padding-bottom: .25rem;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.screen-body > * { flex-shrink: 0; }
+.data-table { flex: 0 0 auto; max-height: clamp(16rem, 52dvh, 38rem); }
+.table-scroll, .receipt-lines { overscroll-behavior: contain; scrollbar-gutter: stable; }
+.table-scroll thead, .receipt-lines thead { position: sticky; top: 0; z-index: 10; }
+.receipt-lines { max-height: 45dvh; overflow: auto; }
+.activity-panel { min-height: 0; max-height: 60dvh; overflow: auto; overscroll-behavior: contain; }
+.activity-panel > h3 { position: sticky; top: -1.25rem; padding-block: .75rem; background: white; z-index: 1; }
+.report-workspace {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 36%) minmax(0, 1fr);
+  gap: 1rem;
+  overflow: hidden;
+}
+.report-filters, .report-preview { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.report-filter-tabs { position: sticky; top: 0; z-index: 20; box-shadow: 0 -1.25rem 0 1rem white; }
+.activity-layout {
+  flex: 1 1 0%; min-height: 0; min-width: 0;
+  display: grid; grid-template-columns: minmax(0,1fr);
+  grid-template-rows: minmax(0,1fr) minmax(0,26%);
+  gap: 1rem; overflow: hidden;
+}
+.activity-layout > .activity-panel { order: 1; height: 100%; max-height: none; }
+.activity-content { min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: .25rem; padding-bottom: .25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.activity-content > * { flex-shrink: 0; }
+.screen-body > .activity-layout { flex-shrink: 1; }
+.sidebar.h-screen { height: 100dvh; min-height: 0; }
+.sidebar-menu { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+@media (min-width: 1024px) {
+  .report-workspace { grid-template-columns: 280px minmax(0,1fr); grid-template-rows: minmax(0,1fr); }
+  .activity-layout { grid-template-columns: minmax(0,1fr) 270px; grid-template-rows: minmax(0,1fr); }
+}
+@media (max-height: 600px) {
+  .screen-page { gap: .5rem; }
+  .screen-page > :first-child h1 { font-size: 1.25rem; }
+  .screen-page > :first-child p { font-size: .75rem; }
+  .screen-page > :first-child img { max-height: 2rem; }
+}
+@media print {
+  .screen-page, .screen-body, .activity-layout, .activity-content, .report-workspace, .report-filters, .report-preview, .activity-panel, .data-table, .table-scroll, .receipt-lines { height: auto; max-height: none; overflow: visible; }
+}
+
+.activity-content { padding: 4px; }
+.activity-layout > .activity-panel { order: 1; }
+.activity-content > .grid { align-items: stretch; }
+
+/* Palette overrides keep the existing component system consistent in dark mode. */
+:root[data-theme="dark"] { background: #0f172a; color: #e2e8f0; }
+:root[data-theme="dark"] body, :root[data-theme="dark"] main { background: #0f172a; color: #e2e8f0; }
+:root[data-theme="dark"] .bg-white, :root[data-theme="dark"] .sidebar, :root[data-theme="dark"] .activity-panel > h3 { background: #1e293b; }
+:root[data-theme="dark"] [class*="bg-slate-50"], :root[data-theme="dark"] [class*="bg-gray-50"], :root[data-theme="dark"] [class*="bg-blue-50"], :root[data-theme="dark"] thead { background: #26354b; }
+:root[data-theme="dark"] [class*="text-[#304a6d]"], :root[data-theme="dark"] [class*="text-[#607694]"], :root[data-theme="dark"] h1, :root[data-theme="dark"] h2, :root[data-theme="dark"] h3, :root[data-theme="dark"] h4 { color: #dbeafe !important; }
+:root[data-theme="dark"] [class*="text-slate-"], :root[data-theme="dark"] [class*="text-gray-"], :root[data-theme="dark"] .sidebar-item, :root[data-theme="dark"] .sidebar-submenu a { color: #cbd5e1; }
+:root[data-theme="dark"] [class*="border-slate-"], :root[data-theme="dark"] [class*="border-blue-100"], :root[data-theme="dark"] [class*="border-gray-"] { border-color: #40516a; }
+:root[data-theme="dark"] input, :root[data-theme="dark"] select, :root[data-theme="dark"] textarea { background: #152238; color: #e2e8f0; border-color: #52637c; }
+:root[data-theme="dark"] .report-filter-tabs { background: #1e293b; box-shadow: 0 -1.25rem 0 1rem #1e293b; }
+:root[data-theme="dark"] .recharts-tooltip-wrapper .recharts-default-tooltip { background: #1e293b !important; color: #f1f5f9; }
+
+.chart-widget { outline: 1px solid transparent; }
+.chart-widget:hover, .chart-widget:focus-within { outline-color: #60a5fa; }
+.chart-handle { position:absolute; width:12px; height:12px; border:2px solid white; background:#3b82f6; border-radius:50%; z-index:15; touch-action:none; opacity:0; }
+.chart-widget:hover .chart-handle, .chart-widget:focus-within .chart-handle { opacity:1; }
+.chart-handle-nw { left:-6px; top:-6px; cursor:nwse-resize; }
+.chart-handle-n { left:calc(50% - 6px); top:-6px; cursor:ns-resize; }
+.chart-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
+.chart-handle-e { right:-6px; top:calc(50% - 6px); cursor:ew-resize; }
+.chart-handle-se { right:-6px; bottom:-6px; cursor:nwse-resize; }
+.chart-handle-s { left:calc(50% - 6px); bottom:-6px; cursor:ns-resize; }
+.chart-handle-sw { left:-6px; bottom:-6px; cursor:nesw-resize; }
+.chart-handle-w { left:-6px; top:calc(50% - 6px); cursor:ew-resize; }
+.report-preview { padding: 1.5rem; }
+@media (hover:none) { .chart-handle { opacity:1; width:16px; height:16px; } }
+@media print { .chart-handle { display:none; } }
+
+:root[data-theme="dark"] [class*="text-blue-600"], :root[data-theme="dark"] [class*="text-blue-700"] { color:#93c5fd; }
+:root[data-theme="dark"] [class*="bg-amber-50"], :root[data-theme="dark"] [class*="bg-rose-50"], :root[data-theme="dark"] [class*="bg-emerald-50"] { background:#2e3545; }
+:root[data-theme="dark"] .logo-sivet { background:#f8fafc; border-radius:6px; padding:4px; }
+:root[data-theme="dark"] .Toastify__toast { background:#1e293b; color:#e2e8f0; border-color:#40516a; }
+:root[data-theme="dark"] .Toastify__close-button { color:#e2e8f0; }
+
+.activity-content > .data-table { flex: 1 1 16rem; min-height: 16rem; max-height: none; }

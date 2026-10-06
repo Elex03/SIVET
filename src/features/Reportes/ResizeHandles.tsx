@@ -1,0 +1,10 @@
+import { useRef } from 'react';
+import type { ChartWidget } from './ReportCanvas';
+export default function ResizeHandles({ widget, width, onUpdate }: { widget: ChartWidget; width: number; onUpdate: (id: string, patch: Partial<ChartWidget>) => void }) {
+  const drag = useRef<{ x: number; y: number; width: number; height: number; total: number } | null>(null);
+  return <>{['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(direction => <button key={direction} type="button" className={`chart-handle chart-handle-${direction}`} aria-label={`Ajustar tamaño ${direction} de ${widget.metric}`} title="Arrastra para ajustar. Flechas para ajustar con teclado."
+    onPointerDown={e => { e.preventDefault(); e.stopPropagation(); const card = e.currentTarget.closest('article')!; drag.current = { x: e.clientX, y: e.clientY, width, height: widget.height || 400, total: card.parentElement!.clientWidth }; e.currentTarget.setPointerCapture(e.pointerId); }}
+    onPointerMove={e => { const d = drag.current; if (!d || !e.currentTarget.hasPointerCapture(e.pointerId)) return; const patch: Partial<ChartWidget> = {}; if (direction.includes('e') || direction.includes('w')) { patch.width = Math.max(30, Math.min(100, Math.round(d.width + (e.clientX - d.x) * (direction.includes('w') ? -1 : 1) / d.total * 100))); patch.isFullWidth = false; } if (direction.includes('n') || direction.includes('s')) patch.height = Math.max(280, Math.min(900, d.height + (e.clientY - d.y) * (direction.includes('n') ? -1 : 1))); onUpdate(widget.id, patch); }}
+    onPointerUp={e => { drag.current = null; e.currentTarget.releasePointerCapture(e.pointerId); }} onLostPointerCapture={() => { drag.current = null; }}
+    onKeyDown={e => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); onUpdate(widget.id, e.key === 'ArrowLeft' || e.key === 'ArrowRight' ? { width: Math.max(30, Math.min(100, width + (e.key === 'ArrowLeft' ? -5 : 5))), isFullWidth: false } : { height: Math.max(280, Math.min(900, (widget.height || 400) + (e.key === 'ArrowUp' ? -20 : 20))) }); } }} />)}</>;
+}

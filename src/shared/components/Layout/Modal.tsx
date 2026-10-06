@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -19,16 +19,31 @@ const Modal: React.FC<ModalProps> = ({
   children, 
   maxWidth = "max-w-3xl" // Actualizado a 3xl por defecto para tablas
 }) => {
+  const panel = useRef<HTMLDivElement>(null);
+  const heading = useId();
+  const close = useRef(onClose);
+  useEffect(() => { close.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
+      const overflow = document.body.style.overflow;
+      const previous = document.activeElement as HTMLElement | null;
+      const handleKey = (event: KeyboardEvent) => {
+        const dialogs = document.querySelectorAll('[role="dialog"]');
+        if (dialogs[dialogs.length - 1] !== panel.current) return;
+        if (event.key === 'Escape') close.current();
+        if (event.key !== 'Tab') return;
+        const focusable = panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]');
+        if (!focusable?.length) return;
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { event.preventDefault(); last.focus(); }
+        if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      };
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+      panel.current?.focus();
+      document.addEventListener('keydown', handleKey);
+      return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', handleKey); previous?.focus(); };
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -44,12 +59,13 @@ const Modal: React.FC<ModalProps> = ({
       
       {/* Contenedor principal con los mismos bordes y sombras de las tarjetas */}
       <div 
+        ref={panel} role="dialog" aria-modal="true" aria-labelledby={heading} tabIndex={-1}
         className={`relative bg-white rounded-2xl shadow-xl border border-gray-100 w-full ${maxWidth} flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10`}
       >
         {/* Cabecera del Modal */}
         <div className="flex justify-between items-start px-6 py-5 border-b border-gray-100 bg-white flex-shrink-0">
           <div>
-            <h2 className="text-[1.15rem] font-semibold text-[#304a6d] leading-tight">
+            <h2 id={heading} className="text-[1.15rem] font-semibold text-[#304a6d] leading-tight">
               {title}
             </h2>
             {subtitle && (

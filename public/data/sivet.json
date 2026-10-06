@@ -1,0 +1,1206 @@
+{
+  "catalogos": [
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [
+        "ventas@example.com",
+        "pedidos@example.com"
+      ],
+      "telefonos": [
+        "+505 0000 0001",
+        "+505 0000 0002"
+      ],
+      "id": "prov-1",
+      "tipo": "proveedores",
+      "nombre": "Distribuidora Veterinaria de Ejemplo"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [
+        "contacto@example.org"
+      ],
+      "telefonos": [
+        "+505 0000 0003"
+      ],
+      "id": "prov-2",
+      "tipo": "proveedores",
+      "nombre": "Laboratorio de Muestra"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "cat-0",
+      "tipo": "categorias",
+      "nombre": "Medicamentos"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "cat-1",
+      "tipo": "categorias",
+      "nombre": "Material Médico"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "cat-2",
+      "tipo": "categorias",
+      "nombre": "Biológicos"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "ter-0",
+      "tipo": "terapeuticas",
+      "nombre": "Antibiótico"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "ter-1",
+      "tipo": "terapeuticas",
+      "nombre": "Analgésico"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "ter-2",
+      "tipo": "terapeuticas",
+      "nombre": "Anestésico"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "ter-3",
+      "tipo": "terapeuticas",
+      "nombre": "Vacuna"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "",
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "marca-1",
+      "tipo": "marcas",
+      "nombre": "Laboratorio Demo"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "MED-001",
+      "categoria": "Medicamentos",
+      "accion": "Antibiótico",
+      "marca": "Laboratorio Demo",
+      "unidad": "tabletas",
+      "minimo": 30,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-1",
+      "tipo": "medicamentos",
+      "nombre": "Amoxicilina 500 mg"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "MED-002",
+      "categoria": "Medicamentos",
+      "accion": "Antibiótico",
+      "marca": "Laboratorio Demo",
+      "unidad": "tabletas",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-2",
+      "tipo": "medicamentos",
+      "nombre": "Doxiciclina 100 mg"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "MED-003",
+      "categoria": "Material Médico",
+      "accion": "",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-3",
+      "tipo": "medicamentos",
+      "nombre": "Jeringas 5 ml"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "MED-004",
+      "categoria": "Medicamentos",
+      "accion": "Anestésico",
+      "marca": "Laboratorio Demo",
+      "unidad": "frascos",
+      "minimo": 15,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-4",
+      "tipo": "medicamentos",
+      "nombre": "Ketamina 50 mg/ml"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "MED-005",
+      "categoria": "Biológicos",
+      "accion": "Vacuna",
+      "marca": "Laboratorio Demo",
+      "unidad": "dosis",
+      "minimo": 10,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-5",
+      "tipo": "medicamentos",
+      "nombre": "Vacuna antirrábica"
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000000",
+      "categoria": "Medicamentos",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-0",
+      "tipo": "medicamentos",
+      "nombre": "Meloxicam",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000001",
+      "categoria": "Medicamentos",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-1",
+      "tipo": "medicamentos",
+      "nombre": "Cefalexina",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000002",
+      "categoria": "Medicamentos",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-2",
+      "tipo": "medicamentos",
+      "nombre": "Metronidazol",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000003",
+      "categoria": "Medicamentos",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-3",
+      "tipo": "medicamentos",
+      "nombre": "Solución salina",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000004",
+      "categoria": "Medicamentos",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-4",
+      "tipo": "medicamentos",
+      "nombre": "Clorhexidina",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000005",
+      "categoria": "Medicamentos",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 20,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-5",
+      "tipo": "medicamentos",
+      "nombre": "Enrofloxacina",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "descripcion": "",
+      "activo": true,
+      "codigo": "750000000006",
+      "categoria": "Material Médico",
+      "accion": "Sin clasificación",
+      "marca": "Laboratorio Demo",
+      "unidad": "unidades",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": [],
+      "id": "med-extra-6",
+      "tipo": "medicamentos",
+      "nombre": "Gasas estériles",
+      "presentacion": "Caja",
+      "uxe": 1
+    },
+    {
+      "id": "ubicacion-0",
+      "tipo": "ubicaciones",
+      "nombre": "Consultorio 1",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    },
+    {
+      "id": "ubicacion-1",
+      "tipo": "ubicaciones",
+      "nombre": "Consultorio 2",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    },
+    {
+      "id": "ubicacion-2",
+      "tipo": "ubicaciones",
+      "nombre": "Quirófano",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    },
+    {
+      "id": "ubicacion-3",
+      "tipo": "ubicaciones",
+      "nombre": "Radiografía",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    },
+    {
+      "id": "ubicacion-4",
+      "tipo": "ubicaciones",
+      "nombre": "Hospitalización",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    },
+    {
+      "id": "ubicacion-5",
+      "tipo": "ubicaciones",
+      "nombre": "Laboratorio",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    },
+    {
+      "id": "ubicacion-6",
+      "tipo": "ubicaciones",
+      "nombre": "Consulta externa",
+      "codigo": "",
+      "descripcion": "Destino de medicamentos de Farmacia",
+      "activo": true,
+      "categoria": "",
+      "accion": "",
+      "marca": "",
+      "unidad": "",
+      "minimo": 0,
+      "correos": [],
+      "telefonos": []
+    }
+  ],
+  "existencias": [
+    {
+      "id": "stock-1",
+      "productoId": "med-1",
+      "lote": "LOTE-001",
+      "vencimiento": "2028-12-31",
+      "cantidad": 120,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-2",
+      "productoId": "med-2",
+      "lote": "LOTE-002",
+      "vencimiento": "2028-12-31",
+      "cantidad": 10,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-3",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "vencimiento": "2028-12-31",
+      "cantidad": 250,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-4",
+      "productoId": "med-4",
+      "lote": "LOTE-004",
+      "vencimiento": "2028-12-31",
+      "cantidad": 45,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-5",
+      "productoId": "med-5",
+      "lote": "LOTE-005",
+      "vencimiento": "2026-11-20",
+      "cantidad": 8,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "farmacia-stock-1",
+      "productoId": "med-1",
+      "lote": "LOTE-001",
+      "vencimiento": "2028-12-31",
+      "cantidad": 20,
+      "ubicacion": "Farmacia"
+    },
+    {
+      "id": "transito-SOL-DEMO-008-stock-2",
+      "productoId": "med-2",
+      "lote": "LOTE-002",
+      "vencimiento": "2028-12-31",
+      "cantidad": 5,
+      "ubicacion": "En tránsito"
+    },
+    {
+      "id": "stock-extra-0",
+      "productoId": "med-extra-0",
+      "lote": "EXP-000",
+      "vencimiento": "2026-11-10",
+      "cantidad": 2,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-extra-1",
+      "productoId": "med-extra-1",
+      "lote": "EXP-001",
+      "vencimiento": "2026-11-11",
+      "cantidad": 3,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-extra-2",
+      "productoId": "med-extra-2",
+      "lote": "EXP-002",
+      "vencimiento": "2026-11-12",
+      "cantidad": 4,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-extra-3",
+      "productoId": "med-extra-3",
+      "lote": "EXP-003",
+      "vencimiento": "2026-11-13",
+      "cantidad": 5,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-extra-4",
+      "productoId": "med-extra-4",
+      "lote": "EXP-004",
+      "vencimiento": "2026-11-14",
+      "cantidad": 6,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-extra-5",
+      "productoId": "med-extra-5",
+      "lote": "EXP-005",
+      "vencimiento": "2026-11-15",
+      "cantidad": 7,
+      "ubicacion": "Bodega Central"
+    },
+    {
+      "id": "stock-extra-6",
+      "productoId": "med-extra-6",
+      "lote": "EXP-006",
+      "vencimiento": "2026-11-16",
+      "cantidad": 8,
+      "ubicacion": "Bodega Central"
+    }
+  ],
+  "solicitudes": [
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-008",
+      "area": "Farmacia",
+      "estado": "ENVIADO",
+      "entregado": "2026-10-05T14:00:00Z",
+      "items": [
+        {
+          "stockId": "stock-2",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-001",
+      "area": "Farmacia",
+      "estado": "PENDIENTE",
+      "items": [
+        {
+          "stockId": "stock-1",
+          "cantidad": 10
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-002",
+      "area": "Farmacia",
+      "estado": "EN PREPARACION",
+      "items": [
+        {
+          "stockId": "stock-4",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-003",
+      "area": "Farmacia",
+      "estado": "LISTO PARA ENTREGA",
+      "items": [
+        {
+          "stockId": "stock-3",
+          "cantidad": 20
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-004",
+      "area": "Farmacia",
+      "estado": "COMPLETADO",
+      "entregado": "2026-10-04T15:00:00Z",
+      "items": [
+        {
+          "stockId": "stock-1",
+          "cantidad": 20
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-005",
+      "area": "Farmacia",
+      "estado": "DESPACHADO",
+      "entregado": "2026-10-03T14:00:00Z",
+      "despachado": "2026-10-03T16:00:00Z",
+      "items": [
+        {
+          "stockId": "stock-3",
+          "cantidad": 30
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-006",
+      "area": "Farmacia",
+      "estado": "DESPACHADO",
+      "entregado": "2026-10-03T14:00:00Z",
+      "despachado": "2026-10-03T16:00:00Z",
+      "items": [
+        {
+          "stockId": "stock-3",
+          "cantidad": 25
+        }
+      ]
+    },
+    {
+      "fecha": "2026-10-03T12:00:00Z",
+      "solicitante": "Usuario de muestra",
+      "prioridad": "NORMAL",
+      "nota": "Registro ficticio para demostración.",
+      "observacion": "",
+      "id": "SOL-DEMO-007",
+      "area": "Farmacia",
+      "estado": "DESPACHADO",
+      "entregado": "2026-10-03T14:00:00Z",
+      "despachado": "2026-10-03T16:00:00Z",
+      "items": [
+        {
+          "stockId": "stock-3",
+          "cantidad": 15
+        }
+      ]
+    }
+  ],
+  "movimientos": [
+    {
+      "id": "mov-rec-0",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-1",
+      "lote": "LOTE-001",
+      "cantidad": 140,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-rec-1",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-2",
+      "lote": "LOTE-002",
+      "cantidad": 15,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-rec-2",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 320,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-rec-3",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-4",
+      "lote": "LOTE-004",
+      "cantidad": 45,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-rec-4",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-5",
+      "lote": "LOTE-005",
+      "cantidad": 8,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-tras-SOL-DEMO-004",
+      "fecha": "2026-10-04T15:00:00Z",
+      "productoId": "med-1",
+      "lote": "LOTE-001",
+      "cantidad": 20,
+      "tipo": "TRASLADO",
+      "area": "Farmacia",
+      "documento": "SOL-DEMO-004"
+    },
+    {
+      "id": "mov-tras-SOL-DEMO-005",
+      "fecha": "2026-10-03T14:00:00Z",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 30,
+      "tipo": "TRASLADO",
+      "area": "Farmacia",
+      "documento": "SOL-DEMO-005"
+    },
+    {
+      "id": "mov-sal-SOL-DEMO-005",
+      "fecha": "2026-10-03T16:00:00Z",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 30,
+      "tipo": "SALIDA",
+      "area": "Quirófano",
+      "destino": "HOSPITAL",
+      "documento": "SOL-DEMO-005"
+    },
+    {
+      "id": "mov-tras-SOL-DEMO-006",
+      "fecha": "2026-10-03T14:00:00Z",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 25,
+      "tipo": "TRASLADO",
+      "area": "Farmacia",
+      "documento": "SOL-DEMO-006"
+    },
+    {
+      "id": "mov-sal-SOL-DEMO-006",
+      "fecha": "2026-10-03T16:00:00Z",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 25,
+      "tipo": "SALIDA",
+      "area": "Consulta externa",
+      "destino": "CASA",
+      "documento": "SOL-DEMO-006"
+    },
+    {
+      "id": "mov-tras-SOL-DEMO-007",
+      "fecha": "2026-10-03T14:00:00Z",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 15,
+      "tipo": "TRASLADO",
+      "area": "Farmacia",
+      "documento": "SOL-DEMO-007"
+    },
+    {
+      "id": "mov-sal-SOL-DEMO-007",
+      "fecha": "2026-10-03T16:00:00Z",
+      "productoId": "med-3",
+      "lote": "LOTE-003",
+      "cantidad": 15,
+      "tipo": "SALIDA",
+      "area": "Hospitalización",
+      "destino": "HOSPITAL",
+      "documento": "SOL-DEMO-007"
+    },
+    {
+      "id": "mov-tras-SOL-DEMO-008",
+      "fecha": "2026-10-05T14:00:00Z",
+      "productoId": "med-2",
+      "lote": "LOTE-002",
+      "cantidad": 5,
+      "tipo": "TRASLADO",
+      "area": "Farmacia",
+      "documento": "SOL-DEMO-008"
+    },
+    {
+      "id": "mov-extra-0",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-0",
+      "lote": "EXP-000",
+      "cantidad": 2,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-extra-1",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-1",
+      "lote": "EXP-001",
+      "cantidad": 3,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-extra-2",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-2",
+      "lote": "EXP-002",
+      "cantidad": 4,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-extra-3",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-3",
+      "lote": "EXP-003",
+      "cantidad": 5,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-extra-4",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-4",
+      "lote": "EXP-004",
+      "cantidad": 6,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-extra-5",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-5",
+      "lote": "EXP-005",
+      "cantidad": 7,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    },
+    {
+      "id": "mov-extra-6",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "productoId": "med-extra-6",
+      "lote": "EXP-006",
+      "cantidad": 8,
+      "tipo": "ENTRADA",
+      "area": "Bodega Central",
+      "documento": "REC-DEMO-001"
+    }
+  ],
+  "recepciones": [
+    {
+      "id": "REC-DEMO-001",
+      "proveedorId": "prov-1",
+      "fecha": "2026-10-01",
+      "responsable": "Usuario de muestra",
+      "items": [
+        {
+          "productoId": "med-1",
+          "lote": "LOTE-001",
+          "vencimiento": "2028-12-31",
+          "cantidad": 140
+        },
+        {
+          "productoId": "med-2",
+          "lote": "LOTE-002",
+          "vencimiento": "2028-12-31",
+          "cantidad": 15
+        },
+        {
+          "productoId": "med-3",
+          "lote": "LOTE-003",
+          "vencimiento": "2028-12-31",
+          "cantidad": 320
+        },
+        {
+          "productoId": "med-4",
+          "lote": "LOTE-004",
+          "vencimiento": "2028-12-31",
+          "cantidad": 45
+        },
+        {
+          "productoId": "med-5",
+          "lote": "LOTE-005",
+          "vencimiento": "2026-11-20",
+          "cantidad": 8
+        },
+        {
+          "productoId": "med-extra-0",
+          "lote": "EXP-000",
+          "vencimiento": "2026-11-10",
+          "cantidad": 2
+        },
+        {
+          "productoId": "med-extra-1",
+          "lote": "EXP-001",
+          "vencimiento": "2026-11-11",
+          "cantidad": 3
+        },
+        {
+          "productoId": "med-extra-2",
+          "lote": "EXP-002",
+          "vencimiento": "2026-11-12",
+          "cantidad": 4
+        },
+        {
+          "productoId": "med-extra-3",
+          "lote": "EXP-003",
+          "vencimiento": "2026-11-13",
+          "cantidad": 5
+        },
+        {
+          "productoId": "med-extra-4",
+          "lote": "EXP-004",
+          "vencimiento": "2026-11-14",
+          "cantidad": 6
+        },
+        {
+          "productoId": "med-extra-5",
+          "lote": "EXP-005",
+          "vencimiento": "2026-11-15",
+          "cantidad": 7
+        },
+        {
+          "productoId": "med-extra-6",
+          "lote": "EXP-006",
+          "vencimiento": "2026-11-16",
+          "cantidad": 8
+        }
+      ],
+      "documento": "FAC-99012",
+      "estado": "COMPLETADO"
+    }
+  ],
+  "notificaciones": [
+    {
+      "id": "not-demo-1",
+      "fecha": "2026-10-03T14:00:00Z",
+      "rol": "farmacia",
+      "solicitudId": "SOL-DEMO-002",
+      "titulo": "Solicitud aprobada",
+      "mensaje": "Bodega verificó y reservó las existencias para Quirófano.",
+      "leidaPor": []
+    },
+    {
+      "id": "not-demo-2",
+      "fecha": "2026-10-05T14:00:00Z",
+      "rol": "farmacia",
+      "solicitudId": "SOL-DEMO-008",
+      "titulo": "Envío pendiente de verificar",
+      "mensaje": "Verifica el lote y las 5 tabletas recibidas antes de confirmar el ingreso.",
+      "leidaPor": []
+    }
+  ],
+  "actividad": [
+    {
+      "id": "audit-0",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Amoxicilina 500 mg · 140 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-1",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Doxiciclina 100 mg · 15 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-2",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Jeringas 5 ml · 320 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-3",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Ketamina 50 mg/ml · 45 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-4",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Vacuna antirrábica · 8 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-5",
+      "fecha": "2026-10-04T15:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "request.status",
+      "documento": "SOL-DEMO-004",
+      "detalle": "TRASLADO · Amoxicilina 500 mg · 20 unidades · Farmacia"
+    },
+    {
+      "id": "audit-6",
+      "fecha": "2026-10-03T14:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "request.status",
+      "documento": "SOL-DEMO-005",
+      "detalle": "TRASLADO · Jeringas 5 ml · 30 unidades · Farmacia"
+    },
+    {
+      "id": "audit-7",
+      "fecha": "2026-10-03T16:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Farmacia",
+      "accion": "pharmacy.dispatch",
+      "documento": "SOL-DEMO-005",
+      "detalle": "SALIDA · Jeringas 5 ml · 30 unidades · Quirófano"
+    },
+    {
+      "id": "audit-8",
+      "fecha": "2026-10-03T14:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "request.status",
+      "documento": "SOL-DEMO-006",
+      "detalle": "TRASLADO · Jeringas 5 ml · 25 unidades · Farmacia"
+    },
+    {
+      "id": "audit-9",
+      "fecha": "2026-10-03T16:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Farmacia",
+      "accion": "pharmacy.dispatch",
+      "documento": "SOL-DEMO-006",
+      "detalle": "SALIDA · Jeringas 5 ml · 25 unidades · Consulta externa"
+    },
+    {
+      "id": "audit-10",
+      "fecha": "2026-10-03T14:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "request.status",
+      "documento": "SOL-DEMO-007",
+      "detalle": "TRASLADO · Jeringas 5 ml · 15 unidades · Farmacia"
+    },
+    {
+      "id": "audit-11",
+      "fecha": "2026-10-03T16:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Farmacia",
+      "accion": "pharmacy.dispatch",
+      "documento": "SOL-DEMO-007",
+      "detalle": "SALIDA · Jeringas 5 ml · 15 unidades · Hospitalización"
+    },
+    {
+      "id": "audit-12",
+      "fecha": "2026-10-05T14:00:00Z",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "request.status",
+      "documento": "SOL-DEMO-008",
+      "detalle": "TRASLADO · Doxiciclina 100 mg · 5 unidades · Farmacia"
+    },
+    {
+      "id": "audit-13",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Meloxicam · 2 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-14",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Cefalexina · 3 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-15",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Metronidazol · 4 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-16",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Solución salina · 5 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-17",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Clorhexidina · 6 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-18",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Enrofloxacina · 7 unidades · Bodega Central"
+    },
+    {
+      "id": "audit-19",
+      "fecha": "2026-10-01T12:00:00-06:00",
+      "usuario": "Operador de ejemplo",
+      "localidad": "Bodega Central",
+      "accion": "receipt.create",
+      "documento": "REC-DEMO-001",
+      "detalle": "ENTRADA · Gasas estériles · 8 unidades · Bodega Central"
+    }
+  ]
+}

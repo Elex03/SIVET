@@ -1,11 +1,11 @@
-import ExcelJS from 'exceljs';
+
 import { saveAs } from 'file-saver';
 import unaLogoPath from '../assets/images/UNA.png';
 
-import { toPng } from 'html-to-image';
-import jsPDF from 'jspdf';
+const escapeHtml = (value: string | number) => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 
 export const downloadCompleteReport = async (elementId: string, filename: string, subtitle?: string) => {
+  const [{ toPng }, { default: jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
   const element = document.getElementById(elementId);
   
   if (!element) {
@@ -61,8 +61,8 @@ export const downloadCompleteReport = async (elementId: string, filename: string
     </div>
     <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 13px; color: #475569; font-family: sans-serif;">
       <div>
-        <strong style="color: #304a6d;">Documento:</strong> ${filename.toUpperCase()}<br/>
-        ${subtitle ? `<strong style="color: #304a6d;">Filtros:</strong> ${subtitle}` : ''}
+        <strong style="color: #304a6d;">Documento:</strong> ${escapeHtml(filename.toUpperCase())}<br/>
+        ${subtitle ? `<strong style="color: #304a6d;">Filtros:</strong> ${escapeHtml(subtitle)}` : ''}
       </div>
       <div style="text-align: right;">
         <strong style="color: #304a6d;">Fecha:</strong> ${dateStr}<br/>
@@ -131,22 +131,22 @@ export const generatePDFTemplate = (printData: PrintData) => {
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-NI', { year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = now.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' });
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Logo_UNA_Nicaragua.png/240px-Logo_UNA_Nicaragua.png"; 
+  const logoUrl = unaLogoPath;
 
   const tableRows = printData.data.map(row => `
     <tr>
-      ${row.map(cell => `<td>${cell}</td>`).join('')}
+      ${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}
     </tr>
   `).join('');
 
-  const tableHeaders = printData.columns.map(col => `<th>${col}</th>`).join('');
+  const tableHeaders = printData.columns.map(col => `<th>${escapeHtml(col)}</th>`).join('');
 
   const htmlTemplate = `
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
-      <title>${printData.title}</title>
+      <title>${escapeHtml(printData.title)}</title>
       <style>
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; margin: 0; padding: 40px; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #304a6d; padding-bottom: 20px; margin-bottom: 30px; }
@@ -179,8 +179,8 @@ export const generatePDFTemplate = (printData: PrintData) => {
       
       <div class="meta-data">
         <div>
-          <strong>Documento:</strong> ${printData.title}<br/>
-          <strong>Referencia:</strong> ${printData.subtitle}
+          <strong>Documento:</strong> ${escapeHtml(printData.title)}<br/>
+          <strong>Referencia:</strong> ${escapeHtml(printData.subtitle)}
         </div>
         <div style="text-align: right;">
           <strong>Fecha:</strong> ${dateStr}<br/>
@@ -243,6 +243,7 @@ const fetchImageAsBase64 = async (imagePath: string): Promise<string | null> => 
 };
 
 export const generateExcel = async (exportData: ExportData) => {
+  const { default: ExcelJS } = await import('exceljs');
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'SIVET - UNA';
   workbook.created = new Date();

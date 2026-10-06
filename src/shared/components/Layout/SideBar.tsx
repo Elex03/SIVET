@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  Bell,
+  Users,
   Boxes,
   ChevronDown,
   ChevronLeft,
@@ -19,7 +19,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import UNALogo from "../../assets/images/UNA.png";
 import SIVETLogo from "../../assets/images/SIVET.png";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/auth";
 
 import "./SideBar.css";
 
@@ -175,7 +175,8 @@ const Sidebar: React.FC = () => {
 
               {openSubmenu === "farmacia" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
-                  <NavLink to="/farmacia/inventario" className="text-sm py-1">Inventario</NavLink>
+                  <NavLink to="/farmacia/catalogos" className="text-sm py-1">Ubicaciones</NavLink><NavLink to="/farmacia/salidas" className="submenu-link">Salidas a localidades</NavLink>
+                <NavLink to="/farmacia/inventario" className="text-sm py-1">Inventario</NavLink>
                   <NavLink to="/farmacia/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
                 </div>
               ) : null}
@@ -197,10 +198,7 @@ const Sidebar: React.FC = () => {
               </div>
             ) : null}
 
-            <NavLink to="/notificaciones" className="sidebar-item" title="Notificaciones">
-              <Bell size={18} />
-              {!isCollapsed ? <span>Notificaciones</span> : null}
-            </NavLink>
+<NavLink to="/usuarios" className="sidebar-item" title="Usuarios"><Users size={18} />{!isCollapsed && <span>Usuarios</span>}</NavLink>
 
             <NavLink to="/configuracion" className="sidebar-item" title="Configuración">
               <Settings size={18} />
@@ -247,9 +245,12 @@ const Sidebar: React.FC = () => {
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
             </NavLink>
+            <NavLink to="/farmacia/inventario" className="sidebar-item" title="Inventario de Farmacia"><Boxes size={18} />{!isCollapsed && <span>Inventario</span>}</NavLink>
 
           </>
         ) : null}
+        {isFarmacia && <NavLink to="/farmacia/salidas" className="sidebar-item" title="Salidas a localidades"><ShoppingCart size={18} />{!isCollapsed && <span>Salidas a localidades</span>}</NavLink>}
+<>{isFarmacia && <NavLink to="/farmacia/catalogos" className="sidebar-item" title="Ubicaciones"><ClipboardList size={18} />{!isCollapsed && <span>Ubicaciones</span>}</NavLink>}{!isAdmin && <NavLink to="/configuracion" className="sidebar-item" title="Configuración"><Settings size={18} />{!isCollapsed && <span>Configuración</span>}</NavLink>}</>
       </nav>
 
       {/* ================= USUARIO ================= */}
