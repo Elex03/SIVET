@@ -1,4 +1,4 @@
-import { assertCatalogPermission } from './permissions';
+import { assertCatalogPermission, assertPreparationPermission } from './permissions';
 import { readAccounts } from './accounts';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { apiClient, apiRequest, apiUrl } from './client';
@@ -52,13 +52,14 @@ export function useSivet() {
     return unsubscribe;
   }, []);
   const mutate = useCallback(async (command: Command) => {
-    command = { ...command, actor: user?.username || 'Sistema', localidad: user?.role === 'farmacia' ? 'Farmacia' : user?.role === 'bodega' ? 'Bodega Central' : 'General' };
+    command = { ...command, actor: user?.username || 'Sistema', localidad: user?.role === 'farmacia' ? 'Farmacia' : user?.role === 'bodega' || user?.role === 'preparador' || command.type === 'request.prepare' ? 'Bodega Central' : 'General' };
     if (busy.current) return false;
     busy.current = true; setPending(true); setError('');
     let notification: ReturnType<typeof toast.loading> | undefined;
     try {
       if (!user || (!apiUrl && !(await readAccounts()).some(a => a.username === user.username && a.active && a.role === user.role))) throw new Error('La sesión no está activa. Vuelve a iniciar sesión.');
       assertCatalogPermission(user?.role, command, snapshot);
+      assertPreparationPermission(user?.role, command);
       if (!ready || loadError) throw new Error('Actualiza los datos antes de guardar.');
       // Validate the local form before asking for confirmation; validate again at commit.
       if (!apiUrl) applyCommand(snapshot, command);

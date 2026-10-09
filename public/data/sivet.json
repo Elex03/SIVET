@@ -638,7 +638,24 @@
           "stockId": "stock-3",
           "cantidad": 20
         }
-      ]
+      ],
+      "preparacion": {
+        "version": 1,
+        "usuario": "bodega",
+        "fecha": "2026-10-03T12:00:00Z",
+        "lista": true,
+        "lines": [
+          {
+            "stockId": "stock-3",
+            "cantidad": 20,
+            "requestedStockId": "stock-3",
+            "lote": "LOTE-003",
+            "vencimiento": "2028-12-31",
+            "comentario": "Preparación de muestra verificada",
+            "lista": true
+          }
+        ]
+      }
     },
     {
       "fecha": "2026-10-03T12:00:00Z",

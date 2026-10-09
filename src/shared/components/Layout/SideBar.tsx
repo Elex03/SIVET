@@ -147,7 +147,7 @@ const Sidebar: React.FC = () => {
               {openSubmenu === "bodega" && !isCollapsed ? (
                 <div className="sidebar-submenu flex flex-col pl-6 mt-1">
                   <NavLink to="/bodega/estanteria" className="text-sm py-1">Inventario</NavLink>
-                  <NavLink to="/bodega/solicitudes" className="text-sm py-1">Solicitudes</NavLink>
+                  <NavLink to="/bodega/solicitudes" className="text-sm py-1">Solicitudes</NavLink><NavLink to="/bodega/preparacion" className="text-sm py-1">Preparación de pedidos</NavLink>
                   <NavLink to="/bodega/catalogos" className="text-sm py-1">Catálogos</NavLink>
                   <NavLink to="/bodega/pedidos" className="text-sm py-1">Pedidos</NavLink>
                 </div>
@@ -210,14 +210,11 @@ const Sidebar: React.FC = () => {
         {/* ================= BODEGA ROL ================= */}
         {isBodega ? (
           <>
-            <NavLink to="/bodega" className="sidebar-item" title="Bodega">
-              <Store size={18} />
-              {!isCollapsed ? <span>Bodega</span> : null}
-            </NavLink>
              <NavLink to="/bodega/estanteria" className="sidebar-item" title="Estantería">
               <Boxes size={18} />
               {!isCollapsed ? <span>Inventario</span> : null}
             </NavLink>
+            <NavLink to="/bodega/preparacion" className="sidebar-item" title="Preparación de pedidos"><ClipboardList size={18} />{!isCollapsed && <span>Preparación de pedidos</span>}</NavLink>
             <NavLink to="/bodega/solicitudes" className="sidebar-item" title="Solicitudes">
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
@@ -237,10 +234,6 @@ const Sidebar: React.FC = () => {
         {/* ================= FARMACIA ROL ================= */}
         {isFarmacia ? (
           <>
-            <NavLink to="/farmacia" className="sidebar-item" title="Farmacia">
-              <ShoppingCart size={18} />
-              {!isCollapsed ? <span>Farmacia</span> : null}
-            </NavLink>
             <NavLink to="/farmacia/solicitudes" className="sidebar-item" title="Solicitudes">
               <ClipboardList size={18} />
               {!isCollapsed ? <span>Solicitudes</span> : null}
@@ -250,11 +243,11 @@ const Sidebar: React.FC = () => {
           </>
         ) : null}
         {isFarmacia && <NavLink to="/farmacia/salidas" className="sidebar-item" title="Salidas a localidades"><ShoppingCart size={18} />{!isCollapsed && <span>Salidas a localidades</span>}</NavLink>}
-<>{isFarmacia && <NavLink to="/farmacia/catalogos" className="sidebar-item" title="Ubicaciones"><ClipboardList size={18} />{!isCollapsed && <span>Ubicaciones</span>}</NavLink>}{!isAdmin && <NavLink to="/configuracion" className="sidebar-item" title="Configuración"><Settings size={18} />{!isCollapsed && <span>Configuración</span>}</NavLink>}</>
+<>{isFarmacia && <NavLink to="/farmacia/catalogos" className="sidebar-item" title="Ubicaciones"><ClipboardList size={18} />{!isCollapsed && <span>Ubicaciones</span>}</NavLink>}</>
       </nav>
 
       {/* ================= USUARIO ================= */}
-      <div className="sidebar-bottom mt-auto border-t p-4 flex flex-col gap-3">
+      <div className="sidebar-bottom mt-auto border-t p-4 flex flex-col gap-3">{!isAdmin && <NavLink to="/configuracion" className="sidebar-item" title="Configuración"><Settings size={18} />{!isCollapsed && <span>Configuración</span>}</NavLink>}
         <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-start gap-3"} bg-gray-50 p-2 rounded-lg border border-gray-100`}>
           <div className="w-8 h-8 rounded-full bg-[#64748b] flex items-center justify-center text-white font-semibold flex-shrink-0">
             {user?.username ? user.username.charAt(0).toUpperCase() : "U"}

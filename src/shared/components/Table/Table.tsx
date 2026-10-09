@@ -1,3 +1,4 @@
+import StatusBadge from './StatusBadge';
 import React, { useState, useEffect, useRef } from "react";
 import {
   Eye, Edit2, Download,
@@ -66,7 +67,23 @@ const Table: React.FC<TableProps> = ({
 
   const startIndex = (currentPage - 1) * effectiveItemsPerPage;
   const endIndex = itemsPerPage === "all" ? data.length : startIndex + effectiveItemsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
+  const [sort, setSort] = useState<{ key: string; descending: boolean } | null>(null);
+  const sortedData = [...data].sort((a, b) => {
+    if (!sort) return 0;
+    const value = (row: Record<string, any>) => {
+      const raw = row[sort.key];
+      if (/fecha|vencimiento/i.test(sort.key) && typeof raw === 'string') {
+        const local = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+        if (local) { let hour = Number(local[4] || 0); if (/[ap]\.?(?:\s*)m/i.test(raw)) hour = hour % 12 + (/p\.?(?:\s*)m/i.test(raw) ? 12 : 0); return Date.UTC(+local[3], +local[2]-1, +local[1], hour, +(local[5] || 0), +(local[6] || 0)); }
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return Date.parse(raw);
+      }
+      return raw;
+    };
+    const av = value(a), bv = value(b);
+    const delta = av == null ? (bv == null ? 0 : 1) : bv == null ? -1 : typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), 'es', { numeric: true, sensitivity: 'base' });
+    return sort.descending ? -delta : delta;
+  });
+  const currentData = sortedData.slice(startIndex, endIndex);
 
   // ==========================================
   // ESTADOS DEL MENÚ
@@ -85,9 +102,9 @@ const Table: React.FC<TableProps> = ({
   }, []);
 
   const getExportData = () => {
-    const exportColumns = activeColumnsForTable.map(c => c.label);
-    const exportRows = data.map(row =>
-      activeColumnsForTable.map(c => Array.isArray(row[c.id]) ? row[c.id].join(', ') : row[c.id] ?? "")
+    const exportColumns = activeColumnsForTable.filter(c => c.id !== 'imagen').map(c => c.label);
+    const exportRows = sortedData.map(row =>
+      activeColumnsForTable.filter(c => c.id !== 'imagen').map(c => Array.isArray(row[c.id]) ? row[c.id].join(', ') : row[c.id] ?? "")
     );
     return { columns: exportColumns, data: exportRows };
   };
@@ -117,8 +134,8 @@ const Table: React.FC<TableProps> = ({
             <tr className="w-full">
 
               {activeColumnsForTable.map((col) => (
-                <th key={col.id} className="px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
-                  {col.label}
+                <th key={col.id} aria-sort={sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
+                  <button type="button" className="flex items-center gap-2 text-left w-full" aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}>{col.label}<span aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button>
                 </th>
               ))}
 
@@ -212,7 +229,7 @@ const Table: React.FC<TableProps> = ({
 
                   {activeColumnsForTable.map((col) => (
                     <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900 break-words">
-                      {col.render ? col.render(row) : row[col.id]}
+                      {col.id === 'estado' ? <StatusBadge value={row[col.id]} /> : col.render ? col.render(row) : row[col.id]}
                     </td>
                   ))}
 

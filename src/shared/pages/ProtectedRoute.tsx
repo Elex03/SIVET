@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../context/auth";
 import type { Role } from "../types/auth";
@@ -11,11 +11,12 @@ const ProtectedRoute = ({
   allowedRoles,
 }: ProtectedRouteProps) => {
   const { user, isAuthenticated, ready } = useAuth();
+  const location = useLocation();
 
   if (!ready) return <div role="status" className="p-8 text-center">Validando sesión…</div>;
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={location.pathname.startsWith('/preparacion') ? '/preparacion/login' : '/login'} replace />;
   }
 
   if (

@@ -13,6 +13,8 @@ import type { CatalogRecord } from "../../shared/api/domain";
 const generalTabs = [
   { id: "medicamentos", label: "Medicamentos" },
   { id: "terapeuticas", label: "Acción Terapéutica" },
+  { id: "presentaciones", label: "Presentaciones" },
+  { id: "unidades", label: "Unidades de inventario" },
   { id: "marcas", label: "Marcas / Laboratorios" },
   { id: "categorias", label: "Categorías" },
   { id: "proveedores", label: "Proveedores" },
@@ -84,7 +86,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
           ))}
         </nav>
         <section className="flex-1 min-w-0 flex flex-col gap-4">
-          <div className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+          <div className="bg-white border border-slate-100 rounded-2xl p-5 screen-toolbar">
             <h2 className="font-bold text-[#304a6d]">
               {tabs.find((t) => t.id === tab)?.label}
             </h2>
@@ -93,10 +95,10 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
               placeholder="Buscar registro…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={`${inputClass} sm:max-w-64`}
+              className={`${inputClass} toolbar-search`}
             />
             <button
-              className={`${buttonClass} flex items-center justify-center gap-2 shrink-0 order-first`}
+              className={`${buttonClass} flex items-center justify-center gap-2 shrink-0 toolbar-actions`}
               onClick={() => edit(blank(tab))}
             >
               <Plus size={16} />

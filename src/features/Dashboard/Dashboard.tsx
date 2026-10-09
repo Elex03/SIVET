@@ -1,5 +1,5 @@
+import MedicationImage from '../../shared/components/MedicationImage';
 import StatCard from '../../shared/components/Layout/StatCard';
-import ActivityPanel from '../../shared/components/Layout/ActivityPanel';
 import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../../shared/api/useSivet';
@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
 
   const stockBajoColumns: TableColumn[] = [
     { id: "codigo", label: "Código" },
-    { id: "medicamento", label: "Producto" },
+    { id: "imagen", label: "Imagen", render: row => <MedicationImage src={row.imagen} name={row.medicamento} /> }, { id: "medicamento", label: "Producto" },
     { id: "stock_actual", label: "Stock actual", render: (row) => <span className="font-bold text-slate-700">{row.stock_actual}</span> },
     { id: "minimo", label: "Mínimo", render: (row) => <span className="text-slate-500">{row.minimo}</span> },
     {
@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const proximosVencerColumns: TableColumn[] = [
-    { id: "medicamento", label: "Producto" },
+    { id: "imagen", label: "Imagen", render: row => <MedicationImage src={row.imagen} name={row.medicamento} /> }, { id: "medicamento", label: "Producto" },
     { id: "lote", label: "Lote", render: (row) => <span className="font-mono text-xs text-slate-500">{row.lote}</span> },
     { id: "vencimiento", label: "Vencimiento", render: (row) => <span className="text-sm text-slate-700 font-medium">{row.vencimiento}</span> },
     { id: "dias", label: "Alerta", render: (row) => <span className="text-amber-600 text-xs font-bold">{row.dias <= 0 ? "Vencido" : `En ${row.dias} días`}</span> },
@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
         sub="Existencias actuales y movimientos registrados en el período seleccionado."
       />
 
-      <DataFeedback {...state} /><div className="activity-layout"><ActivityPanel db={state.data} reportLink /><div className="activity-content" tabIndex={0} role="region" aria-label="Contenido de la pantalla">
+      <DataFeedback {...state} /><div className="activity-layout dashboard-without-activity"><div className="activity-content" tabIndex={0} role="region" aria-label="Contenido de la pantalla">
       {dateFilter === "custom" && fechaInicio > fechaFin && <p role="alert" className="text-rose-600">La fecha inicial debe ser anterior a la final.</p>}
       {/* BARRA DE FILTROS SUPERIOR */}
       <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100">

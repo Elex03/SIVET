@@ -19,5 +19,12 @@
     "active": true,
     "salt": "sivet-demo-farmacia",
     "hash": "c812fb838b71bbd73ed5d1153a58d8a9633881adb573d619bee749110cb5843c"
+  },
+  {
+    "username": "preparador",
+    "role": "preparador",
+    "active": true,
+    "salt": "sivet-demo-preparador",
+    "hash": "8e160ec6f649cccacdf7107ec9e6d97a8bf301c85759918581eb4fb90c6fd285"
   }
 ]

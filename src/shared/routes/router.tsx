@@ -14,6 +14,8 @@ import CircularIndeterminate from "../components/progress/CircularIndeterminate"
 
 
 
+const PreparationPortal = lazy(() => import("../../features/Bodega/pages/PreparationPortal"));
+const Preparacion = lazy(() => import("../../features/Bodega/pages/Preparacion"));
 const UsersPage = lazy(() => import('../pages/UsersPage'));
 const Login = lazy(
   () => import("../../features/Login/Login")
@@ -74,10 +76,11 @@ const AppRouter = () => {
       <Suspense fallback={<CircularIndeterminate />}>
         <Routes>
           {/* ================= LOGIN ================= */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} /><Route path="/preparacion/login" element={<Login preparation />} />
+<Route element={<ProtectedRoute allowedRoles={["administrador", "bodega", "preparador"]} />}><Route path="/preparacion" element={<PreparationPortal />} /></Route>
 
           {/* ================= RUTAS PROTEGIDAS ================= */}
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute allowedRoles={["administrador", "bodega", "farmacia"]} />}>
             <Route element={<MainLayout />}>
               <Route path="/configuracion" element={<SystemPage settings />} />
 
@@ -97,6 +100,7 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador", "bodega"]} />
                 }
               >
+                <Route path="/bodega/preparacion" element={<Preparacion />} />
                 <Route path="/bodega" element={<Bodega location="Bodega Central" />} />
                 <Route path="/bodega/solicitudes" element={<SolicitudesBodega bodega />} />
                 <Route path="/bodega/notificaciones" element={<NotificationsPage bodega />} />
@@ -138,7 +142,7 @@ const AppRouter = () => {
                 />
                 <Route
                   path="/notificaciones"
-                  element={<SystemPage />}
+                  element={<NotificationsPage combined />}
                 />
 
               </Route>

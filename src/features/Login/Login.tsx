@@ -7,13 +7,13 @@ import type { Role } from "../../shared/types/auth";
 import UNA from "../../shared/assets/images/UNA.png";
 import { User, Lock, ShieldAlert, LogIn, ChevronDown } from "lucide-react";
 
-const Login = () => {
+const Login = ({ preparation = false }: { preparation?: boolean }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role | "">("");
+  const [role, setRole] = useState<Role | "">(preparation ? "preparador" : "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +38,7 @@ const Login = () => {
     }
 
     // Redirección dependiendo del rol
-    if (role === "administrador") {
+    if (role === "preparador") { navigate("/preparacion"); } else if (role === "administrador") {
       navigate("/dashboard");
     } else if (role === "bodega") {
       navigate("/bodega");
@@ -48,7 +48,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
+    <div className="min-h-dvh flex items-center justify-center bg-slate-50 relative overflow-x-hidden py-4 px-3">
       
       {/* ========================================== */}
       {/* DECORACIONES DE FONDO (Sutiles y Corporativas) */}
@@ -59,14 +59,14 @@ const Login = () => {
       {/* ========================================== */}
       {/* TARJETA DE LOGIN */}
       {/* ========================================== */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 sm:p-10 relative z-10 animate-in zoom-in-95 fade-in duration-500">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-5 sm:p-10 relative z-10 animate-in zoom-in-95 fade-in duration-500">
         
         {/* CABECERA: Logo y Títulos */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-40 h-40 mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-2">
+          <div className="w-20 h-20 sm:w-40 sm:h-40 mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-2">
             <img src={UNA} alt="Logo UNA" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-black text-[#304a6d] tracking-tight">Acceso a SIVET</h1>
+          <h1 className="text-2xl font-black text-[#304a6d] tracking-tight">{preparation ? "Preparación · Acceso" : "Acceso a SIVET"}</h1>
           <p className="text-sm font-medium text-slate-400 uppercase tracking-widest mt-1 text-center">
             Sistema de Inventario Veterinario
           </p>
@@ -122,7 +122,7 @@ const Login = () => {
             </label>
             <div className="relative">
               <select
-                id="role"
+                id="role" disabled={preparation}
                 value={role}
                 onChange={(event) => setRole(event.target.value as Role)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm text-[#1e293b] font-medium outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#304a6d] focus:ring-4 focus:ring-[#304a6d]/10 transition-all"
@@ -130,7 +130,7 @@ const Login = () => {
                 <option value="" disabled className="text-slate-400 font-normal">Seleccione su rol asignado</option>
                 <option value="administrador">Administrador del Sistema</option>
                 <option value="bodega">Gestión de Bodega</option>
-                <option value="farmacia">Operador de Farmacia</option>
+                <option value="farmacia">Operador de Farmacia</option><option value="preparador">Preparador de Bodega</option>
               </select>
               <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
                 <ChevronDown size={16} className="text-slate-400" />

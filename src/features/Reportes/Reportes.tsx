@@ -42,7 +42,7 @@ export default function Reportes() {
   const reports = selectReports(state.data, period, from, to, place, category);
   const table = reports.tables[report];
   const chartData = reports.charts[report] as ChartDatum[];
-  const temporal = report === 'movimientos' || report === 'salidas_area' || report === 'auditoria';
+  const temporal = report === 'donaciones' || report === 'movimientos' || report === 'salidas_area' || report === 'auditoria';
   const invalidDates = temporal && period === 'custom' && (!from || !to || from > to);
   const dates = temporal ? period === 'custom' ? `${from} al ${to}` : `Últimos ${period} días` : `Existencias actuales · ${today()}`;
   const subtitle = `${dates} | ${place === 'todas' ? 'Todas las ubicaciones' : place} | ${report === 'auditoria' ? 'Todas las acciones' : category === 'todas' ? 'Todas las categorías' : category}`;

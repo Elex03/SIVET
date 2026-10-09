@@ -1,4 +1,4 @@
-import { passwordHash, validateAccountChange } from './accountRules';
+import { addDemoPreparer, passwordHash, validateAccountChange } from './accountRules';
 export { passwordHash, validateAccountChange } from './accountRules';
 import { apiClient, apiUrl } from './client';
 import type { Role } from '../types/auth';
@@ -8,7 +8,16 @@ const key = 'sivet-accounts-v1';
 export async function readAccounts(): Promise<Account[]> {
   if (apiUrl) return (await apiClient.get<Account[]>('/users')).data;
   const saved = localStorage.getItem(key);
-  if (saved) return JSON.parse(saved);
+  if (saved) {
+    const accounts: Account[] = JSON.parse(saved);
+    if (accounts.some(a => a.username.toLowerCase() === 'preparador')) return accounts;
+    const seeds = (await apiClient.get<Account[]>('data/users.json')).data;
+    // Re-read after the request so an administrative change made while loading wins.
+    const current: Account[] = JSON.parse(localStorage.getItem(key) || saved);
+    const updated = addDemoPreparer(current, seeds);
+    if (updated !== current) localStorage.setItem(key, JSON.stringify(updated));
+    return updated;
+  }
   const accounts = (await apiClient.get<Account[]>('data/users.json')).data;
   localStorage.setItem(key, JSON.stringify(accounts)); return accounts;
 }

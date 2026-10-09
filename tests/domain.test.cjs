@@ -11,6 +11,162 @@ const { applyCommand, availableStock, today } = require('../src/shared/api/domai
 const { selectDashboard } = require('../src/shared/api/selectors.ts');
 const { selectReports } = require('../src/shared/api/reports.ts');
 const fixtures = require('../public/data/sivet.json');
+const { chartRows } = require('../src/features/Reportes/chartOptions.ts');
+function donationReceipt(patch = {}) {
+  const product = fixtures.catalogos.find(p => p.tipo === 'medicamentos' && p.activo);
+  return { id: 'DON-TEST', tipoIngreso: 'DONACION', donante: 'Fundación de prueba', proveedorId: '', fecha: today(), responsable: 'bodega', documento: 'ACTA-TEST', items: [{ productoId: product.id, lote: 'DON-TEST-LOTE', vencimiento: null, cantidad: 12 }], ...patch };
+}
+test('salida por registro convierte ml desde frascos y conserva modalidad y cantidades', () => {
+  const db = structuredClone(fixtures);
+  const product = db.catalogos.find(p => p.tipo === 'medicamentos');
+  product.unidad = 'Frasco'; product.contenidoMl = 100;
+  db.existencias.push({ id: 'liquido', productoId: product.id, lote: 'LIQ', cantidad: 1, vencimiento: '2099-12-31', ubicacion: 'Farmacia' }, { id: 'liquido2', productoId: product.id, lote: 'LIQ2', cantidad: 1, vencimiento: '2099-12-31', ubicacion: 'Farmacia' });
+  const command = { type: 'pharmacy.dispatch', id: 'SAL-ML', area: db.catalogos.find(c => c.tipo === 'ubicaciones' && c.activo).nombre, nota: '', items: [{ stockId: 'liquido', cantidad: 5, unidadSalida: 'ML', destino: 'HOSPITAL' }, { stockId: 'liquido2', cantidad: 0.5, unidadSalida: 'ML', destino: 'CASA' }] };
+  const saved = applyCommand(db, command);
+  assert.equal(saved.existencias.find(s => s.id === 'liquido').cantidad, 0.95);
+  assert.equal(saved.existencias.find(s => s.id === 'liquido2').cantidad, 0.995);
+  const rows = saved.movimientos.filter(m => m.documento === command.id);
+  assert.deepEqual(rows.map(m => [m.cantidadEntregada,m.unidadEntrega,m.destino]), [[5,'ml (cc)','HOSPITAL'],[0.5,'ml (cc)','CASA']]);
+  assert.throws(() => applyCommand(saved, command), /ya fue registrada/);
+  assert.throws(() => applyCommand(db, { ...command, items: [{ ...command.items[0], cantidad: 101 }] }), /insuficiente/);
+  assert.throws(() => applyCommand(db, { ...command, items: [{ ...command.items[0], destino: undefined }] }), /modalidad/);
+  delete product.contenidoMl;
+  assert.throws(() => applyCommand(db, command), /contenido en ml/);
+});
+test('ingreso sin número de factura guarda total y asociación única del código de lote', () => {
+  const receipt = donationReceipt({ documento: undefined, total: 250.50 });
+  receipt.items[0].codigoLote = 'CODIGO-UNICO';
+  const db = applyCommand(fixtures, {type:'receipt.create',receipt});
+  assert.equal(db.recepciones.find(r => r.id === receipt.id).total, 250.50);
+  assert.equal(db.existencias.find(s => s.lote === receipt.items[0].lote).codigoLote, 'CODIGO-UNICO');
+  assert.throws(() => applyCommand(db, {type:'receipt.create',receipt:{...receipt,id:'OTRO',items:[{...receipt.items[0],lote:'OTRO'}]}}), /otro lote/);
+  assert.throws(() => applyCommand(fixtures, {type:'receipt.create',receipt:{...receipt,total:-1}}), /total/);
+});
+test('donación sin vencimiento ingresa stock físico una sola vez y queda fuera de disponibilidad', () => {
+  const receipt = donationReceipt();
+  const draft = applyCommand(fixtures, { type: 'receipt.draft', receipt });
+  assert.deepEqual(draft.existencias, fixtures.existencias);
+  const db = applyCommand(draft, { type: 'receipt.create', receipt });
+  const stock = db.existencias.find(s => s.lote === 'DON-TEST-LOTE');
+  assert.equal(stock.vencimiento, null);
+  assert.equal(stock.cantidad, 12);
+  assert.equal(availableStock(db, stock.id), 0);
+  assert.throws(() => applyCommand(db, { type: 'receipt.create', receipt }), /ya existe/);
+  assert.throws(() => applyCommand(db, { type: 'receipt.create', receipt: { ...receipt, id: 'OTRA' } }), /ya está registrada/);
+  assert.ok(!selectDashboard(db, '30', '', '', 'todas', 'todas').proximosVencerData.some(s => s.id === stock.id));
+  const { inventoryAlerts } = require('../src/shared/api/alerts.ts');
+  assert.ok(inventoryAlerts(db, 'Bodega Central').some(a => a.id === 'unknown-expiry-' + stock.id));
+  const request = { ...structuredClone(fixtures.solicitudes[0]), id: 'SOL-DON', estado: 'PENDIENTE', items: [{ stockId: stock.id, cantidad: 1 }] };
+  assert.throws(() => applyCommand(db, { type: 'request.create', request }), /vencido|disponible/);
+});
+test('donaciones validan donante y vencimiento; compras siguen exigiendo fecha', () => {
+  const receipt = donationReceipt();
+  for (const patch of [{ donante: '' }]) assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, ...patch } }), /donante/);
+  for (const vencimiento of ['', '2000-01-01', 'sin fecha']) assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, items: [{ ...receipt.items[0], vencimiento }] } }), /vencimiento/);
+  assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, tipoIngreso: 'COMPRA', proveedorId: fixtures.catalogos.find(p => p.tipo === 'proveedores').id } }), /vencimiento/);
+  const db = applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, items: [{ ...receipt.items[0], vencimiento: '2099-12-31' }] } });
+  assert.equal(availableStock(db, db.existencias.find(s => s.lote === 'DON-TEST-LOTE').id), 12);
+});
+test('reporte de donaciones incluye solo ingresos confirmados y respeta filtros en tabla y gráficas', () => {
+  const receipt = donationReceipt();
+  const db = applyCommand(fixtures, { type: 'receipt.create', receipt });
+  db.recepciones.push({ ...receipt, id: 'BORRADOR-DON', estado: 'BORRADOR' }, { ...receipt, id: 'CANCELADO-DON', estado: 'CANCELADO' });
+  const report = selectReports(db, 'custom', today(), today(), 'Bodega Central', 'todas');
+  assert.equal(report.tables.donaciones.data.length, 1);
+  assert.equal(report.tables.donaciones.data[0].vencimiento, 'Desconocido');
+  assert.deepEqual(report.charts.donaciones, [{ name: receipt.donante, cantidad: 12, sinFecha: 12 }]);
+  for (const [place, category, from, to] of [['Farmacia','todas',today(),today()], ['todas','INEXISTENTE',today(),today()], ['todas','todas','2000-01-01','2000-01-02']]) {
+    const filtered = selectReports(db, 'custom', from, to, place, category);
+    assert.equal(filtered.tables.donaciones.data.length, 0);
+    assert.equal(filtered.charts.donaciones.length, 0);
+  }
+});
+test('cuentas demo antiguas incorporan preparador sin alterar cuentas existentes', async () => {
+  const { addDemoPreparer, authenticateAccount } = require('../src/shared/api/accountRules.ts');
+  const seeds = require('../public/data/users.json');
+  const old = seeds.filter(a => a.role !== 'preparador');
+  const upgraded = addDemoPreparer(old,seeds);
+  assert.equal(upgraded.length,old.length+1);
+  assert.deepEqual(upgraded.slice(0,old.length),old);
+  assert.equal((await authenticateAccount(upgraded,'preparador','Sivet2026!','preparador')).role,'preparador');
+  assert.equal(await authenticateAccount(upgraded,'preparador','incorrecta','preparador'),null);
+  const inactive = upgraded.map(a => a.username === 'preparador' ? {...a,active:false,hash:'custom'} : a);
+  assert.strictEqual(addDemoPreparer(inactive,seeds),inactive);
+  assert.equal(await authenticateAccount(inactive,'preparador','Sivet2026!','preparador'),null);
+});
+const { assertPreparationPermission } = require('../src/shared/api/permissions.ts');
+function prepCommand(source, id, patch = {}) {
+  const r = source.solicitudes.find(r => r.id === id);
+  return { type: 'request.prepare', id, actor: 'preparador', version: r.preparacion?.version || 0, ready: true, lines: (r.approvedItems || r.items).map(i => { const s = source.existencias.find(s => s.id === i.stockId); return {...i, requestedStockId:i.stockId,lote:s.lote,vencimiento:s.vencimiento,comentario:'Verificado físicamente',lista:true}; }), ...patch };
+}
+test('preparador solo guarda checklist y no aprueba, envía ni edita catálogo', () => {
+  const cmd = prepCommand(fixtures,'SOL-DEMO-002');
+  for (const role of ['administrador','bodega','preparador']) assert.doesNotThrow(() => assertPreparationPermission(role,cmd));
+  assert.throws(() => assertPreparationPermission('farmacia',cmd), /permiso/);
+  for (const command of [{type:'request.status',estado:'ENVIADO'},{type:'catalog.save'},{type:'receipt.create'},{type:'request.review'},{type:'notification.read'}]) assert.throws(() => assertPreparationPermission('preparador',command), /solo puede preparar/);
+});
+test('preparación guarda avance sin stock y termina antes de permitir envío', () => {
+  let source = structuredClone(fixtures); const before = structuredClone(source.existencias);
+  const draft = prepCommand(source,'SOL-DEMO-002',{ready:false});
+  draft.lines[0] = {...draft.lines[0],cantidad:0,lote:'',vencimiento:'',lista:false};
+  source = applyCommand(source,draft);
+  assert.deepEqual(source.existencias,before);
+  assert.equal(source.solicitudes.find(r=>r.id===draft.id).preparacion.version,1);
+  assert.throws(() => applyCommand(source,{type:'request.status',id:draft.id,estado:'LISTO PARA ENTREGA',observacion:''}), /checklist/);
+  source = applyCommand(source,prepCommand(source,draft.id));
+  assert.equal(source.solicitudes.find(r=>r.id===draft.id).estado,'LISTO PARA ENTREGA');
+  assert.deepEqual(source.existencias,before);
+  assert.equal(source.actividad.at(-1).accion,'request.prepare');
+  const sent = applyCommand(source,{type:'request.status',id:draft.id,estado:'ENVIADO',observacion:''});
+  assert.equal(sent.existencias.find(s=>s.id==='stock-4').cantidad, before.find(s=>s.id==='stock-4').cantidad-5);
+});
+test('preparación rechaza pendientes, checklist incompleto y datos discrepantes', () => {
+  assert.throws(() => applyCommand(fixtures,prepCommand(fixtures,'SOL-DEMO-001')), /aprobadas/);
+  const good = prepCommand(fixtures,'SOL-DEMO-002');
+  for (const patch of [{lista:false},{cantidad:4},{lote:'OTRO'},{vencimiento:'2020-01-01'},{stockId:'stock-1'}]) {
+    const cmd = structuredClone(good); Object.assign(cmd.lines[0],patch);
+    assert.throws(() => applyCommand(fixtures,cmd));
+  }
+  assert.throws(() => applyCommand(fixtures,{...good,lines:[]}), /líneas/);
+});
+test('preparación detecta cambios concurrentes y no modifica pedidos ya listos', () => {
+  const command = prepCommand(fixtures,'SOL-DEMO-002',{ready:false});
+  const updated = applyCommand(fixtures,command);
+  assert.throws(() => applyCommand(updated,command), /Otra persona/);
+  const ready = applyCommand(updated,prepCommand(updated,command.id));
+  assert.throws(() => applyCommand(ready,prepCommand(ready,command.id)), /aprobadas/);
+});
+test('cambio de lote al preparar conserva producto y reasigna reserva atómicamente', () => {
+  const source = structuredClone(fixtures); const stock = source.existencias.find(s=>s.id==='stock-4');
+  source.existencias.push({...stock,id:'otro-lote',lote:'OTRO-VALIDO',cantidad:8});
+  const command = prepCommand(source,'SOL-DEMO-002');
+  command.lines[0] = {...command.lines[0],stockId:'otro-lote',lote:'OTRO-VALIDO'};
+  const before = availableStock(source,'stock-4');
+  const updated = applyCommand(source,command);
+  assert.equal(availableStock(updated,'stock-4'),before+5);
+  assert.equal(availableStock(updated,'otro-lote'),3);
+  assert.equal(updated.solicitudes.find(r=>r.id===command.id).approvedItems[0].stockId,'stock-4');
+  source.existencias.find(s=>s.id==='otro-lote').cantidad=4;
+  assert.throws(() => applyCommand(source,command), /Stock insuficiente/);
+});
+test('no se envía un pedido legado sin checklist y un rechazo invalida el avance', () => {
+  const source = structuredClone(fixtures); delete source.solicitudes.find(r=>r.id==='SOL-DEMO-003').preparacion;
+  assert.throws(() => applyCommand(source,{type:'request.status',id:'SOL-DEMO-003',estado:'ENVIADO',observacion:''}), /checklist/);
+  const rejected = applyCommand(fixtures,{type:'request.status',id:'SOL-DEMO-002',estado:'RECHAZADO',observacion:'Anulada por bodega'});
+  assert.throws(() => applyCommand(rejected,prepCommand(rejected,'SOL-DEMO-002')), /aprobadas/);
+});
+test('gráficas ordenan y limitan sin alterar los datos del reporte', () => {
+  const rows = [{name:'B',stock:2},{name:'A',stock:9},{name:'C',stock:4}];
+  assert.deepEqual(chartRows(rows,'stock',{sort:'desc',limit:2},false).map(r=>r.name), ['A','C']);
+  assert.deepEqual(chartRows(rows,'stock',{sort:'asc'},false).map(r=>r.stock), [2,4,9]);
+  assert.deepEqual(chartRows(rows,'stock',{sort:'name'},false).map(r=>r.name), ['A','B','C']);
+  assert.deepEqual(rows.map(r=>r.name), ['B','A','C']);
+});
+test('gráficas temporales mantienen cronología y seleccionan últimos períodos', () => {
+  const rows = [{name:'2026-10-03',entradas:1,salidas:3},{name:'2026-10-01',entradas:90,salidas:10},{name:'2026-10-02',entradas:2,salidas:1}];
+  assert.deepEqual(chartRows(rows,'flujo',{sort:'desc',limit:2},true).map(r=>r.name), ['2026-10-02','2026-10-03']);
+  assert.equal(chartRows(rows,'flujo',{limit:0},true).length, 3);
+});
 const { assertCatalogPermission, canEditMedication } = require('../src/shared/api/permissions.ts');
 const { authenticateAccount, validateAccountChange } = require('../src/shared/api/accountRules.ts');
 const accounts = require('../public/data/users.json');
@@ -209,4 +365,32 @@ test('auditoría filtra fechas y localidad y coincide con la gráfica', () => {
   const reports = selectReports(db(), 'custom', '2026-10-01', '2026-10-05', 'Farmacia', 'todas');
   assert.ok(reports.tables.auditoria.data.every(a => a.localidad === 'Farmacia'));
   assert.equal(reports.charts.auditoria.reduce((n,a) => n+a.cantidad,0), reports.tables.auditoria.data.length);
+});
+
+test('el saldo parcial de 200 cc se puede despachar después sin perder volumen', () => {
+  const source = structuredClone(fixtures);
+  const product = source.catalogos.find(p => p.tipo === 'medicamentos');
+  product.unidad = 'Frasco'; product.contenidoMl = 200;
+  source.existencias.push({id:'partial-volume',productoId:product.id,lote:'PARTIAL',cantidad:1,vencimiento:'2099-12-31',ubicacion:'Farmacia'});
+  const send = (id,cantidad) => ({type:'pharmacy.dispatch',id,area:source.catalogos.find(c => c.tipo === 'ubicaciones' && c.activo).nombre,nota:'',items:[{stockId:'partial-volume',cantidad,unidadSalida:'ML',destino:'HOSPITAL'}]});
+  const half = applyCommand(source,send('HALF',100));
+  assert.equal(half.existencias.find(s => s.id === 'partial-volume').cantidad * 200,100);
+  assert.throws(() => applyCommand(half,send('EXCESS',100.001)), /insuficiente/);
+  const empty = applyCommand(half,send('REST',100));
+  assert.equal(empty.existencias.find(s => s.id === 'partial-volume').cantidad,0);
+  assert.equal(source.existencias.find(s => s.id === 'partial-volume').cantidad,1);
+});
+test('tabletas individuales y fracciones conservan el saldo sin descontar el empaque', () => {
+  const source = structuredClone(fixtures);
+  const product = source.catalogos.find(p => p.tipo === 'medicamentos');
+  product.unidad = 'Tableta'; product.presentacion = 'Caja'; product.uxe = 10;
+  source.existencias.push({id:'partial-tablets',productoId:product.id,lote:'TABLETS',cantidad:10,vencimiento:'2099-12-31',ubicacion:'Farmacia'});
+  const send = (id,cantidad) => ({type:'pharmacy.dispatch',id,area:source.catalogos.find(c => c.tipo === 'ubicaciones' && c.activo).nombre,nota:'',items:[{stockId:'partial-tablets',cantidad,unidadSalida:'BASE',destino:'CASA'}]});
+  const one = applyCommand(source,send('ONE',1));
+  assert.equal(one.existencias.find(s => s.id === 'partial-tablets').cantidad,9);
+  const quarter = applyCommand(one,send('QUARTER',0.25));
+  assert.equal(quarter.existencias.find(s => s.id === 'partial-tablets').cantidad,8.75);
+  assert.throws(() => applyCommand(quarter,send('EXCESS',9)), /insuficiente/);
+  const rest = applyCommand(quarter,send('REST',8.75));
+  assert.equal(rest.existencias.find(s => s.id === 'partial-tablets').cantidad,0);
 });

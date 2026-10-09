@@ -1,6 +1,6 @@
 interface ReportTable { columns: { id: string; label: string }[]; data: object[] }
 /** Export every row, independent of preview pagination, and each configured chart. */
-export async function exportReport(title: string, subtitle: string, table: ReportTable) {
+export async function exportReport(title: string, subtitle: string, table: ReportTable, includeCharts = true) {
   const [{ default: jsPDF }, { toPng }] = await Promise.all([import('jspdf'), import('html-to-image')]);
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const margin = 12;
@@ -15,10 +15,15 @@ export async function exportReport(title: string, subtitle: string, table: Repor
   };
   const page = () => { pdf.addPage(); y = margin; header(); };
   header();
-  for (const chart of document.querySelectorAll<HTMLElement>('[data-report-chart]')) {
+  for (const chart of includeCharts ? document.querySelectorAll<HTMLElement>('[data-report-chart]') : []) {
     const plot = chart.querySelector<HTMLElement>('[data-report-plot]');
     if (!plot) continue;
-    const png = await toPng(plot, { pixelRatio: 2, backgroundColor: '#ffffff' });
+    const scrollers = [...plot.querySelectorAll<HTMLElement>('[data-chart-scroll]')].map(element => ({ element, style: element.getAttribute('style') }));
+    let png: string;
+    try {
+      scrollers.forEach(({element}) => { element.style.maxHeight = 'none'; element.style.overflow = 'visible'; });
+      png = await toPng(plot, { pixelRatio: 2, backgroundColor: '#ffffff' });
+    } finally { scrollers.forEach(({element, style}) => { if (style === null) element.removeAttribute('style'); else element.setAttribute('style', style); }); }
     const image = pdf.getImageProperties(png);
     const scale = Math.min(Math.min(width, 220) / image.width, 120 / image.height);
     const chartWidth = image.width * scale;

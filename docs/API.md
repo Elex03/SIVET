@@ -22,9 +22,11 @@ Contrato Axios propuesto cuando exista backend: `POST /auth/login` recibe userna
 
 Actividad a la derecha en escritorio, debajo en pantallas pequeñas. El alto se limita al viewport y cada tabla, panel y filtros de reportes tiene su propio scroll. Las cards de inventario filtran los lotes y conservan sus bordes visibles. Las gráficas admiten orden por arrastre y tamaño mediante ocho tiradores accesibles con teclado; si el contenido necesita más altura mantiene scroll interno. Reportes muestra UNA en el encabezado.
 
-Campanas sin texto y con contador rojo en el header. Panel segmentado en traslados, solicitudes, incidencias, alertas y recordatorios. Claro/oscuro se cambia desde notificaciones o Configuración; silenciar avisos emergentes está únicamente en Configuración. Las preferencias persisten en el navegador. Salidas abre su historial y permite registrar desde un modal; los destinos deben estar activos en el catálogo.
+Una campana sin texto y con contador rojo en el header; Administración reúne las bandejas de Bodega y Farmacia con filtro por área. Panel segmentado en traslados, solicitudes, incidencias, alertas y recordatorios. Claro/oscuro se cambia únicamente desde Configuración; silenciar avisos emergentes está únicamente en Configuración. Las preferencias persisten en el navegador. Salidas abre su historial y permite registrar desde un modal; los destinos deben estar activos en el catálogo.
 
 ## Flujos
+
+- **Donaciones:** en Recepción se selecciona Compra o Donación. Donación registra donante, importe total y adjunto opcional, sin número de factura o acta; no exige proveedor. Cada línea permite marcar «Vencimiento desconocido», persistido como null. El stock físico queda visible y genera alerta, pero no se reserva ni se despacha mientras no se conozca la fecha. Los registros anteriores sin tipo siguen siendo compras. Reportes → Donaciones recibidas muestra ingresos confirmados, con filtros de fechas/categoría/ubicación, tabla exportable y gráficas por donante de unidades recibidas y sin fecha. Borradores y cancelados no cuentan. Es un reporte de ingresos históricos, no de saldo remanente de donaciones. Funciona en modo JSON; los cambios REST requeridos están en `PROMPT-BACKEND-INTEGRACION.md`.
 
 - **Recepción en Bodega:** proveedor, factura/remisión, responsable, fecha y líneas por lote. Un borrador conserva los campos y adjunto sin mover existencias. Confirmar crea ENTRADA y actualiza Bodega una sola vez. Se impide repetir el número de factura para el mismo proveedor. Cancelar un borrador conserva su historial.
 - **Medicamentos:** código de barras, acción terapéutica, empaque, unidad interna, cantidad por empaque, marca, descripción/síntomas, imagen, categoría y mínimo. UXE es informativo: las cantidades de recepción se capturan en unidades internas y no se multiplican. La creación desde recepción agrega el producto a la tabla y conserva el pedido.
@@ -52,3 +54,7 @@ Los adjuntos locales aceptan PDF/PNG/JPEG/WebP (solo imágenes para medicamentos
 Antes de producción: autenticación real, permisos de servidor, validación integral, transacciones, control de concurrencia/versiones y prevención de duplicados. Los permisos de rutas del cliente no sustituyen controles del servidor. Los comandos incluyen `catalog.save`, `receipt.draft/create/cancel`, `request.create/status/receive/review`, `pharmacy.dispatch` y `notification.read`.
 
 `npm test` comprueba transacciones, reservas, devoluciones, facturas, borradores, salidas parciales, notificaciones, filtros y auditoría. `npm run build` valida TypeScript y genera la aplicación.
+
+El historial de pedidos permite abrir cada factura adjunta (PDF o imagen) en un visor. Se retiraron las acciones de descarga de documentos y de exportación del historial. Las tarjetas compactas reservan más alto para las tablas.
+
+Las gráficas admiten orden, límite de elementos, orientación, paleta, leyenda y valores. Las series temporales conservan cronología y permiten líneas, áreas y curvas; las barras múltiples permiten apilamiento y los gráficos circulares alternan entre pastel y dona. Estos ajustes se aplican también al PDF.
