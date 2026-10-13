@@ -394,3 +394,11 @@ test('tabletas individuales y fracciones conservan el saldo sin descontar el emp
   const rest = applyCommand(quarter,send('REST',8.75));
   assert.equal(rest.existencias.find(s => s.id === 'partial-tablets').cantidad,0);
 });
+
+test('PDF conserva orden y anchos del lienzo al distribuir las gráficas en carta', () => {
+  const {reportRows} = require('../src/shared/utils/reportLayout.ts');
+  const input = [{id:'third',order:2,width:100},{id:'second',order:1,width:40},{id:'first',order:0,width:60}];
+  assert.deepEqual(reportRows(input).map(row=>row.map(c=>c.id)),[['first','second'],['third']]);
+  assert.deepEqual(reportRows([{order:0,width:70},{order:1,width:50},{order:2,width:50}]).map(row=>row.length),[1,2]);
+  assert.deepEqual(input.map(c=>c.id),['third','second','first']);
+});

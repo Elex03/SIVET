@@ -10,7 +10,7 @@ import { lazy, Suspense } from "react";
 import ProtectedRoute from "../pages/ProtectedRoute";
 import MainLayout from "../pages/MainLayout";
 
-import CircularIndeterminate from "../components/progress/CircularIndeterminate";
+import PageSkeleton from "../components/Layout/PageSkeleton";
 
 
 
@@ -73,7 +73,7 @@ const RecepcionPedidosBodega = lazy(
 const AppRouter = () => {
   return (
     <BrowserRouter>
-      <Suspense fallback={<CircularIndeterminate />}>
+      <Suspense fallback={<div className="p-5 sm:p-8"><PageSkeleton heading /></div>}>
         <Routes>
           {/* ================= LOGIN ================= */}
           <Route path="/login" element={<Login />} /><Route path="/preparacion/login" element={<Login preparation />} />
