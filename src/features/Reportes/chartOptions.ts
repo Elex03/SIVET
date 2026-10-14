@@ -11,9 +11,9 @@ export interface ChartOptions {
   curve?: 'monotone' | 'linear' | 'step';
 }
 export const palettes = {
-  blue: ['#304a6d', '#3b82f6', '#64748b', '#94a3b8', '#0d9488', '#a5b4fc'],
-  teal: ['#0f766e', '#14b8a6', '#0891b2', '#67e8f9', '#4d7c0f', '#a3e635'],
-  warm: ['#b45309', '#f59e0b', '#e11d48', '#fb7185', '#7c3aed', '#c4b5fd'],
+  blue: ['#355b7c', '#718ba2', '#505e6d', '#a8b7c6', '#577975', '#9292a6'],
+  teal: ['#466e68', '#77968d', '#547b8a', '#9fb6bc', '#777c57', '#afb496'],
+  warm: ['#896839', '#b39a6a', '#995d66', '#c49b9e', '#756581', '#aca0b6'],
 };
 export function chartRows(data: ChartDatum[], metric: string, options: ChartOptions, temporal: boolean) {
   const rows = [...data]; const value = (r: ChartDatum) => metric === 'flujo' ? Number(r.entradas || 0) + Number(r.salidas || 0) : metric === 'destino' ? Number(r.hospital || 0) + Number(r.casa || 0) : Number(r[metric === 'brecha' ? 'actual' : metric] || 0);

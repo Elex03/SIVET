@@ -1,4 +1,5 @@
 import AppRouter from "./shared/routes/router";
+import GuidedTourProvider from './shared/context/GuidedTourProvider';
 
 import { AuthProvider } from "./shared/context/AuthContext";
 import ConfirmationProvider from './shared/context/ConfirmationProvider';
@@ -10,7 +11,7 @@ import "./shared/styles/shared.css";
 const App = () => {
   return (
     <AuthProvider>
-      <ConfirmationProvider><AppRouter /></ConfirmationProvider>
+      <GuidedTourProvider><ConfirmationProvider><AppRouter /></ConfirmationProvider></GuidedTourProvider>
       <ToastContainer position="top-right" autoClose={4500} limit={3} closeOnClick pauseOnHover pauseOnFocusLoss newestOnTop theme="light" />
     </AuthProvider>
   );

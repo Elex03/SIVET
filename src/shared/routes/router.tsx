@@ -80,9 +80,9 @@ const AppRouter = () => {
 <Route element={<ProtectedRoute allowedRoles={["administrador", "bodega", "preparador"]} />}><Route path="/preparacion" element={<PreparationPortal />} /></Route>
 
           {/* ================= RUTAS PROTEGIDAS ================= */}
-          <Route element={<ProtectedRoute allowedRoles={["administrador", "bodega", "farmacia"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={["administrador", "bodega", "farmacia", "consulta"]} />}>
             <Route element={<MainLayout />}>
-              <Route path="/configuracion" element={<SystemPage settings />} />
+              <Route path="/configuracion" element={<SystemPage settings />} /><Route element={<ProtectedRoute allowedRoles={["administrador","consulta"]} />}><Route path="/inventario" element={<Inventory />} /></Route>
 
               {/* ============ ADMINISTRADOR ============ */}
               <Route
@@ -91,7 +91,7 @@ const AppRouter = () => {
                 }
               >
                 <Route path="/usuarios" element={<UsersPage />} /><Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/inventario" element={<Inventory />} />
+
               </Route>
 
               {/* ============ BODEGA ============ */}

@@ -30,6 +30,8 @@ const Modal: React.FC<ModalProps> = ({
       const overflow = document.body.style.overflow;
       const previous = document.activeElement as HTMLElement | null;
       const handleKey = (event: KeyboardEvent) => {
+        // Reactour owns keyboard focus while explaining this dialog.
+        if (document.querySelector('.sivet-tour')) return;
         const dialogs = document.querySelectorAll('[role="dialog"]');
         if (dialogs[dialogs.length - 1] !== panel.current) return;
         if (event.key === 'Escape') close.current();
@@ -41,7 +43,7 @@ const Modal: React.FC<ModalProps> = ({
         if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       };
       document.body.style.overflow = "hidden";
-      panel.current?.focus();
+      if (!document.querySelector('.sivet-tour')) panel.current?.focus();
       document.addEventListener('keydown', handleKey);
       return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', handleKey); previous?.focus(); };
     }
@@ -76,6 +78,7 @@ const Modal: React.FC<ModalProps> = ({
             )}
           </div>
           <button 
+            data-tour-close
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
             title="Cerrar ventana"

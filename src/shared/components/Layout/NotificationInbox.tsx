@@ -1,3 +1,4 @@
+import ContextHelp from './ContextHelp';
 import { usePreference, useTheme } from '../../context/preferences';
 import { useEffect, useRef } from 'react';
 import { inventoryAlerts } from '../../api/alerts';
@@ -39,6 +40,6 @@ export default function NotificationInbox() {
     remind(); const interval = window.setInterval(remind, 30000);
     return () => window.clearInterval(interval);
   }, [state.data, state.loading, muted, reader, user]);
-  const count = roles.reduce((total, role) => total + state.data.notificaciones.filter(n => n.rol === role && !n.leidaPor.includes(reader)).length + inventoryAlerts(state.data, role === 'farmacia' ? 'Farmacia' : 'Bodega Central').length, 0);
-  return <div className="flex justify-end px-3 sm:px-5 pt-3"><Link title="Notificaciones" aria-label={`Notificaciones${count ? ': ' + count + ' pendientes' : ''}`} className="relative bg-white border border-slate-200 rounded-xl p-3 text-[#304a6d]" to={user?.role === 'administrador' ? '/notificaciones' : `/${user?.role}/notificaciones`}><Bell size={20} />{count > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-4 h-4 px-1 rounded-full text-center">{count > 99 ? '99+' : count}</span>}</Link></div>;
+  const count = roles.reduce((total, role) => total + state.data.notificaciones.filter(n => (n.ownerId===undefined || n.ownerId===user?.id) && n.rol === role && !n.leidaPor.includes(reader)).length + inventoryAlerts(state.data, role === 'farmacia' ? 'Farmacia' : 'Bodega Central').length, 0);
+  return <div className="flex justify-end gap-2 px-3 sm:px-5 pt-3"><ContextHelp /><Link title="Notificaciones" aria-label={`Notificaciones${count ? ': ' + count + ' pendientes' : ''}`} className="relative bg-white border border-slate-200 rounded-xl p-3 text-[#304a6d]" to={user?.role==='consulta'?'/inventario':user?.role === 'administrador' ? '/notificaciones' : `/${user?.role}/notificaciones`}><Bell size={20} />{count > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-4 h-4 px-1 rounded-full text-center">{count > 99 ? '99+' : count}</span>}</Link></div>;
 }

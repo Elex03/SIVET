@@ -22,7 +22,7 @@ export default function InventoryPage({ location = '' }: { location?: string }) 
   const [place, setPlace] = useState('');
   const [status, setStatus] = useState('');
   const [selected, setSelected] = useState('');
-  const rows = state.data.existencias.map(s => {
+  const rows = state.data.existencias.filter(s=>!s.virtual).map(s => {
     const p = state.data.catalogos.find(p => p.id === s.productoId);
     const days = Math.ceil((Date.parse(s.vencimiento || '') - Date.parse(today())) / 86400000);
     return { ...s, vencimiento: s.vencimiento || 'Desconocido', imagen: p?.imagen, volumenMl: p?.contenidoMl ? Number((s.cantidad * p.contenidoMl).toFixed(3)) : undefined, producto: p?.nombre, codigo: p?.codigo, categoria: p?.categoria, unidad: p?.unidad, minimo: p?.minimo || 0, dias: days,

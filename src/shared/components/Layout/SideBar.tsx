@@ -208,6 +208,7 @@ const Sidebar: React.FC = () => {
         ) : null}
 
         {/* ================= BODEGA ROL ================= */}
+        {user.role === "consulta" && <NavLink to="/inventario" className="sidebar-item" title="Inventario"><Boxes size={18} />{!isCollapsed && <span>Inventario</span>}</NavLink>}
         {isBodega ? (
           <>
              <NavLink to="/bodega/estanteria" className="sidebar-item" title="Estantería">

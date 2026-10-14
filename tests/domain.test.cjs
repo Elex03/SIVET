@@ -12,6 +12,19 @@ const { selectDashboard } = require('../src/shared/api/selectors.ts');
 const { selectReports } = require('../src/shared/api/reports.ts');
 const fixtures = require('../public/data/sivet.json');
 const { chartRows } = require('../src/features/Reportes/chartOptions.ts');
+const { normalizeNumberText } = require('../src/shared/utils/numberInput.ts');
+const { requestGuidePurpose, pageGuides } = require('../src/shared/components/Layout/pageGuides.ts');
+test('edición numérica conserva vacío y decimales sin ceros sobrantes', () => {
+  for (const [input, expected] of [['',''],['0','0'],['02','2'],['005','5'],['0.5','0.5'],['00.25','0.25'],['-02','-2']]) assert.equal(normalizeNumberText(input), expected);
+});
+test('guía de solicitudes respeta rol, estado e incidencia pendiente', () => {
+  assert.equal(requestGuidePurpose({estado:'COMPLETADO'},false),undefined);
+  assert.equal(requestGuidePurpose({estado:'ENVIADO'},false),'verify-delivery');
+  assert.equal(requestGuidePurpose({estado:'PENDIENTE'},true),'approve-request');
+  assert.equal(requestGuidePurpose({estado:'ENVIADO',incidencia:{resuelta:false}},true),'resolve-difference');
+  assert.equal(requestGuidePurpose({estado:'ENVIADO',incidencia:{resuelta:true}},true),undefined);
+  assert.equal(pageGuides('/farmacia','farmacia').some(g=>g.title.includes('Resolver')),false);
+});
 function donationReceipt(patch = {}) {
   const product = fixtures.catalogos.find(p => p.tipo === 'medicamentos' && p.activo);
   return { id: 'DON-TEST', tipoIngreso: 'DONACION', donante: 'Fundación de prueba', proveedorId: '', fecha: today(), responsable: 'bodega', documento: 'ACTA-TEST', items: [{ productoId: product.id, lote: 'DON-TEST-LOTE', vencimiento: null, cantidad: 12 }], ...patch };
@@ -186,6 +199,14 @@ test('autenticación comprueba contraseña, rol y estado activo', async () => {
   assert.equal(await authenticateAccount(accounts,'farmacia','Sivet2026!','administrador'), null);
   assert.equal(await authenticateAccount(accounts.map(a=>({...a,active:false})),'admin','Sivet2026!','administrador'), null);
   assert.equal(await authenticateAccount(accounts,'desconocido','Sivet2026!','administrador'), null);
+});
+test('login identifica el rol de la cuenta sin selección manual', async () => {
+  for (const username of ['admin', 'bodega', 'farmacia']) {
+    const expected = accounts.find(account => account.username === username);
+    assert.deepEqual(await authenticateAccount(accounts, username, 'Sivet2026!'), { username, role: expected.role });
+  }
+  assert.equal(await authenticateAccount(accounts, 'admin', 'incorrecta'), null);
+  assert.equal(await authenticateAccount(accounts.map(account => ({ ...account, active: false })), 'admin', 'Sivet2026!'), null);
 });
 test('administración conserva acceso propio y al menos un administrador', () => {
   assert.throws(() => validateAccountChange(accounts,{username:'admin',role:'administrador',active:false},'admin'), /tu cuenta/);
@@ -401,4 +422,29 @@ test('PDF conserva orden y anchos del lienzo al distribuir las gráficas en cart
   assert.deepEqual(reportRows(input).map(row=>row.map(c=>c.id)),[['first','second'],['third']]);
   assert.deepEqual(reportRows([{order:0,width:70},{order:1,width:50},{order:2,width:50}]).map(row=>row.length),[1,2]);
   assert.deepEqual(input.map(c=>c.id),['third','second','first']);
+});
+
+test('salidas parciales conservan saldos y contexto histórico en la unidad entregada', () => {
+  const source = structuredClone(fixtures);
+  const product = source.catalogos.find(p => p.tipo === 'medicamentos');
+  product.unidad = 'Frasco'; product.contenidoMl = 200;
+  source.existencias.push({id:'trace-volume',productoId:product.id,lote:'TRACE',cantidad:1,vencimiento:'2099-12-31',ubicacion:'Farmacia'});
+  const command = {type:'pharmacy.dispatch',id:'TRACE-1',actor:'farmacia',nota:'Entrega parcial',area:source.catalogos.find(c=>c.tipo==='ubicaciones' && c.activo).nombre,items:[{stockId:'trace-volume',cantidad:5,unidadSalida:'ML',destino:'HOSPITAL'}]};
+  const updated = applyCommand(source,command);
+  const movement = updated.movimientos.find(m=>m.documento === command.id);
+  assert.deepEqual([movement.saldoAnterior,movement.cantidadEntregada,movement.saldoPosterior],[200,5,195]);
+  assert.equal(movement.responsableSalida,'farmacia');
+  assert.equal(movement.observacionSalida,'Entrega parcial');
+  assert.equal(movement.contenidoMlSalida,200);
+  assert.throws(()=>applyCommand(updated,command),/ya fue registrada/);
+  const second = applyCommand(updated,{...command,id:'TRACE-2',items:[{...command.items[0],cantidad:0.5}]});
+  assert.equal(second.movimientos.at(-1).saldoPosterior,194.5);
+});
+test('cálculo compartido rechaza cantidades inválidas y evita redondear un exceso', () => {
+  const {dispatchQuantity} = require('../src/shared/api/dispatchQuantity.ts');
+  for(const amount of [0,-1,NaN,Infinity,0.0001,200.001]) assert.ok(dispatchQuantity(1,amount,true,200).error);
+  assert.ok(dispatchQuantity(1,5,true).error);
+  assert.equal(dispatchQuantity(1,5,true,200).remaining,195);
+  assert.equal(dispatchQuantity(10,0.25,false).remaining,9.75);
+  assert.equal(dispatchQuantity(0.975,195,true,200).remainingBase,0);
 });

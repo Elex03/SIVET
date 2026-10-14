@@ -39,6 +39,14 @@ const Table: React.FC<TableProps> = ({
   exportSubtitle = "Listado de registros del sistema"
 }) => {
   const hasActions = Boolean(onView || onEdit || onDownload);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const resize = useRef<{ id: string; x: number; width: number } | null>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const measureColumns = () => Object.fromEntries(
+    [...(tableRef.current?.querySelectorAll<HTMLElement>('th[data-column]') || [])]
+      .map(cell => [cell.dataset.column!, cell.getBoundingClientRect().width])
+  );
+  const setWidth = (id: string, width: number) => setColumnWidths(previous => ({ ...previous, [id]: Math.max(80, Math.min(640, Math.round(width))) }));
 
   // ==========================================
   // ESTADO DE VISIBILIDAD DE COLUMNAS
@@ -126,7 +134,8 @@ const Table: React.FC<TableProps> = ({
       <div tabIndex={0} role="region" aria-label={`Tabla: ${exportTitle}`} className="table-scroll w-full flex-1 min-h-0 overflow-auto custom-scrollbar">
 
         {/* LA TABLA AHORA ES UN FLEX CONTAINER PARA QUE EL TBODY SE ESTIRE */}
-        <table className="w-full table-auto border-collapse text-left">
+        <table ref={tableRef} className="w-full table-auto border-collapse text-left" style={Object.keys(columnWidths).length ? { tableLayout: 'fixed', width: activeColumnsForTable.reduce((sum, col) => sum + (columnWidths[col.id] || 140), 0) + (hasActions ? 112 : 0) + (enableExport ? 56 : 0), minWidth: '100%' } : undefined}>
+          {Object.keys(columnWidths).length > 0 && <colgroup>{activeColumnsForTable.map(col => <col key={col.id} style={{ width: columnWidths[col.id] || 140 }} />)}{hasActions && <col style={{width:112}} />}{enableExport && <col style={{width:56}} />}</colgroup>}
 
           {/* THEAD: Estático, fuera del scroll vertical.
               El pr-[6px] compensa visualmente el ancho del scrollbar que tendrá el tbody */}
@@ -134,8 +143,15 @@ const Table: React.FC<TableProps> = ({
             <tr className="w-full">
 
               {activeColumnsForTable.map((col) => (
-                <th key={col.id} aria-sort={sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
+                <th key={col.id} data-column={col.id} aria-sort={sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="relative px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
                   <button type="button" className="flex items-center gap-2 text-left w-full" aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}>{col.label}<span aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button>
+                  <span role="separator" tabIndex={0} aria-orientation="vertical" aria-label={`Ancho de ${col.label}`} aria-valuemin={80} aria-valuemax={640} aria-valuenow={Math.round(columnWidths[col.id] || 140)} className="column-resizer" title="Arrastra para ajustar. Flechas para cambiar el ancho. Doble clic para restablecer."
+                    onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); const measured = measureColumns(); setColumnWidths(measured); resize.current = {id:col.id,x:event.clientX,width:measured[col.id] || 140}; event.currentTarget.setPointerCapture(event.pointerId); }}
+                    onPointerMove={event => { const active = resize.current; if (active?.id === col.id) setWidth(col.id, active.width + event.clientX - active.x); }}
+                    onPointerUp={event => { resize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }}
+                    onPointerCancel={() => { resize.current = null; }} onLostPointerCapture={() => { resize.current = null; }}
+                    onDoubleClick={() => setColumnWidths({})}
+                    onKeyDown={event => { if (!['ArrowLeft','ArrowRight','Home'].includes(event.key)) return; event.preventDefault(); if (event.key === 'Home') {setColumnWidths({});return;} const measured = measureColumns(); setColumnWidths(measured); setWidth(col.id,(measured[col.id] || 140) + (event.key === 'ArrowRight' ? 16 : -16)); }} />
                 </th>
               ))}
 
@@ -237,12 +253,12 @@ const Table: React.FC<TableProps> = ({
                     <td className="w-28 px-5 py-3 text-right flex-shrink-0">
                       <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover/row:opacity-100 transition-opacity">
                         {onView && (
-                          <button onClick={() => onView(row)} className="p-1.5 text-slate-400 hover:text-[#3b82f6] hover:bg-blue-50 rounded-lg transition-all" title="Ver detalles">
+                          <button data-tour-open="detail" data-tour-purpose={row.guidePurpose} onClick={() => onView(row)} className="p-1.5 text-slate-400 hover:text-[#3b82f6] hover:bg-blue-50 rounded-lg transition-all" title="Ver detalles">
                             <Eye size={17} />
                           </button>
                         )}
                         {onEdit && (
-                          <button onClick={() => onEdit(row)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Editar">
+                          <button data-tour-open="edit" onClick={() => onEdit(row)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Editar">
                             <Edit2 size={17} />
                           </button>
                         )}

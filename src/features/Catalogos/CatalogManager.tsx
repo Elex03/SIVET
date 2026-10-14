@@ -1,3 +1,7 @@
+import { apiUrl } from '../../shared/api/client';
+import { canWriteApiCatalog } from '../../shared/api/permissions';
+import { useAuth } from '../../shared/context/auth';
+import NumberInput from '../../shared/components/NumberInput';
 import MedicationForm from "./MedicationForm";
 import { useState } from "react";
 import { Plus, Pencil } from "lucide-react";
@@ -37,7 +41,7 @@ const blank = (tipo: string): CatalogRecord => ({
 });
 export default function CatalogManager({ locationsOnly = false }: { locationsOnly?: boolean }) {
   const tabs = locationsOnly ? [{ id: "ubicaciones", label: "Ubicaciones de destino" }] : [...generalTabs, { id: "ubicaciones", label: "Ubicaciones de destino" }];
-  const state = useSivet();
+  const state = useSivet(); const {user}=useAuth();
   const [params, setParams] = useSearchParams();
   const tab = tabs.some((t) => t.id === params.get("tipo"))
     ? params.get("tipo")!
@@ -99,7 +103,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
             />
             <button
               className={`${buttonClass} flex items-center justify-center gap-2 shrink-0 toolbar-actions`}
-              onClick={() => edit(blank(tab))}
+              data-tour-open="create" disabled={!!apiUrl && !canWriteApiCatalog(user?.role,tab)} onClick={() => edit(blank(tab))}
             >
               <Plus size={16} />
               Nuevo registro
@@ -161,7 +165,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
                   <button
                     title={`Editar ${r.nombre}`}
                     className="p-2 text-[#304a6d]"
-                    onClick={() => edit(r)}
+                    disabled={!!apiUrl && !canWriteApiCatalog(user?.role,tab)} onClick={() => edit(r)}
                   >
                     <Pencil size={17} />
                   </button>
@@ -269,7 +273,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
                 ))}
                 <label>
                   Stock mínimo
-                  <input
+                  <NumberInput
                     type="number"
                     min={0}
                     required

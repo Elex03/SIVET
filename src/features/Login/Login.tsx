@@ -1,11 +1,11 @@
 import { useState } from "react";
 import type { FormEvent } from 'react';
+import type { User as AuthUser } from '../../shared/types/auth';
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../shared/context/auth";
-import type { Role } from "../../shared/types/auth";
 import UNA from "../../shared/assets/images/UNA.png";
-import { User, Lock, ShieldAlert, LogIn, ChevronDown } from "lucide-react";
+import { User, Lock, ShieldAlert, LogIn } from "lucide-react";
 
 const Login = ({ preparation = false }: { preparation?: boolean }) => {
   const navigate = useNavigate();
@@ -13,7 +13,6 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role | "">(preparation ? "preparador" : "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -22,23 +21,24 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
     event.preventDefault();
     setError("");
 
-    if (!username || !password || !role) {
+    if (!username || !password) {
       setError("Por favor, complete todos los campos requeridos.");
       return;
     }
 
     if (submitting) return;
     setSubmitting(true);
-    const success = await login(username, password, role);
+    let account: AuthUser | null;
+    try {account = await login(username, password);} catch(reason) {setSubmitting(false);setError(reason instanceof Error?reason.message:'No se pudo iniciar sesión.');return;}
     setSubmitting(false);
 
-    if (!success) {
+    if (!account) {
       setError("Credenciales incorrectas. Verifique e intente nuevamente.");
       return;
     }
 
-    // Redirección dependiendo del rol
-    if (role === "preparador") { navigate("/preparacion"); } else if (role === "administrador") {
+    const role = account.role; // El rol pertenece a la cuenta autenticada.
+    if (role === "consulta") { navigate("/inventario"); } else if (role === "preparador") { navigate("/preparacion"); } else if (role === "administrador") {
       navigate("/dashboard");
     } else if (role === "bodega") {
       navigate("/bodega");
@@ -49,18 +49,18 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-slate-50 relative overflow-x-hidden py-4 px-3">
-      
+
       {/* ========================================== */}
       {/* DECORACIONES DE FONDO (Sutiles y Corporativas) */}
       {/* ========================================== */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#304a6d]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-in fade-in duration-1000"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-slate-300/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-in fade-in duration-1000 delay-300"></div>
+
+
 
       {/* ========================================== */}
       {/* TARJETA DE LOGIN */}
       {/* ========================================== */}
       <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-5 sm:p-10 relative z-10 animate-in zoom-in-95 fade-in duration-500">
-        
+
         {/* CABECERA: Logo y Títulos */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 sm:w-40 sm:h-40 mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-2">
@@ -74,7 +74,7 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
 
         {/* FORMULARIO */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          
+
           {/* Campo: Usuario */}
           <div>
             <label htmlFor="username" className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
@@ -85,7 +85,7 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
                 <User size={18} className="text-slate-400" />
               </div>
               <input
-                id="username"
+                id="username" autoComplete="username"
                 type="text"
                 placeholder="Ingrese su credencial institucional"
                 value={username}
@@ -105,36 +105,13 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
                 <Lock size={18} className="text-slate-400" />
               </div>
               <input
-                id="password"
+                id="password" autoComplete="current-password"
                 type="password"
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm text-[#1e293b] font-medium outline-none focus:bg-white focus:border-[#304a6d] focus:ring-4 focus:ring-[#304a6d]/10 transition-all placeholder:text-slate-400"
               />
-            </div>
-          </div>
-
-          {/* Campo: Rol */}
-          <div>
-            <label htmlFor="role" className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Perfil de Acceso
-            </label>
-            <div className="relative">
-              <select
-                id="role" disabled={preparation}
-                value={role}
-                onChange={(event) => setRole(event.target.value as Role)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm text-[#1e293b] font-medium outline-none appearance-none cursor-pointer focus:bg-white focus:border-[#304a6d] focus:ring-4 focus:ring-[#304a6d]/10 transition-all"
-              >
-                <option value="" disabled className="text-slate-400 font-normal">Seleccione su rol asignado</option>
-                <option value="administrador">Administrador del Sistema</option>
-                <option value="bodega">Gestión de Bodega</option>
-                <option value="farmacia">Operador de Farmacia</option><option value="preparador">Preparador de Bodega</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                <ChevronDown size={16} className="text-slate-400" />
-              </div>
             </div>
           </div>
 
@@ -149,12 +126,12 @@ const Login = ({ preparation = false }: { preparation?: boolean }) => {
           )}
 
           {/* Botón de Submit - Azul Marino Institucional */}
-          <button 
+          <button
             type="submit" disabled={submitting}
             className="w-full mt-2 bg-[#304a6d] hover:bg-[#233854] text-white font-bold py-3.5 rounded-xl shadow-md shadow-[#304a6d]/20 transition-all flex items-center justify-center gap-2 group"
           >
             <span>Iniciar Sesión</span>
-            <LogIn size={18} className="group-hover:translate-x-1 transition-transform" />
+            <LogIn size={18} className="" />
           </button>
 
         </form>
