@@ -78,6 +78,7 @@ const Modal: React.FC<ModalProps> = ({
             )}
           </div>
           <button 
+            type="button"
             data-tour-close
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"

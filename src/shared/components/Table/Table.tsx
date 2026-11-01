@@ -133,8 +133,8 @@ const Table: React.FC<TableProps> = ({
       {/* CONTENEDOR HORIZONTAL (Controla el overflow si hay demasiadas columnas) */}
       <div tabIndex={0} role="region" aria-label={`Tabla: ${exportTitle}`} className="table-scroll w-full flex-1 min-h-0 overflow-auto custom-scrollbar">
 
-        {/* LA TABLA AHORA ES UN FLEX CONTAINER PARA QUE EL TBODY SE ESTIRE */}
-        <table ref={tableRef} className="w-full table-auto border-collapse text-left" style={Object.keys(columnWidths).length ? { tableLayout: 'fixed', width: activeColumnsForTable.reduce((sum, col) => sum + (columnWidths[col.id] || 140), 0) + (hasActions ? 112 : 0) + (enableExport ? 56 : 0), minWidth: '100%' } : undefined}>
+        {/* Natural content widths until the user manually resizes the columns. */}
+        <table ref={tableRef} className={`content-sized-table border-collapse text-left ${Object.keys(columnWidths).length ? 'has-custom-widths' : ''}`} style={Object.keys(columnWidths).length ? { tableLayout: 'fixed', width: activeColumnsForTable.reduce((sum, col) => sum + (columnWidths[col.id] || 140), 0) + (hasActions ? 112 : 0) + (enableExport ? 56 : 0), minWidth: '100%' } : { width: 'max-content', minWidth: '100%' }}>
           {Object.keys(columnWidths).length > 0 && <colgroup>{activeColumnsForTable.map(col => <col key={col.id} style={{ width: columnWidths[col.id] || 140 }} />)}{hasActions && <col style={{width:112}} />}{enableExport && <col style={{width:56}} />}</colgroup>}
 
           {/* THEAD: Estático, fuera del scroll vertical.
@@ -144,7 +144,7 @@ const Table: React.FC<TableProps> = ({
 
               {activeColumnsForTable.map((col) => (
                 <th key={col.id} data-column={col.id} aria-sort={sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="relative px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
-                  <button type="button" className="flex items-center gap-2 text-left w-full" aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}>{col.label}<span aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button>
+                  <button type="button" className="table-column-heading flex items-center gap-2 text-left" title={col.label} aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}><span className="truncate">{col.label}</span><span className="shrink-0" aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button>
                   <span role="separator" tabIndex={0} aria-orientation="vertical" aria-label={`Ancho de ${col.label}`} aria-valuemin={80} aria-valuemax={640} aria-valuenow={Math.round(columnWidths[col.id] || 140)} className="column-resizer" title="Arrastra para ajustar. Flechas para cambiar el ancho. Doble clic para restablecer."
                     onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); const measured = measureColumns(); setColumnWidths(measured); resize.current = {id:col.id,x:event.clientX,width:measured[col.id] || 140}; event.currentTarget.setPointerCapture(event.pointerId); }}
                     onPointerMove={event => { const active = resize.current; if (active?.id === col.id) setWidth(col.id, active.width + event.clientX - active.x); }}
@@ -244,8 +244,10 @@ const Table: React.FC<TableProps> = ({
                 <tr key={row.id || index} className="group/row hover:bg-slate-50/60 transition-colors">
 
                   {activeColumnsForTable.map((col) => (
-                    <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900 break-words">
-                      {col.id === 'estado' ? <StatusBadge value={row[col.id]} /> : col.render ? col.render(row) : row[col.id]}
+                    <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
+                      <div className="table-cell-content" title={!col.render && (typeof row[col.id] === 'string' || typeof row[col.id] === 'number') ? String(row[col.id]) : undefined}>
+                        {col.id === 'estado' ? <StatusBadge value={row[col.id]} /> : col.render ? col.render(row) : row[col.id]}
+                      </div>
                     </td>
                   ))}
 

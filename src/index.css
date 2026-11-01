@@ -115,6 +115,21 @@ body,
 .data-table { flex: 0 0 auto; max-height: clamp(16rem, 52dvh, 38rem); }
 .table-scroll, .receipt-lines { overscroll-behavior: contain; scrollbar-gutter: stable; }
 .table-scroll thead, .receipt-lines thead { position: sticky; top: 0; z-index: 10; }
+.content-sized-table .table-cell-content,
+.content-sized-table .table-column-heading {
+  width: max-content;
+  max-width: 320px;
+  white-space: nowrap;
+}
+.content-sized-table .table-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.content-sized-table.has-custom-widths .table-cell-content,
+.content-sized-table.has-custom-widths .table-column-heading {
+  width: 100%;
+  max-width: 100%;
+}
 .receipt-lines { max-height: 45dvh; overflow: auto; }
 .activity-panel { min-height: 0; max-height: 60dvh; overflow: auto; overscroll-behavior: contain; }
 .activity-panel > h3 { position: sticky; top: -1.25rem; padding-block: .75rem; background: white; z-index: 1; }
