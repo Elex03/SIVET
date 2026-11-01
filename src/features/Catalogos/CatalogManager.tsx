@@ -2,6 +2,8 @@ import { canEditMedication, canWriteCatalog } from '../../shared/api/permissions
 import { useAuth } from '../../shared/context/auth';
 import NumberInput from '../../shared/components/NumberInput';
 import MedicationForm from "./MedicationForm";
+import MedicationImage from '../../shared/components/MedicationImage';
+import MedicationUses from '../../shared/components/MedicationUses';
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -47,6 +49,8 @@ export default function CatalogManager() {
     : tabs[0].id;
   const [search, setSearch] = useState("");
   const [medicationStatus, setMedicationStatus] = useState("active");
+  const [origin, setOrigin] = useState("");
+  const [viewing, setViewing] = useState<CatalogRecord | null>(null);
   const [record, setRecord] = useState<CatalogRecord | null>(null);
   const [emails, setEmails] = useState("");
   const [phones, setPhones] = useState("");
@@ -61,6 +65,7 @@ export default function CatalogManager() {
     (r) =>
       r.tipo === tab &&
       (tab !== "medicamentos" || medicationStatus === "all" || r.activo === (medicationStatus === "active")) &&
+      (tab !== "medicamentos" || !origin || r.origen_registro === origin) &&
       `${r.nombre} ${r.codigo} ${r.correos.join(" ")} ${r.telefonos.join(" ")}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -114,6 +119,7 @@ export default function CatalogManager() {
               <option value="inactive">Medicamentos inactivos</option>
               <option value="all">Todos los medicamentos</option>
             </select>}
+            {tab === "medicamentos" && <select aria-label="Origen del medicamento" className={`${inputClass} toolbar-search`} value={origin} onChange={e => setOrigin(e.target.value)}><option value="">Todos los orígenes</option><option>Sistema</option><option>Importado desde Excel</option></select>}
           </div>
           <Table
             exportTitle={tabs.find((t) => t.id === tab)?.label}
@@ -124,6 +130,7 @@ export default function CatalogManager() {
                     { id: "codigo", label: "Código" },
                     { id: "unidad", label: "Unidad" },
                     { id: "marca", label: "Marca" },
+                    { id: "origen_registro", label: "Origen del registro", render: (r: CatalogRecord) => r.origen_registro || 'No documentado' },
                   ]
                 : []),
               ...(tab === "proveedores"
@@ -193,9 +200,13 @@ export default function CatalogManager() {
               ...r,
               estado: r.activo ? "Activo" : "Inactivo",
             }))}
+            onView={tab === "medicamentos" ? r => setViewing(state.data.catalogos.find(c => c.id === r.id) || null) : undefined}
           />
         </section>
       </div>
+      <Modal isOpen={!!viewing} onClose={() => setViewing(null)} title={viewing?.nombre || 'Detalle del medicamento'}>
+        {viewing && <div className="space-y-5"><MedicationImage preview src={viewing.imagen} name={viewing.nombre} /><p className="text-sm text-slate-600">Código: {viewing.codigo} · Origen del registro: {viewing.origen_registro || 'No documentado'}</p><MedicationUses value={viewing.indicaciones} /><div><h3 className="font-bold text-[#304a6d] mb-2">Descripción de catálogo</h3><p className="whitespace-pre-line text-sm text-slate-600">{viewing.descripcion || 'No documentado'}</p></div></div>}
+      </Modal>
       <Modal
         isOpen={!!record && record.tipo !== "medicamentos"}
         onClose={() => !state.pending && setRecord(null)}

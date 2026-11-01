@@ -25,6 +25,8 @@ interface TableProps<Row extends object> {
   enableExport?: boolean;
   exportTitle?: string;
   exportSubtitle?: string;
+  pagination?: boolean;
+  sortable?: boolean;
 }
 
 const cellValue = <Row extends object,>(row: Row, id: string): unknown => row[id as keyof Row];
@@ -39,7 +41,9 @@ const Table = <Row extends object,>({
   onDownload,
   enableExport = true,
   exportTitle = "Reporte General",
-  exportSubtitle = "Listado de registros del sistema"
+  exportSubtitle = "Listado de registros del sistema",
+  pagination = true,
+  sortable = true,
 }: TableProps<Row>) => {
   const hasActions = Boolean(onView || onEdit || onDownload);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
@@ -80,7 +84,7 @@ const Table = <Row extends object,>({
   const endIndex = itemsPerPage === "all" ? data.length : startIndex + effectiveItemsPerPage;
   const [sort, setSort] = useState<{ key: string; descending: boolean } | null>(null);
   const sortedData = [...data].sort((a, b) => {
-    if (!sort) return 0;
+    if (!sortable || !sort) return 0;
     const value = (row: Row) => {
       const raw = cellValue(row, sort.key);
       if (/fecha|vencimiento/i.test(sort.key) && typeof raw === 'string') {
@@ -94,7 +98,7 @@ const Table = <Row extends object,>({
     const delta = av == null ? (bv == null ? 0 : 1) : bv == null ? -1 : typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), 'es', { numeric: true, sensitivity: 'base' });
     return sort.descending ? -delta : delta;
   });
-  const currentData = sortedData.slice(startIndex, endIndex);
+  const currentData = pagination ? sortedData.slice(startIndex, endIndex) : sortedData;
 
   // ==========================================
   // ESTADOS DEL MENÚ
@@ -146,8 +150,8 @@ const Table = <Row extends object,>({
             <tr className="w-full">
 
               {activeColumnsForTable.map((col) => (
-                <th key={col.id} data-column={col.id} aria-sort={sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="relative px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
-                  <button type="button" className="table-column-heading flex items-center gap-2 text-left" title={col.label} aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}><span className="truncate">{col.label}</span><span className="shrink-0" aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button>
+                <th key={col.id} data-column={col.id} aria-sort={!sortable ? undefined : sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="relative px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
+                  {sortable ? <button type="button" className="table-column-heading flex items-center gap-2 text-left" title={col.label} aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}><span className="truncate">{col.label}</span><span className="shrink-0" aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button> : <div className="table-column-heading truncate" title={col.label}>{col.label}</div>}
                   <span role="separator" tabIndex={0} aria-orientation="vertical" aria-label={`Ancho de ${col.label}`} aria-valuemin={80} aria-valuemax={640} aria-valuenow={Math.round(columnWidths[col.id] || 140)} className="column-resizer" title="Arrastra para ajustar. Flechas para cambiar el ancho. Doble clic para restablecer."
                     onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); const measured = measureColumns(); setColumnWidths(measured); resize.current = {id:col.id,x:event.clientX,width:measured[col.id] || 140}; event.currentTarget.setPointerCapture(event.pointerId); }}
                     onPointerMove={event => { const active = resize.current; if (active?.id === col.id) setWidth(col.id, active.width + event.clientX - active.x); }}
@@ -298,7 +302,7 @@ const Table = <Row extends object,>({
       </div>
 
       {/* FOOTER ESTÁTICO (Nunca se oculta ni scrollea) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-3 border-t border-slate-100 bg-white gap-4 flex-shrink-0 z-30">
+      {pagination && <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-3 border-t border-slate-100 bg-white gap-4 flex-shrink-0 z-30">
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <span>Mostrar</span>
           <select
@@ -337,7 +341,7 @@ const Table = <Row extends object,>({
             </button>
           </div>
         </div>
-      </div>
+      </div>}
 
     </div>
   );

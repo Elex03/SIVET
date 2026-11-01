@@ -29,6 +29,7 @@ export interface CatalogRecord {
   telefonos: string[];
   contenidoMl?: number;
   indicaciones?: string;
+  readonly origen_registro?: 'Sistema' | 'Importado desde Excel';
   sintomas?: string;
   sintomaIds?: string[];
   presentacion?: string;

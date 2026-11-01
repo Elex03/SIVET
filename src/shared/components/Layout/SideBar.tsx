@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { canReadHistory } from '../../api/history';
 import {
   Users,
   Boxes,
@@ -245,6 +246,7 @@ const Sidebar: React.FC = () => {
         ) : null}
         {isFarmacia && <NavLink to="/farmacia/salidas" className="sidebar-item" title="Salidas a localidades"><ShoppingCart size={18} />{!isCollapsed && <span>Salidas a localidades</span>}</NavLink>}
 
+        {canReadHistory(user.role) && <NavLink to={isBodega ? '/bodega/historial-importado' : isFarmacia ? '/farmacia/historial-importado' : '/historial-importado'} className="sidebar-item" title="Histórico importado"><FileText size={18} />{!isCollapsed && <span>Histórico importado</span>}</NavLink>}
       </nav>
 
       {/* ================= USUARIO ================= */}

@@ -2,6 +2,7 @@ import NumberInput from '../../../shared/components/NumberInput';
 import Modal from '../../../shared/components/Layout/Modal';
 import LotScanner from '../../../shared/components/LotScanner';
 import MedicationImage from '../../../shared/components/MedicationImage';
+import MedicationUses from '../../../shared/components/MedicationUses';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -107,7 +108,7 @@ function PreparationEditor({ request, db, pending, onBack, onReload, onSave, onD
       </fieldset>; })}
     </div>
     <Modal isOpen={scannerOpen} onClose={() => setScannerOpen(false)} title="Escanear medicamento" maxWidth="max-w-xl">{scannerOpen && <LotScanner onScan={scan} />}</Modal>
-    <Modal isOpen={!!info} onClose={() => setInfoId(null)} title={info?.nombre || 'Información del medicamento'} maxWidth="max-w-xl"><div className="space-y-5 text-sm text-slate-600"><MedicationImage src={info?.imagen} name={info?.nombre} /><div><h3 className="font-bold text-[#304a6d] mb-2">¿Para qué sirve?</h3><p>{info?.indicaciones || 'Aún no se ha registrado esta información.'}</p></div><div><h3 className="font-bold text-[#304a6d] mb-2">Síntomas que trata</h3><p>{info?.sintomas || 'Aún no se ha registrado esta información.'}</p></div><p>{info?.descripcion}</p><p><b>Acción terapéutica:</b> {info?.accion || 'Sin registrar'}</p></div></Modal>
+    <Modal isOpen={!!info} onClose={() => setInfoId(null)} title={info?.nombre || 'Información del medicamento'} maxWidth="max-w-xl"><div className="space-y-5 text-sm text-slate-600"><MedicationImage src={info?.imagen} name={info?.nombre} /><MedicationUses value={info?.indicaciones} /><p>Origen del registro: {info?.origen_registro || 'No documentado'}</p><div><h3 className="font-bold text-[#304a6d] mb-2">Síntomas que trata</h3><p>{info?.sintomas || 'Aún no se ha registrado esta información.'}</p></div><p>{info?.descripcion}</p><p><b>Acción terapéutica:</b> {info?.accion || 'Sin registrar'}</p></div></Modal>
     <footer className="p-4 border-t border-slate-100 shrink-0">{locked ? <p className="text-sm text-emerald-700 flex gap-2 items-center"><PackageCheck size={20} />Preparación completada. Bodega confirmará el envío a Farmacia.</p> : <><p className="text-xs text-slate-500 mb-3">{dirty ? 'Tienes cambios sin guardar.' : 'El avance se conserva al guardar.'} Puedes guardar y continuar después. Bodega descontará las existencias al confirmar el envío.</p><div className="flex flex-wrap justify-end gap-3"><button disabled={pending || stale} className="px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50" onClick={() => void save(false)}><Save size={16} />Guardar avance</button><button disabled={pending || stale || completed !== lines.length || !lines.length} className={`${buttonClass} flex items-center gap-2 disabled:opacity-50`} onClick={() => void save(true)}><Check size={17} />Listo para enviar</button></div></>}</footer>
   </>;
 }

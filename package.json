@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test tests/domain.test.cjs tests/api-adapter.test.cjs tests/api-session.test.cjs tests/form-save.test.cjs"
+    "test": "node --test tests/domain.test.cjs tests/api-adapter.test.cjs tests/api-session.test.cjs tests/form-save.test.cjs tests/history.test.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

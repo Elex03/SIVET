@@ -22,6 +22,7 @@ Para modo JSON, deja `VITE_API_URL=` vacía y reinicia Vite. Ese modo conserva s
 | Catálogos | `/medicamentos`, `/marcas`, `/categorias`, `/presentaciones`, `/unidades-medida`, `/acciones-terapeuticas`, `/sintomas`, `/areas-destino`, `/proveedores` |
 | Imagen y síntomas | `/medicamentos/{id}/imagen`, `/medicamentos/{id}/sintomas` |
 | Eliminar medicamento | `DELETE /medicamentos/{id}` (baja lógica, respuesta 204) |
+| Histórico importado | `GET /historial-movimientos`, `GET /historial-movimientos/{id_fila}` (solo lectura; requiere la versión nueva del backend) |
 | Inventario | `/inventario` |
 | Pedidos de ingreso | `/lotes`, `/recepciones/borradores`, `/recepciones/{id}`, `/confirmar`, `/cancelar` |
 | Evidencia del ingreso | `/recepciones/{id}/adjuntos`, `/recepciones/{id}/adjuntos/{adjuntoId}` |
@@ -58,6 +59,9 @@ El adaptador `server.ts` reemplaza `/sivet`, `/sivet/commands` y `/users`. Manti
 
 ## Verificación
 
+- Histórico importado: la consulta pública de `https://sivet-backend-n8fv.onrender.com/openapi.json` devolvió versión 1.4.0 sin las dos rutas de histórico el 1 de noviembre de 2026. La pantalla está implementada contra el DTO proporcionado, con errores explícitos de despliegue/alcance y reintento. Queda pendiente desplegar esa versión de backend y comprobar los totales reales por rol (ADMIN/CONSULTA 3.620, BODEGA 557, FARMACIA 3.398) y los 335 traslados entrantes a Farmacia. Esos números son criterios suministrados, no resultados observados ni valores fijos en la interfaz.
+- El histórico se carga página a página, sin rango temporal inicial y con cancelación de solicitudes obsoletas. No se añade a `loadServerDatabase`, inventario, movimientos operativos, recepciones ni métricas. Los detalles conservan datos originales/normalizados, null, destino explícito, motivo y fuente. El componente Table desactiva su paginación y orden local para este módulo; las exportaciones parciales están deshabilitadas.
+- `indicaciones` se presenta como «Para qué sirve», con texto escapado, saltos de línea y «Uso no documentado» como valor vacío. `origen_registro` se mapea y filtra sobre el catálogo completo ya cargado; se muestra como lectura y no se envía en POST/PATCH. Las pruebas cubren también esas restricciones.
 - Autenticación y carga mediante el adaptador real comprobadas con ADMIN, BODEGA, FARMACIA, PREPARADOR y CONSULTA.
 - Login, carga administrativa y usuarios también comprobados a través del proxy local de Vite.
 - El backend de desarrollo estaba vacío de medicamentos, lotes, recepciones, solicitudes y movimientos. No se crearon registros de negocio para la prueba.

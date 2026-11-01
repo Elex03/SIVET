@@ -25,6 +25,7 @@ const Salidas = lazy(() => import('../../features/Farmacia/Salidas'));
 const Farmacia = lazy(() => import("../../features/Farmacia/Solicitudes"));
 const SystemPage = lazy(() => import("../pages/SystemPage"));
 const NotificationsPage = lazy(() => import('../../features/Farmacia/NotificationsPage'));
+const ImportedHistory = lazy(() => import('../../features/Historial/ImportedHistory'));
 
 const Unauthorized = lazy(
   () => import("../pages/Unauthorized")
@@ -82,6 +83,7 @@ const AppRouter = () => {
           {/* ================= RUTAS PROTEGIDAS ================= */}
           <Route element={<ProtectedRoute allowedRoles={["administrador", "bodega", "farmacia", "consulta"]} />}>
             <Route element={<MainLayout />}>
+              <Route path="/historial-importado" element={<ImportedHistory />} />
               <Route path="/configuracion" element={<SystemPage settings />} /><Route element={<ProtectedRoute allowedRoles={["administrador","consulta"]} />}><Route path="/inventario" element={<Inventory />} /></Route>
 
               {/* ============ ADMINISTRADOR ============ */}
@@ -101,6 +103,7 @@ const AppRouter = () => {
                 }
               >
                 <Route path="/bodega/preparacion" element={<Preparacion />} />
+                <Route path="/bodega/historial-importado" element={<ImportedHistory />} />
                 <Route path="/bodega" element={<Bodega location="Bodega Central" />} />
                 <Route path="/bodega/solicitudes" element={<SolicitudesBodega bodega />} />
                 <Route path="/bodega/notificaciones" element={<NotificationsPage bodega />} />
@@ -119,6 +122,7 @@ const AppRouter = () => {
                 }
               >
                 <Route path="/farmacia" element={<Farmacia />} />
+                <Route path="/farmacia/historial-importado" element={<ImportedHistory />} />
                 <Route path="/farmacia/salidas" element={<Salidas />} />
                 <Route path="/farmacia/solicitudes" element={<Farmacia />} />
                 <Route path="/farmacia/notificaciones" element={<NotificationsPage />} />
