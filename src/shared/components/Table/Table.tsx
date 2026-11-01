@@ -9,25 +9,28 @@ import {
 
 import { generatePDFTemplate, generateExcel } from "../../utils/printUtils";
 
-export interface TableColumn {
+export interface TableColumn<Row extends object = Record<string, React.ReactNode>> {
   id: string;
   label: string;
-  render?: (row: any) => React.ReactNode;
+  render?: (row: Row) => React.ReactNode;
 }
 
-interface TableProps {
-  columns: TableColumn[];
+interface TableProps<Row extends object> {
+  columns: TableColumn<Row>[];
   pageSize?: number;
-  data: Record<string, any>[];
-  onView?: (row: any) => void;
-  onEdit?: (row: any) => void;
-  onDownload?: (row: any) => void;
+  data: Row[];
+  onView?: (row: Row) => void;
+  onEdit?: (row: Row) => void;
+  onDownload?: (row: Row) => void;
   enableExport?: boolean;
   exportTitle?: string;
   exportSubtitle?: string;
 }
 
-const Table: React.FC<TableProps> = ({
+const cellValue = <Row extends object,>(row: Row, id: string): unknown => row[id as keyof Row];
+const cellText = (value: unknown): string | number => value == null ? '' : typeof value === 'number' ? value : Array.isArray(value) ? value.join(', ') : String(value);
+
+const Table = <Row extends object,>({
   columns,
   pageSize = 10,
   data,
@@ -37,7 +40,7 @@ const Table: React.FC<TableProps> = ({
   enableExport = true,
   exportTitle = "Reporte General",
   exportSubtitle = "Listado de registros del sistema"
-}) => {
+}: TableProps<Row>) => {
   const hasActions = Boolean(onView || onEdit || onDownload);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const resize = useRef<{ id: string; x: number; width: number } | null>(null);
@@ -78,8 +81,8 @@ const Table: React.FC<TableProps> = ({
   const [sort, setSort] = useState<{ key: string; descending: boolean } | null>(null);
   const sortedData = [...data].sort((a, b) => {
     if (!sort) return 0;
-    const value = (row: Record<string, any>) => {
-      const raw = row[sort.key];
+    const value = (row: Row) => {
+      const raw = cellValue(row, sort.key);
       if (/fecha|vencimiento/i.test(sort.key) && typeof raw === 'string') {
         const local = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
         if (local) { let hour = Number(local[4] || 0); if (/[ap]\.?(?:\s*)m/i.test(raw)) hour = hour % 12 + (/p\.?(?:\s*)m/i.test(raw) ? 12 : 0); return Date.UTC(+local[3], +local[2]-1, +local[1], hour, +(local[5] || 0), +(local[6] || 0)); }
@@ -112,7 +115,7 @@ const Table: React.FC<TableProps> = ({
   const getExportData = () => {
     const exportColumns = activeColumnsForTable.filter(c => c.id !== 'imagen').map(c => c.label);
     const exportRows = sortedData.map(row =>
-      activeColumnsForTable.filter(c => c.id !== 'imagen').map(c => Array.isArray(row[c.id]) ? row[c.id].join(', ') : row[c.id] ?? "")
+      activeColumnsForTable.filter(c => c.id !== 'imagen').map(c => cellText(cellValue(row, c.id)))
     );
     return { columns: exportColumns, data: exportRows };
   };
@@ -241,12 +244,12 @@ const Table: React.FC<TableProps> = ({
           <tbody className="divide-y divide-slate-100/80 bg-white">
             {currentData.length > 0 ? (
               currentData.map((row, index) => (
-                <tr key={row.id || index} className="group/row hover:bg-slate-50/60 transition-colors">
+                <tr key={typeof cellValue(row, 'id') === 'string' || typeof cellValue(row, 'id') === 'number' ? String(cellValue(row, 'id')) : index} className="group/row hover:bg-slate-50/60 transition-colors">
 
                   {activeColumnsForTable.map((col) => (
                     <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
-                      <div className="table-cell-content" title={!col.render && (typeof row[col.id] === 'string' || typeof row[col.id] === 'number') ? String(row[col.id]) : undefined}>
-                        {col.id === 'estado' ? <StatusBadge value={row[col.id]} /> : col.render ? col.render(row) : row[col.id]}
+                      <div className="table-cell-content" title={!col.render ? String(cellText(cellValue(row, col.id))) : undefined}>
+                        {col.id === 'estado' ? <StatusBadge value={cellValue(row, col.id)} /> : col.render ? col.render(row) : React.isValidElement(cellValue(row, col.id)) ? cellValue(row, col.id) as React.ReactElement : cellText(cellValue(row, col.id))}
                       </div>
                     </td>
                   ))}
@@ -255,7 +258,7 @@ const Table: React.FC<TableProps> = ({
                     <td className="w-28 px-5 py-3 text-right flex-shrink-0">
                       <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover/row:opacity-100 transition-opacity">
                         {onView && (
-                          <button data-tour-open="detail" data-tour-purpose={row.guidePurpose} onClick={() => onView(row)} className="p-1.5 text-slate-400 hover:text-[#3b82f6] hover:bg-blue-50 rounded-lg transition-all" title="Ver detalles">
+                          <button type="button" data-tour-open="detail" data-tour-purpose={typeof cellValue(row, 'guidePurpose') === 'string' ? String(cellValue(row, 'guidePurpose')) : undefined} onClick={() => onView(row)} className="p-1.5 text-slate-400 hover:text-[#3b82f6] hover:bg-blue-50 rounded-lg transition-all" title="Ver detalles">
                             <Eye size={17} />
                           </button>
                         )}

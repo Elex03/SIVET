@@ -181,8 +181,58 @@ test('gráficas temporales mantienen cronología y seleccionan últimos período
   assert.equal(chartRows(rows,'flujo',{limit:0},true).length, 3);
 });
 const { assertCatalogPermission, canEditMedication } = require('../src/shared/api/permissions.ts');
+const { commandConfirmation, commandSuccess } = require('../src/shared/api/commandFeedback.ts');
 const { authenticateAccount, validateAccountChange } = require('../src/shared/api/accountRules.ts');
 const accounts = require('../public/data/users.json');
+
+test('eliminar un medicamento conserva inventario, archivos e historial y no repite auditoría', () => {
+  const source = structuredClone(fixtures);
+  const medication = source.catalogos.find(c => c.tipo === 'medicamentos' && c.activo);
+  const command = { type: 'medication.delete', id: medication.id, actor: 'admin' };
+  const updated = applyCommand(source, command);
+  assert.equal(updated.catalogos.find(c => c.id === medication.id).activo, false);
+  assert.deepEqual(updated.catalogos.find(c => c.id === medication.id), { ...medication, activo: false });
+  for (const key of ['existencias', 'movimientos', 'solicitudes', 'recepciones', 'notificaciones'])
+    assert.deepEqual(updated[key], source[key]);
+  assert.equal(medication.activo, true);
+  assert.equal(updated.actividad.length, (source.actividad || []).length + 1);
+  assert.equal(updated.actividad.at(-1).accion, 'medication.delete');
+  assert.ok(updated.actividad.at(-1).detalle.includes(medication.nombre));
+  assert.deepEqual(applyCommand(updated, command), updated);
+  const confirmation = commandConfirmation(command, source);
+  assert.equal(confirmation.danger, true);
+  assert.deepEqual(confirmation.details, [medication.nombre]);
+  assert.match(commandSuccess(command), /baja/);
+});
+
+test('solo Administración y Bodega pueden eliminar medicamentos existentes', () => {
+  const source = structuredClone(fixtures);
+  const id = source.catalogos.find(c => c.tipo === 'medicamentos').id;
+  const command = { type: 'medication.delete', id };
+  for (const role of ['administrador', 'bodega'])
+    assert.doesNotThrow(() => assertCatalogPermission(role, command, source));
+  for (const role of ['farmacia', 'preparador', 'consulta', undefined])
+    assert.throws(() => assertCatalogPermission(role, command, source), /permiso/);
+  for (const badId of ['inexistente', source.catalogos.find(c => c.tipo !== 'medicamentos').id]) {
+    assert.throws(() => applyCommand(source, { ...command, id: badId }), /no existe/);
+    assert.throws(() => assertCatalogPermission('administrador', { ...command, id: badId }, source), /no existe/);
+  }
+});
+
+test('un medicamento eliminado no admite nuevas solicitudes, ingresos ni salidas y se puede reactivar', () => {
+  const source = structuredClone(fixtures);
+  const stock = source.existencias.find(s => s.ubicacion === 'Bodega Central' && s.cantidad > 0 && s.vencimiento > today());
+  const medication = source.catalogos.find(c => c.id === stock.productoId);
+  const updated = applyCommand(source, { type: 'medication.delete', id: medication.id });
+  assert.throws(() => applyCommand(updated, { type: 'request.create', request: { id: 'SOL-INACTIVO', solicitante: 'farmacia', items: [{ stockId: stock.id, cantidad: 1 }] } }), /inactivo/);
+  const pharmacyStock = { ...stock, id: 'pharmacy-inactive', ubicacion: 'Farmacia' };
+  updated.existencias.push(pharmacyStock);
+  const area = source.catalogos.find(c => c.tipo === 'ubicaciones' && c.activo).nombre;
+  assert.throws(() => applyCommand(updated, { type: 'pharmacy.dispatch', id: 'SAL-INACTIVO', area, nota: '', items: [{ stockId: pharmacyStock.id, cantidad: 1, destino: 'HOSPITAL' }] }), /inactivo/);
+  assert.throws(() => applyCommand(updated, { type: 'receipt.create', receipt: { id: 'REC-INACTIVO', tipoIngreso: 'DONACION', donante: 'Fundación', fecha: today(), total: 0, items: [{ productoId: medication.id, lote: 'NEW', vencimiento: '2099-01-01', cantidad: 1 }] } }), /producto|medicamento/i);
+  const reactivated = applyCommand(updated, { type: 'catalog.save', record: { ...medication, activo: true } });
+  assert.equal(reactivated.catalogos.find(c => c.id === medication.id).activo, true);
+});
 test('solo bodega y administración editan medicamentos; farmacia solo ubicaciones', () => {
   const source = structuredClone(fixtures); const medicine = source.catalogos.find(c => c.tipo === 'medicamentos');
   assert.equal(canEditMedication('farmacia'), false);

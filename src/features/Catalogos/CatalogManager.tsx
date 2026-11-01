@@ -1,10 +1,10 @@
 import { apiUrl } from '../../shared/api/client';
-import { canWriteApiCatalog } from '../../shared/api/permissions';
+import { canEditMedication, canWriteApiCatalog } from '../../shared/api/permissions';
 import { useAuth } from '../../shared/context/auth';
 import NumberInput from '../../shared/components/NumberInput';
 import MedicationForm from "./MedicationForm";
 import { useState } from "react";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import PageHeader from "../../shared/components/Layout/PageHeader";
 import Modal from "../../shared/components/Layout/Modal";
@@ -47,6 +47,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
     ? params.get("tipo")!
     : tabs[0].id;
   const [search, setSearch] = useState("");
+  const [medicationStatus, setMedicationStatus] = useState("active");
   const [record, setRecord] = useState<CatalogRecord | null>(null);
   const [emails, setEmails] = useState("");
   const [phones, setPhones] = useState("");
@@ -60,6 +61,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
   const rows = state.data.catalogos.filter(
     (r) =>
       r.tipo === tab &&
+      (tab !== "medicamentos" || medicationStatus === "all" || r.activo === (medicationStatus === "active")) &&
       `${r.nombre} ${r.codigo} ${r.correos.join(" ")} ${r.telefonos.join(" ")}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -108,6 +110,11 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
               <Plus size={16} />
               Nuevo registro
             </button>
+            {tab === "medicamentos" && <select aria-label="Estado de medicamentos" className={`${inputClass} toolbar-search`} value={medicationStatus} onChange={e => setMedicationStatus(e.target.value)}>
+              <option value="active">Medicamentos activos</option>
+              <option value="inactive">Medicamentos inactivos</option>
+              <option value="all">Todos los medicamentos</option>
+            </select>}
           </div>
           <Table
             exportTitle={tabs.find((t) => t.id === tab)?.label}
@@ -160,15 +167,26 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
               { id: "estado", label: "Estado" },
               {
                 id: "editar",
-                label: "Editar",
+                label: tab === "medicamentos" ? "Acciones" : "Editar",
                 render: (r: CatalogRecord) => (
+                  <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     title={`Editar ${r.nombre}`}
                     className="p-2 text-[#304a6d]"
-                    disabled={!!apiUrl && !canWriteApiCatalog(user?.role,tab)} onClick={() => edit(r)}
+                    disabled={state.pending || (!!apiUrl && !canWriteApiCatalog(user?.role,tab))} onClick={() => edit(r)}
                   >
                     <Pencil size={17} />
                   </button>
+                  {tab === "medicamentos" && canEditMedication(user?.role) && <button
+                    type="button"
+                    title={r.activo ? `Eliminar ${r.nombre}` : "El medicamento ya está inactivo"}
+                    aria-label={`Eliminar ${r.nombre}`}
+                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg disabled:opacity-40"
+                    disabled={state.pending || !r.activo}
+                    onClick={() => void state.mutate({ type: "medication.delete", id: r.id })}
+                  ><Trash2 size={17} /></button>}
+                  </div>
                 ),
               },
             ]}

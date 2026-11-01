@@ -6,6 +6,14 @@ export function commandConfirmation(
   command: Command,
   db: Database,
 ): Confirmation {
+  if (command.type === "medication.delete")
+    return {
+      title: "¿Eliminar este medicamento?",
+      description: "Se dará de baja y dejará de estar disponible para nuevas operaciones. Sus existencias, imágenes e historial se conservarán. Puedes reactivarlo desde los medicamentos inactivos.",
+      details: [db.catalogos.find((r) => r.id === command.id)?.nombre || command.id],
+      confirmLabel: "Eliminar medicamento",
+      danger: true,
+    };
   if (command.type === "request.prepare")
     return {
       title: command.ready
@@ -220,6 +228,8 @@ export function commandConfirmation(
   };
 }
 export function commandSuccess(command: Command): string {
+  if (command.type === "medication.delete")
+    return "Medicamento dado de baja correctamente. Su historial se conserva.";
   if (command.type === "request.prepare")
     return command.ready
       ? "Pedido listo. Bodega puede confirmar su envío."

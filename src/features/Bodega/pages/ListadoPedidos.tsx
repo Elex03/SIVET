@@ -21,11 +21,11 @@ const ListadoPedidos: React.FC = () => {
 
   // Estados para el Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPedido, setSelectedPedido] = useState<any>(null);
+  const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
   const [activeTab, setActiveTab] = useState<"productos" | "documento">("productos");
 
   // Configuración de las columnas principales
-  const columns: TableColumn[] = [
+  const columns: TableColumn<Pedido>[] = [
     { id: "documento", label: "No. Documento" },
     { id: "proveedor", label: "Proveedor" },
     { id: "fecha", label: "Fecha Recepción" },
@@ -73,7 +73,8 @@ const ListadoPedidos: React.FC = () => {
   // ==========================================
   // ACCIÓN: VER DETALLES (Abre el Popup)
   // ==========================================
-  const handleViewDetails = (row: any) => {
+  type Pedido = typeof pedidosData[number];
+  const handleViewDetails = (row: Pedido) => {
     setSelectedPedido(row);
     setActiveTab("productos"); // Reinicia a la pestaña de productos
     setIsModalOpen(true);
@@ -90,7 +91,7 @@ const ListadoPedidos: React.FC = () => {
       title: `Reporte de Recepción: ${selectedPedido.documento}`,
       subtitle: `Proveedor: ${selectedPedido.proveedor} | Fecha: ${selectedPedido.fecha}`,
       columns: ["Código", "Medicamento", "Lote", "Vencimiento", "Cantidad"],
-      data: selectedPedido.productos.map((p: any) => [
+      data: selectedPedido.productos.map((p) => [
         p.codigo, 
         p.nombre, 
         p.lote, 
@@ -192,7 +193,7 @@ const ListadoPedidos: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {selectedPedido.productos.map((p: any, i: number) => (
+                    {selectedPedido.productos.map((p, i: number) => (
                       <tr key={i} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-gray-500 font-mono">{p.codigo}</td>
                         <td className="px-4 py-3 font-medium text-gray-800">{p.nombre}</td>

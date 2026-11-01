@@ -35,9 +35,9 @@ const Dashboard: React.FC = () => {
   const { catData, terapeuticaData, areaData, kpis, stockBajoData, proximosVencerData } = selectDashboard(state.data, dateFilter, fechaInicio, fechaFin, bodega, categoria);
   const handleRecargar = async () => { setIsRefreshing(true); await state.refresh(); setIsRefreshing(false); };
 
-  const stockBajoColumns: TableColumn[] = [
+  const stockBajoColumns: TableColumn<typeof stockBajoData[number]>[] = [
     { id: "codigo", label: "Código" },
-    { id: "imagen", label: "Imagen", render: row => <MedicationImage src={row.imagen} name={row.medicamento} /> }, { id: "medicamento", label: "Producto" },
+    { id: "imagen", label: "Imagen", render: row => <MedicationImage preview src={row.imagen} name={row.medicamento} /> }, { id: "medicamento", label: "Producto" },
     { id: "stock_actual", label: "Stock actual", render: (row) => <span className="font-bold text-slate-700">{row.stock_actual}</span> },
     { id: "minimo", label: "Mínimo", render: (row) => <span className="text-slate-500">{row.minimo}</span> },
     {
@@ -46,8 +46,8 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  const proximosVencerColumns: TableColumn[] = [
-    { id: "imagen", label: "Imagen", render: row => <MedicationImage src={row.imagen} name={row.medicamento} /> }, { id: "medicamento", label: "Producto" },
+  const proximosVencerColumns: TableColumn<typeof proximosVencerData[number]>[] = [
+    { id: "imagen", label: "Imagen", render: row => <MedicationImage preview src={row.imagen} name={row.medicamento} /> }, { id: "medicamento", label: "Producto" },
     { id: "lote", label: "Lote", render: (row) => <span className="font-mono text-xs text-slate-500">{row.lote}</span> },
     { id: "vencimiento", label: "Vencimiento", render: (row) => <span className="text-sm text-slate-700 font-medium">{row.vencimiento}</span> },
     { id: "dias", label: "Alerta", render: (row) => <span className="text-amber-600 text-xs font-bold">{row.dias <= 0 ? "Vencido" : `En ${row.dias} días`}</span> },

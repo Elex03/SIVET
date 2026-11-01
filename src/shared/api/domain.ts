@@ -203,6 +203,7 @@ export interface Notification {
 }
 export type Command = (
   | { type: "catalog.save"; record: CatalogRecord }
+  | { type: "medication.delete"; id: string }
   | { type: "request.create"; request: SupplyRequest }
   | {
       type: "request.status";
@@ -367,6 +368,13 @@ export function applyCommand(source: Database, command: Command): Database {
       );
     }
     db.catalogos = [...db.catalogos.filter((c) => c.id !== r.id), r];
+  }
+  if (command.type === "medication.delete") {
+    const medication = db.catalogos.find((r) => r.id === command.id && r.tipo === "medicamentos");
+    if (!medication) throw new Error("El medicamento no existe. Actualiza los datos.");
+    // Match the API's idempotent soft delete; inventory and history stay intact.
+    if (!medication.activo) return db;
+    medication.activo = false;
   }
   if (command.type === "request.create") {
     const r = command.request;
@@ -1008,7 +1016,9 @@ export function applyCommand(source: Database, command: Command): Database {
         ? `${command.ready ? "Preparación lista" : "Avance de preparación"} · ${command.lines.filter((l) => l.lista).length}/${command.lines.length} medicamentos`
         : command.type === "catalog.save"
           ? command.record.nombre
-          : command.type === "request.status"
+          : command.type === "medication.delete"
+            ? `Medicamento dado de baja · ${db.catalogos.find((r) => r.id === command.id)?.nombre}`
+            : command.type === "request.status"
             ? `${command.estado} · ${command.observacion}`
             : command.type === "request.receive"
               ? `${command.mode === "confirm" ? "Recepción conforme" : command.mode === "return" ? "Devolución" : "Recepción pendiente"} · ${command.note}`

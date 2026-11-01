@@ -6,7 +6,8 @@ export interface ProductItem {
   nombre: string;
   presentacion: string;
   unidad: string;
-  [key: string]: any;
+  marca?: string;
+  [key: string]: unknown;
 }
 
 interface ProductSearchProps {

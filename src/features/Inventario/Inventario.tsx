@@ -58,7 +58,7 @@ const Inventario: React.FC = () => {
   // LÓGICA DE FILTRADO Y ORDENAMIENTO
   // ==========================================
   const processedData = useMemo(() => {
-    let filtered = mockInventario.filter(item => {
+    const filtered = mockInventario.filter(item => {
       const matchesUbicacion = ubicacionFilter === "Todas" || item.ubicacion === ubicacionFilter;
       const matchesTab = activeTab === "Todos" || item.estado === activeTab;
       const matchesCategoria = categoriaFilter === "Todas" || item.categoria === categoriaFilter;
@@ -94,7 +94,7 @@ const Inventario: React.FC = () => {
   // ==========================================
   // DEFINICIÓN MAESTRA DE COLUMNAS
   // ==========================================
-  const columns: TableColumn[] = [
+  const columns: TableColumn<ProductoInventario>[] = [
     { id: "codigo", label: "Código", render: (row: ProductoInventario) => <span className="font-mono text-xs font-semibold text-slate-500">{row.codigo}</span> },
     { id: "producto", label: "Producto", render: (row: ProductoInventario) => <span className="font-bold text-[#304a6d]">{row.producto}</span> },
     { id: "categoria", label: "Categoría", render: (row: ProductoInventario) => <span className="text-slate-600 font-medium text-sm">{row.categoria}</span> },

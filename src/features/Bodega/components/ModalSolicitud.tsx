@@ -4,8 +4,19 @@ import {
   X, Printer, FileText, AlertCircle, Clock, Image as ImageIcon, MessageSquare
 } from "lucide-react";
 
+export interface SolicitudPreview {
+  id: string;
+  farmacia: string;
+  solicitante: string;
+  fecha: string;
+  prioridad: string;
+  estado: string;
+  nota_farmacia?: string;
+  items: { id: number; codigo: string; producto: string; cantidad: number; unidad: string; stock_disponible: number; imagen?: string }[];
+}
+
 interface ModalSolicitudProps {
-  solicitud: any;
+  solicitud: SolicitudPreview | null;
   isOpen: boolean;
   onClose: () => void;
   onChangeStatus: (id: string, newStatus: string) => void;
@@ -148,7 +159,7 @@ const ModalSolicitud: React.FC<ModalSolicitudProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {solicitud.items.map((item: any) => {
+                      {solicitud.items.map((item) => {
                         const stockValue = item.stock_disponible || 0;
                         const isInsufficient = stockValue < item.cantidad;
 

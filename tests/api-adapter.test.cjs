@@ -7,6 +7,28 @@ const {mapCatalog,mapStock,mapRequest,decimal}=require('../src/shared/api/apiMap
 const {executeServerCommand}=require('../src/shared/api/server.ts');
 const {emptyDatabase}=require('../src/shared/api/domain.ts');
 function fixture(){const db=structuredClone(emptyDatabase);db.catalogos=[mapCatalog('unidades',{id_unidad:1,nombre:'Frasco'}),mapCatalog('presentaciones',{id_presentacion:1,nombre:'Frasco'}),mapCatalog('ubicaciones',{id_area:1,nombre:'Consulta'}),mapCatalog('medicamentos',{id_medicamento:1,codigo:'M1',nombre:'Medicamento',id_unidad_medida:1,id_presentacion:1,contenido_ml:'100',cantidad_por_empaque:'1'},[mapCatalog('unidades',{id_unidad:1,nombre:'Frasco'}),mapCatalog('presentaciones',{id_presentacion:1,nombre:'Frasco'})])];db.existencias=[mapStock({id_inventario:1,id_lote:11,ubicacion:'FARMACIA',cantidad:'2',cantidad_disponible:'2',lotes_id_lote:{id_medicamento:1,numero_lote:'A',fecha_vencimiento:'2099-01-01'}}),mapStock({id_inventario:2,id_lote:12,ubicacion:'BODEGA',cantidad:'10',lotes_id_lote:{id_medicamento:1,numero_lote:'B',fecha_vencimiento:'2099-01-01'}})];return db;}
+test('eliminar medicamento usa DELETE con ID real y acepta respuesta vacía sin tocar stock', async () => {
+  calls.length = 0;
+  reply = async () => undefined;
+  const db = fixture();
+  const before = structuredClone(db);
+  await executeServerCommand({ type: 'medication.delete', id: 'medicamentos:1' }, db);
+  assert.deepEqual(calls, [{ url: '/medicamentos/1', method: 'DELETE', data: undefined }]);
+  assert.deepEqual(db, before);
+  db.catalogos.find(c => c.id === 'medicamentos:1').activo = false;
+  await executeServerCommand({ type: 'medication.delete', id: 'medicamentos:1' }, db);
+  assert.equal(calls.length, 2);
+});
+test('eliminar rechaza IDs de otros catálogos y propaga rechazo del servidor', async () => {
+  calls.length = 0;
+  for (const id of ['marcas:1', 'unidades:1', 'medicamentos:999'])
+    await assert.rejects(() => executeServerCommand({ type: 'medication.delete', id }, fixture()), /no existe/);
+  assert.equal(calls.length, 0);
+  reply = async () => { throw new Error('Sin permisos'); };
+  const db = fixture();
+  await assert.rejects(() => executeServerCommand({ type: 'medication.delete', id: 'medicamentos:1' }, db), /Sin permisos/);
+  assert.equal(db.catalogos.find(c => c.id === 'medicamentos:1').activo, true);
+});
 test('IDs de catálogos no colisionan y conversiones conservan cantidades',()=>{const db=fixture();assert.equal(new Set(db.catalogos.map(c=>c.id)).size,4);assert.equal(db.existencias[0].productoId,'medicamentos:1');assert.equal(db.catalogos[3].unidad,'Frasco');assert.equal(decimal(.000000000001),'0.000000000001');assert.equal(decimal(200),'200');assert.throws(()=>decimal(NaN));});
 test('salida usa UUID, lote real, decimal y destino por línea',async()=>{calls.length=0;reply=async()=>({id_movimiento:9});await executeServerCommand({type:'pharmacy.dispatch',id:'SAL-00000000-0000-4000-8000-000000000001',area:'Consulta',nota:'',items:[{stockId:'1',cantidad:5,unidadSalida:'ML',destino:'CASA'}]},fixture());assert.deepEqual(calls[0],{url:'/movimientos',method:'POST',data:{id_operacion:'00000000-0000-4000-8000-000000000001',tipo_movimiento:'FARMACIA_AREA',ubicacion_origen:'FARMACIA',id_area_destino:1,observaciones:null,detalles:[{id_lote:11,cantidad:'5',unidad_salida:'ML',destino_salida:'CASA'}]}});});
 test('solicitar agrupa medicamentos y no manda lotes como detalles',async()=>{calls.length=0;reply=async()=>({});await executeServerCommand({type:'request.create',request:{id:'SOL-X',prioridad:'NORMAL',nota:'',items:[{stockId:'1',cantidad:1},{stockId:'2',cantidad:2}]}},fixture());assert.deepEqual(calls[0].data.detalles,[{id_medicamento:1,cantidad_solicitada:'3'}]);assert.equal(calls[0].url,'/solicitudes');});

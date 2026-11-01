@@ -14,7 +14,8 @@ import UNALOGO from '../../../shared/assets/images/UNA.png'
 const Bodega: React.FC = () => {
   const navigate = useNavigate();
 
-  const columns: TableColumn[] = [
+  type InventoryRow = typeof inventoryData[number];
+  const columns: TableColumn<InventoryRow>[] = [
     {
       id: "imagen",
       label: "", // Lo dejamos vacío o puedes poner "Img"
@@ -63,11 +64,11 @@ const Bodega: React.FC = () => {
   ];
 
   // 3. Funciones de acción para la tabla
-  const handleViewDetails = (row: any) => {
+  const handleViewDetails = (row: InventoryRow) => {
     navigate(`/bodega/medicamento/${row.id}`); 
   };
 
-  const handleEdit = (row: any) => {
+  const handleEdit = (row: InventoryRow) => {
     console.log("Editar medicamento:", row.nombre);
     // Lógica para abrir modal de edición
   };

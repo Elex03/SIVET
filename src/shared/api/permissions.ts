@@ -35,6 +35,13 @@ export function assertCatalogPermission(
   command: Command,
   db: Database,
 ) {
+  if (command.type === "medication.delete") {
+    if (!canEditMedication(role))
+      throw new Error("Tu usuario no tiene permiso para eliminar medicamentos.");
+    if (!db.catalogos.some((r) => r.id === command.id && r.tipo === "medicamentos"))
+      throw new Error("El medicamento no existe. Actualiza los datos.");
+    return;
+  }
   if (command.type !== "catalog.save") return;
   const previous = db.catalogos.find((r) => r.id === command.record.id);
   if (

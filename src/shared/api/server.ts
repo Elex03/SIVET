@@ -388,6 +388,12 @@ export async function executeServerCommand(
   command: Command,
   db: Database,
 ): Promise<string | undefined> {
+  if (command.type === "medication.delete") {
+    const medication = db.catalogos.find((r) => r.id === command.id && r.tipo === "medicamentos");
+    if (!medication) throw new Error("El medicamento no existe. Actualiza los datos.");
+    await apiData(`/medicamentos/${numberId(medication.id)}`, "DELETE");
+    return;
+  }
   if (command.type === "catalog.save") {
     const r = command.record;
     const [path, key] = catalogRoutes[r.tipo];

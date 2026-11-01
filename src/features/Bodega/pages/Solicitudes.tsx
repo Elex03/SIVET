@@ -4,6 +4,7 @@ import PageHeader from "../../../shared/components/Layout/PageHeader";
 import Table from "../../../shared/components/Table/Table";
 import type  { TableColumn } from "../../../shared/components/Table/Table";
 import ModalSolicitud from "../components/ModalSolicitud"; 
+import type { SolicitudPreview } from "../components/ModalSolicitud";
 
 const initialData = [
   {
@@ -31,7 +32,7 @@ const SolicitudesBodega: React.FC = () => {
   const [solicitudes, setSolicitudes] = useState(initialData);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("TODOS");
-  const [selectedSolicitud, setSelectedSolicitud] = useState<any | null>(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudPreview | null>(null);
 
   const counts = {
     Total: solicitudes.length,
@@ -42,7 +43,7 @@ const SolicitudesBodega: React.FC = () => {
 
   const handleStatusChange = (id: string, newStatus: string) => {
     setSolicitudes(prev => prev.map(sol => sol.id === id ? { ...sol, estado: newStatus } : sol));
-    setSelectedSolicitud((prev: any) => prev?.id === id ? { ...prev, estado: newStatus } : prev);
+    setSelectedSolicitud((prev) => prev?.id === id ? { ...prev, estado: newStatus } : prev);
   };
 
   const filteredData = solicitudes.filter(sol => {
@@ -51,7 +52,7 @@ const SolicitudesBodega: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const columns: TableColumn[] = [
+  const columns: TableColumn<SolicitudPreview>[] = [
     { id: "id", label: "Documento", render: (row) => <span className="font-mono text-sm font-bold text-[#304a6d]">{row.id}</span> },
     { 
       id: "origen", label: "Área / Solicitante", 

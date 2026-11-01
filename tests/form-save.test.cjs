@@ -91,3 +91,12 @@ test('cancelar la confirmación mantiene abierto el formulario sin guardar', asy
   assert.equal(saves(), 0);
   assert.deepEqual(notices, []);
 });
+
+test('cancelar la eliminación no envía DELETE y un rechazo no devuelve éxito', async () => {
+  const cancelled = await fixture({ confirmed: false });
+  assert.equal(await cancelled.state.mutate({ type: 'medication.delete', id: 'medicamentos:1' }), false);
+  assert.equal(cancelled.saves(), 0);
+  const rejected = await fixture({ saveFails: true });
+  assert.equal(await rejected.state.mutate({ type: 'medication.delete', id: 'medicamentos:1' }), false);
+  assert.deepEqual(rejected.notices, ['error']);
+});

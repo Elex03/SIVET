@@ -1,6 +1,6 @@
 # Integración API de SIVET
 
-Implementada contra la documentación local **1.3.0**, base `/api/v1`. Referencia: `api-openapi-integracion-1.3.json`.
+Integración con base `/api/v1`. El contrato original se conserva en `api-openapi-integracion-1.3.json`. La eliminación de medicamentos se verificó contra la documentación local **1.4.0** en [Swagger](http://localhost:3000/docs/) el 1 de noviembre de 2026.
 
 ## Ejecutar
 
@@ -21,6 +21,7 @@ Para modo JSON, deja `VITE_API_URL=` vacía y reinicia Vite. Ese modo conserva s
 | Usuarios | `/usuarios`, `/usuarios/{id}`, `/usuarios/{id}/password`, `/roles` |
 | Catálogos | `/medicamentos`, `/marcas`, `/categorias`, `/presentaciones`, `/unidades-medida`, `/acciones-terapeuticas`, `/sintomas`, `/areas-destino`, `/proveedores` |
 | Imagen y síntomas | `/medicamentos/{id}/imagen`, `/medicamentos/{id}/sintomas` |
+| Eliminar medicamento | `DELETE /medicamentos/{id}` (baja lógica, respuesta 204) |
 | Inventario | `/inventario` |
 | Pedidos de ingreso | `/lotes`, `/recepciones/borradores`, `/recepciones/{id}`, `/confirmar`, `/cancelar` |
 | Evidencia del ingreso | `/recepciones/{id}/adjuntos`, `/recepciones/{id}/adjuntos/{adjuntoId}` |
@@ -38,6 +39,8 @@ El adaptador `server.ts` reemplaza `/sivet`, `/sivet/commands` y `/users`. Manti
 
 ## Comportamiento
 
+- Administración y Bodega pueden eliminar medicamentos desde Catálogos. Se solicita confirmación y se envía `DELETE /medicamentos/{id}` sin cuerpo. La baja desactiva el medicamento sin borrar existencias, imágenes ni historial y es idempotente. El modo JSON aplica la misma regla y no duplica la auditoría al repetirla.
+- El catálogo muestra medicamentos activos por defecto; el filtro permite consultar inactivos o todos. Para reactivar, editar el medicamento inactivo y marcar «Medicamento activo». Los selectores de nuevas operaciones excluyen medicamentos inactivos.
 - Bearer y refresh rotativo: las renovaciones simultáneas se serializan. Tokens en sessionStorage; una sesión rechazada se elimina. No se envía rol ni actor como autoridad al backend.
 - Cambiar sesión vacía el almacén de datos y descarta cargas anteriores. El servidor conserva la autorización efectiva.
 - CONSULTA accede al inventario con lectura. PREPARADOR consulta únicamente solicitudes autorizadas, sus detalles y lotes elegibles; no descarga catálogos o inventario globales.
@@ -56,7 +59,7 @@ El adaptador `server.ts` reemplaza `/sivet`, `/sivet/commands` y `/users`. Manti
 - Autenticación y carga mediante el adaptador real comprobadas con ADMIN, BODEGA, FARMACIA, PREPARADOR y CONSULTA.
 - Login, carga administrativa y usuarios también comprobados a través del proxy local de Vite.
 - El backend de desarrollo estaba vacío de medicamentos, lotes, recepciones, solicitudes y movimientos. No se crearon registros de negocio para la prueba.
-- `npm test`: 58 pruebas de dominio, contratos del adaptador y sesión. Cubren decimales, modalidad por línea, solicitudes por medicamento, recepción, cambio de lote/versiones, donaciones, confirmación y refresh concurrente/rechazado.
+- `npm test`: pruebas de dominio, contratos del adaptador, formularios y sesión. Cubren decimales, modalidad por línea, solicitudes por medicamento, recepción, cambio de lote/versiones, donaciones, confirmación y refresh concurrente/rechazado. La baja cubre permisos por rol, conservación del inventario e historial, repetición sin duplicar auditoría, reactivación, rechazo de nuevas operaciones, cancelación, errores de API y respuesta 204 sin contenido.
 - Los tests de escritura usan transporte simulado: validan rutas y payloads del frontend. No sustituyen una prueba de todo el flujo con registros reales y las pruebas de integración del backend.
 - Se conserva la validación de producción en el servidor; ocultar controles o comprobar el formulario no sustituye la autorización ni las transacciones del backend.
 
