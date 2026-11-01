@@ -1,4 +1,5 @@
 import MedicationImage from '../../shared/components/MedicationImage';
+import { WAREHOUSE_NAME } from '../../shared/config/institution';
 import StatCard from '../../shared/components/Layout/StatCard';
 import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
@@ -103,7 +104,7 @@ const Dashboard: React.FC = () => {
               className="bg-transparent outline-none cursor-pointer font-medium text-xs text-slate-700"
             >
               <option value="todas">Todas las bodegas</option>
-              <option value="Bodega Central">Bodega Central UNA</option>
+              <option value="Bodega Central">{WAREHOUSE_NAME}</option>
               <option value="Farmacia">Farmacia</option>
             </select>
           </div>

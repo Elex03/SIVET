@@ -2,19 +2,22 @@ import type { Role } from "../types/auth";
 import type { Command, Database } from "./domain";
 export const canEditMedication = (role?: Role) =>
   role === "administrador" || role === "bodega";
-export function canWriteApiCatalog(role: Role | undefined, type: string) {
+export function canWriteCatalog(role: Role | undefined, type: string, local = false) {
   return (
     role === "administrador" ||
     (role === "bodega" &&
-      [
+      type !== "ubicaciones" &&
+      (local || [
         "medicamentos",
         "marcas",
         "categorias",
         "terapeuticas",
         "proveedores",
-      ].includes(type)) ||
-    (role === "farmacia" && type === "ubicaciones")
+      ].includes(type)))
   );
+}
+export function canWriteApiCatalog(role: Role | undefined, type: string) {
+  return canWriteCatalog(role, type);
 }
 export function assertPreparationPermission(
   role: Role | undefined,
@@ -44,13 +47,8 @@ export function assertCatalogPermission(
   }
   if (command.type !== "catalog.save") return;
   const previous = db.catalogos.find((r) => r.id === command.record.id);
-  if (
-    !role ||
-    role === "preparador" ||
-    (role === "farmacia" &&
-      (command.record.tipo !== "ubicaciones" ||
-        (previous && previous.tipo !== "ubicaciones")))
-  )
+  if (!canWriteCatalog(role, command.record.tipo, true) ||
+      (previous?.tipo === "ubicaciones" && role !== "administrador"))
     throw new Error(
       "Tu usuario no tiene permiso para modificar este catálogo.",
     );

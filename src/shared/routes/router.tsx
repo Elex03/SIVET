@@ -118,7 +118,6 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador", "farmacia"]} />
                 }
               >
-                <Route path="/farmacia/catalogos" element={<Catalogos locationsOnly />} />
                 <Route path="/farmacia" element={<Farmacia />} />
                 <Route path="/farmacia/salidas" element={<Salidas />} />
                 <Route path="/farmacia/solicitudes" element={<Farmacia />} />
@@ -132,6 +131,7 @@ const AppRouter = () => {
                   <ProtectedRoute allowedRoles={["administrador"]} />
                 }
               >
+                <Route path="/farmacia/catalogos" element={<Navigate to="/catalogos?tipo=ubicaciones" replace />} />
                 <Route
                   path="/reportes"
                   element={<Reportes />}

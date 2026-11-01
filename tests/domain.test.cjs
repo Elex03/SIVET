@@ -180,7 +180,8 @@ test('gráficas temporales mantienen cronología y seleccionan últimos período
   assert.deepEqual(chartRows(rows,'flujo',{sort:'desc',limit:2},true).map(r=>r.name), ['2026-10-02','2026-10-03']);
   assert.equal(chartRows(rows,'flujo',{limit:0},true).length, 3);
 });
-const { assertCatalogPermission, canEditMedication } = require('../src/shared/api/permissions.ts');
+const { assertCatalogPermission, canEditMedication, canWriteCatalog, canWriteApiCatalog } = require('../src/shared/api/permissions.ts');
+const { INSTITUTION_NAME, WAREHOUSE_NAME, locationLabel } = require('../src/shared/config/institution.ts');
 const { commandConfirmation, commandSuccess } = require('../src/shared/api/commandFeedback.ts');
 const { authenticateAccount, validateAccountChange } = require('../src/shared/api/accountRules.ts');
 const accounts = require('../public/data/users.json');
@@ -233,15 +234,48 @@ test('un medicamento eliminado no admite nuevas solicitudes, ingresos ni salidas
   const reactivated = applyCommand(updated, { type: 'catalog.save', record: { ...medication, activo: true } });
   assert.equal(reactivated.catalogos.find(c => c.id === medication.id).activo, true);
 });
-test('solo bodega y administración editan medicamentos; farmacia solo ubicaciones', () => {
+test('solo bodega y administración editan medicamentos; farmacia no modifica catálogos', () => {
   const source = structuredClone(fixtures); const medicine = source.catalogos.find(c => c.tipo === 'medicamentos');
   assert.equal(canEditMedication('farmacia'), false);
   assert.throws(() => assertCatalogPermission('farmacia', {type:'catalog.save',record:medicine}, source), /permiso/);
   for (const role of ['bodega','administrador']) assert.doesNotThrow(() => assertCatalogPermission(role, {type:'catalog.save',record:medicine}, source));
-  assert.doesNotThrow(() => assertCatalogPermission('farmacia', {type:'catalog.save',record:source.catalogos.find(c=>c.tipo==='ubicaciones')}, source));
+  assert.throws(() => assertCatalogPermission('farmacia', {type:'catalog.save',record:source.catalogos.find(c=>c.tipo==='ubicaciones')}, source), /permiso/);
   assert.throws(() => assertCatalogPermission('farmacia', {type:'catalog.save',record:{...medicine,tipo:'ubicaciones'}}, source), /permiso/);
   const updated = applyCommand(source, {type:'catalog.save',record:{...medicine,nombre:'Nombre actualizado'}});
   assert.deepEqual(updated.existencias, source.existencias);
+});
+
+test('solo Administración crea o modifica localidades en modo API y local', () => {
+  const source = structuredClone(fixtures);
+  const location = source.catalogos.find(c => c.tipo === 'ubicaciones');
+  for (const role of ['administrador', 'bodega', 'farmacia', 'consulta', 'preparador', undefined]) {
+    for (const local of [false, true])
+      assert.equal(canWriteCatalog(role, 'ubicaciones', local), role === 'administrador');
+    assert.equal(canWriteApiCatalog(role, 'ubicaciones'), role === 'administrador');
+    for (const record of [location, { ...location, id: 'new-location', nombre: 'Localidad nueva' }]) {
+      const check = () => assertCatalogPermission(role, { type: 'catalog.save', record }, source);
+      if (role === 'administrador') assert.doesNotThrow(check);
+      else assert.throws(check, /permiso/);
+    }
+  }
+  assert.throws(() => assertCatalogPermission('bodega', { type: 'catalog.save', record: { ...location, tipo: 'medicamentos' } }, source), /permiso/);
+  for (const record of source.catalogos) {
+    assert.equal(canWriteCatalog('farmacia', record.tipo, true), false);
+    assert.equal(canWriteApiCatalog('farmacia', record.tipo), false);
+  }
+});
+
+test('el nombre institucional es fijo y la nueva etiqueta de bodega conserva los filtros históricos', () => {
+  assert.equal(INSTITUTION_NAME, 'Hospital Veterinario');
+  assert.equal(WAREHOUSE_NAME, 'Bodega Hospital Veterinario UNA');
+  for (const previous of ['Bodega Central', 'Bodega Central UNA', WAREHOUSE_NAME])
+    assert.equal(locationLabel(previous), WAREHOUSE_NAME);
+  assert.equal(locationLabel('Farmacia'), 'Farmacia');
+  const source = structuredClone(fixtures);
+  const report = selectReports(source, '30', today(), today(), 'Bodega Central', 'todas');
+  assert.ok(report.tables.existencias.data.length > 0);
+  assert.ok(report.tables.existencias.data.every(s => s.ubicacion === WAREHOUSE_NAME));
+  assert.deepEqual(source, fixtures);
 });
 test('autenticación comprueba contraseña, rol y estado activo', async () => {
   assert.deepEqual(await authenticateAccount(accounts,'admin','Sivet2026!','administrador'), {username:'admin',role:'administrador'});

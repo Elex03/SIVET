@@ -1,5 +1,5 @@
 import { apiUrl } from '../api/client';
-import { canWriteApiCatalog } from '../api/permissions';
+import { canWriteCatalog } from '../api/permissions';
 import { useState } from 'react';
 import Modal from './Layout/Modal';
 import { useAuth } from '../context/auth';
@@ -9,7 +9,7 @@ import { inputClass, buttonClass } from '../styles/formStyles';
 
 export default function CatalogSelect({ type, value, onChange, label, useId = false, required = false, defaults = [] }: { type: string; value: string; onChange: (value: string) => void; label: string; useId?: boolean; required?: boolean; defaults?: string[] }) {
   const state = useSivet(); const { user } = useAuth(); const [adding, setAdding] = useState(false); const [name, setName] = useState('');
-  const canAdd = apiUrl ? canWriteApiCatalog(user?.role,type) : user?.role === 'administrador' || user?.role === 'bodega' || (user?.role === 'farmacia' && type === 'ubicaciones');
+  const canAdd = canWriteCatalog(user?.role, type, state.local);
   const records = state.data.catalogos.filter(c => c.tipo === type && c.activo);
   const options = records.map(c => ({ value: useId ? c.id : c.nombre, label: c.nombre }));
   for (const item of [...(apiUrl?[]:defaults), value]) if (item && !options.some(o => o.value === item)) options.push({ value: item, label: item });

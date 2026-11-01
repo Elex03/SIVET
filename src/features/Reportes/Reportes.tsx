@@ -1,4 +1,5 @@
 import PageSkeleton from '../../shared/components/Layout/PageSkeleton';
+import { locationLabel, WAREHOUSE_NAME } from '../../shared/config/institution';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Download, FileSearch, GripVertical, Layout, Settings2 } from 'lucide-react';
@@ -49,7 +50,7 @@ export default function Reportes() {
   const temporal = report === 'donaciones' || report === 'movimientos' || report === 'salidas_area' || report === 'auditoria';
   const invalidDates = temporal && period === 'custom' && (!from || !to || from > to);
   const dates = temporal ? period === 'custom' ? `${from} al ${to}` : `Últimos ${period} días` : `Existencias actuales · ${today()}`;
-  const subtitle = `${dates} | ${place === 'todas' ? 'Todas las ubicaciones' : place} | ${report === 'auditoria' ? 'Todas las acciones' : category === 'todas' ? 'Todas las categorías' : category}`;
+  const subtitle = `${dates} | ${place === 'todas' ? 'Todas las ubicaciones' : locationLabel(place)} | ${report === 'auditoria' ? 'Todas las acciones' : category === 'todas' ? 'Todas las categorías' : category}`;
 
   function addChart(template: { metric: string; chartType: ChartType }, target?: number) {
     if (!generated) { toast.info('Carga el reporte para agregar gráficas.'); return; }
@@ -103,7 +104,7 @@ export default function Reportes() {
           <label className="text-sm font-bold text-[#304a6d]">Tipo de reporte<select className={inputClass} value={report} onChange={e => { setParams({tipo:e.target.value}); setGenerated(false); setSelectedSlot(0); }}>{reportDefinitions.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}</select><span className="block text-xs font-normal text-slate-500 mt-3 leading-relaxed">{definition.desc}</span></label>
           <div className="flex flex-col gap-4 border-t border-slate-100 pt-4"><h2 className="text-sm font-bold text-[#304a6d]">2. Filtros</h2>
             {temporal ? <><label className="text-xs text-slate-500 font-semibold">Período<select className={inputClass} value={period} onChange={e => { setPeriod(e.target.value); setGenerated(false); }}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="custom">Personalizado</option></select></label>{period === 'custom' && <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3"><label className="text-xs text-slate-500">Desde<input className={inputClass} type="date" value={from} onChange={e => { setFrom(e.target.value); setGenerated(false); }} /></label><label className="text-xs text-slate-500">Hasta<input className={inputClass} type="date" value={to} onChange={e => { setTo(e.target.value); setGenerated(false); }} /></label></div>}</> : <p className="text-xs text-slate-500">Este reporte refleja las existencias actuales.</p>}
-            <label className="text-xs text-slate-500 font-semibold">Ubicación<select className={inputClass} value={place} onChange={e => { setPlace(e.target.value); setGenerated(false); }}><option value="todas">Todas las ubicaciones</option><option>Bodega Central</option><option>Farmacia</option></select></label>
+            <label className="text-xs text-slate-500 font-semibold">Ubicación<select className={inputClass} value={place} onChange={e => { setPlace(e.target.value); setGenerated(false); }}><option value="todas">Todas las ubicaciones</option><option value="Bodega Central">{WAREHOUSE_NAME}</option><option>Farmacia</option></select></label>
             {report !== 'auditoria' && <label className="text-xs text-slate-500 font-semibold">Categoría<select className={inputClass} value={category} onChange={e => { setCategory(e.target.value); setGenerated(false); }}><option value="todas">Todas las categorías</option>{[...new Set(state.data.catalogos.filter(p => p.tipo === 'medicamentos').map(p => p.categoria).filter(Boolean))].map(c => <option key={c}>{c}</option>)}</select></label>}
           </div>
           <button type="button" className="text-sm text-blue-600 text-left" onClick={() => {setPeriod('30');setFrom(today());setTo(today());setPlace('todas');setCategory('todas');setGenerated(false);}}>Restablecer filtros</button>

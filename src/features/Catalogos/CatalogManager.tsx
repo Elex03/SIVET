@@ -1,5 +1,4 @@
-import { apiUrl } from '../../shared/api/client';
-import { canEditMedication, canWriteApiCatalog } from '../../shared/api/permissions';
+import { canEditMedication, canWriteCatalog } from '../../shared/api/permissions';
 import { useAuth } from '../../shared/context/auth';
 import NumberInput from '../../shared/components/NumberInput';
 import MedicationForm from "./MedicationForm";
@@ -39,9 +38,9 @@ const blank = (tipo: string): CatalogRecord => ({
   correos: [],
   telefonos: [],
 });
-export default function CatalogManager({ locationsOnly = false }: { locationsOnly?: boolean }) {
-  const tabs = locationsOnly ? [{ id: "ubicaciones", label: "Ubicaciones de destino" }] : [...generalTabs, { id: "ubicaciones", label: "Ubicaciones de destino" }];
+export default function CatalogManager() {
   const state = useSivet(); const {user}=useAuth();
+  const tabs = [...generalTabs, ...(user?.role === "administrador" ? [{ id: "ubicaciones", label: "Ubicaciones de destino" }] : [])];
   const [params, setParams] = useSearchParams();
   const tab = tabs.some((t) => t.id === params.get("tipo"))
     ? params.get("tipo")!
@@ -69,8 +68,8 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
   return (
     <div className="screen-page max-w-[1600px] mx-auto flex flex-col gap-6 pb-10">
       <PageHeader
-        header={locationsOnly ? "Farmacia · Ubicaciones" : "Catálogos del Sistema"}
-        sub={locationsOnly ? "Localidades que reciben medicamentos de Farmacia." : "Administración de medicamentos, clasificaciones y proveedores."}
+        header="Catálogos del Sistema"
+        sub="Administración de medicamentos, clasificaciones y proveedores."
       />
       <DataFeedback {...state} /><div className="screen-body" tabIndex={0} role="region" aria-label="Contenido de la pantalla">
       <div className="flex flex-col lg:flex-row gap-6 min-w-0">
@@ -105,7 +104,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
             />
             <button
               className={`${buttonClass} flex items-center justify-center gap-2 shrink-0 toolbar-actions`}
-              data-tour-open="create" disabled={!!apiUrl && !canWriteApiCatalog(user?.role,tab)} onClick={() => edit(blank(tab))}
+              data-tour-open="create" disabled={!canWriteCatalog(user?.role,tab,state.local)} onClick={() => edit(blank(tab))}
             >
               <Plus size={16} />
               Nuevo registro
@@ -174,7 +173,7 @@ export default function CatalogManager({ locationsOnly = false }: { locationsOnl
                     type="button"
                     title={`Editar ${r.nombre}`}
                     className="p-2 text-[#304a6d]"
-                    disabled={state.pending || (!!apiUrl && !canWriteApiCatalog(user?.role,tab))} onClick={() => edit(r)}
+                    disabled={state.pending || !canWriteCatalog(user?.role,tab,state.local)} onClick={() => edit(r)}
                   >
                     <Pencil size={17} />
                   </button>

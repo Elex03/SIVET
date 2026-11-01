@@ -1,4 +1,5 @@
 import { destinations, today } from "./domain";
+import { locationLabel } from '../config/institution';
 import type { Database } from "./domain";
 import { selectDashboard } from "./selectors";
 
@@ -145,7 +146,7 @@ export function selectReports(
   const charts = {
     donaciones: [...donorTotals.values()],
     auditoria: [...activityTotals].map(([name, cantidad]) => ({
-      name,
+      name: locationLabel(name),
       cantidad,
     })),
     existencias: [...totals.values()].sort((a, b) => b.stock - a.stock),
@@ -204,6 +205,7 @@ export function selectReports(
       ],
       data: activity.map((a) => ({
         ...a,
+        localidad: locationLabel(a.localidad),
         accion: labels[a.accion] || a.accion,
         fecha: new Date(a.fecha).toLocaleString("es-NI"),
       })),
@@ -218,7 +220,7 @@ export function selectReports(
         { id: "unidad", label: "Unidad" },
         { id: "vencimiento", label: "Vencimiento" },
       ],
-      data: stock,
+      data: stock.map(s => ({ ...s, ubicacion: locationLabel(s.ubicacion) })),
     },
     movimientos: {
       columns: [
