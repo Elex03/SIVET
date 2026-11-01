@@ -148,7 +148,15 @@ export function useSivet() {
           const savedId = await executeServerCommand(command, snapshot);
           if (savedId && command.type === "catalog.save")
             command.record.id = savedId;
-          snapshot = parseDatabase(await loadServerDatabase());
+          // A failed reload must not turn a committed save into a failed submission.
+          // Forms use this result to close and must not invite duplicate creations.
+          try {
+            snapshot = parseDatabase(await loadServerDatabase());
+            loadError = "";
+          } catch {
+            loadError = "Los cambios se guardaron, pero no se pudieron actualizar los datos. Actualiza antes de continuar.";
+            toast.warning(loadError, { toastId: "sivet-load-error" });
+          }
         } else {
           const current = parseDatabase(
             JSON.parse(localStorage.getItem(key) || JSON.stringify(snapshot)),
