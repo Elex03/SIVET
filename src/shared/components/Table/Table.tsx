@@ -1,4 +1,4 @@
-import Modal from '../Layout/Modal';
+import { createPortal } from 'react-dom';
 import StatusBadge from './StatusBadge';
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -46,7 +46,26 @@ const Table = <Row extends object,>({
   pagination = true,
   sortable = true,
 }: TableProps<Row>) => {
-  const [actionRow, setActionRow] = useState<Row | null>(null);
+  const [rowMenu, setRowMenu] = useState<{ row: Row; x: number; y: number; trigger: HTMLTableRowElement } | null>(null);
+  const rowMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!rowMenu) return;
+    const menu = rowMenuRef.current;
+    if (menu) {
+      const bounds = menu.getBoundingClientRect();
+      menu.style.left = Math.max(8, Math.min(rowMenu.x, window.innerWidth - bounds.width - 8)) + 'px';
+      menu.style.top = Math.max(8, Math.min(rowMenu.y, window.innerHeight - bounds.height - 8)) + 'px';
+      menu.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+    }
+    const outside = (event: PointerEvent) => { if (!menu?.contains(event.target as Node)) setRowMenu(null); };
+    const dismiss = (event: Event) => { if (!(event.target instanceof Node) || !menu?.contains(event.target)) { if (menu?.contains(document.activeElement)) rowMenu.trigger.focus({ preventScroll: true }); setRowMenu(null); } };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); rowMenu.trigger.focus({ preventScroll: true }); setRowMenu(null); } };
+    document.addEventListener('pointerdown', outside, true);
+    document.addEventListener('keydown', escape);
+    window.addEventListener('scroll', dismiss, true);
+    window.addEventListener('resize', dismiss);
+    return () => { document.removeEventListener('pointerdown', outside, true); document.removeEventListener('keydown', escape); window.removeEventListener('scroll', dismiss, true); window.removeEventListener('resize', dismiss); };
+  }, [rowMenu]);
   const hasActions = Boolean(onView || onEdit || onDownload);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const resize = useRef<{ id: string; x: number; width: number } | null>(null);
@@ -250,7 +269,7 @@ const Table = <Row extends object,>({
           <tbody className="divide-y divide-slate-100/80 bg-white">
             {currentData.length > 0 ? (
               currentData.map((row, index) => (
-                <tr key={typeof cellValue(row, 'id') === 'string' || typeof cellValue(row, 'id') === 'number' ? String(cellValue(row, 'id')) : index} tabIndex={hasActions ? 0 : undefined} title={hasActions ? "Pulsa para ver las acciones del registro" : undefined} onClick={event => { if (!hasActions || !event.currentTarget.contains(event.target as Node) || (event.target as Element).closest("button,a,input,select,textarea,label,[role=button]") || window.getSelection()?.toString()) return; setActionRow(row); }} onKeyDown={event => { if (hasActions && event.target === event.currentTarget && ["Enter", " "].includes(event.key)) { event.preventDefault(); setActionRow(row); } }} className={`group/row hover:bg-slate-50/60 transition-colors ${hasActions ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500" : ""}`}>
+                <tr key={typeof cellValue(row, 'id') === 'string' || typeof cellValue(row, 'id') === 'number' ? String(cellValue(row, 'id')) : index} tabIndex={hasActions ? 0 : undefined} title={hasActions ? "Pulsa para ver las acciones del registro" : undefined} onClick={event => { if (!hasActions || !event.currentTarget.contains(event.target as Node) || (event.target as Element).closest("button,a,input,select,textarea,label,[role=button]") || window.getSelection()?.toString()) return; setRowMenu({ row, x: event.clientX, y: event.clientY, trigger: event.currentTarget }); }} onKeyDown={event => { if (hasActions && event.target === event.currentTarget && ["Enter", " "].includes(event.key)) { event.preventDefault(); const bounds = event.currentTarget.getBoundingClientRect(); setRowMenu({ row, x: Math.max(8, bounds.left + 16), y: bounds.bottom, trigger: event.currentTarget }); } }} className={`group/row hover:bg-slate-50/60 transition-colors ${hasActions ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500" : ""}`}>
 
                   {activeColumnsForTable.map((col) => (
                     <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
@@ -303,9 +322,17 @@ const Table = <Row extends object,>({
         </table>
       </div>
 
-      <Modal isOpen={actionRow !== null} onClose={() => setActionRow(null)} title="Acciones del registro" subtitle={actionRow ? String(cellText(cellValue(actionRow, 'id'))) : undefined} maxWidth="max-w-md">
-        <div className="flex flex-col gap-3">{actionRow && ([['Ver detalles', onView, Eye], ['Editar', onEdit, Edit2], ['Descargar adjunto', onDownload, Download]] as const).map(([label, action, Icon]) => action && <button key={label} type="button" className="flex items-center gap-3 rounded-xl border border-blue-100 p-4 text-left text-[#304a6d] hover:bg-blue-50" onClick={() => { const row = actionRow; setActionRow(null); action(row); }}><Icon size={20} />{label}</button>)}</div>
-      </Modal>
+      {rowMenu && createPortal(<div ref={rowMenuRef} role="menu" aria-label="Acciones del registro" className="fixed z-[100] min-w-44 max-w-[calc(100vw-16px)] rounded-xl border border-slate-100 bg-white py-1.5 shadow-[0_6px_24px_rgba(0,0,0,0.18)]" style={{ left: rowMenu.x, top: rowMenu.y }} onKeyDown={event => {
+        if (event.key === 'Tab') { rowMenu.trigger.focus({ preventScroll: true }); setRowMenu(null); return; }
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('button')];
+        const index = items.indexOf(document.activeElement as HTMLButtonElement);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        items[next]?.focus();
+      }}>
+        {([['Ver detalles', onView, Eye], ['Editar', onEdit, Edit2], ['Descargar adjunto', onDownload, Download]] as const).map(([label, action, Icon]) => action && <button key={label} type="button" role="menuitem" className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-[#304a6d] hover:bg-blue-50 focus:bg-blue-50 focus:outline-none" onClick={() => { const row = rowMenu.row; rowMenu.trigger.focus({ preventScroll: true }); setRowMenu(null); action(row); }}><Icon size={16} />{label}</button>)}
+      </div>, document.body)}
       {/* FOOTER ESTÁTICO (Nunca se oculta ni scrollea) */}
       {pagination && <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-3 border-t border-slate-100 bg-white gap-4 flex-shrink-0 z-30">
         <div className="flex items-center gap-2 text-sm text-slate-500">
