@@ -18,6 +18,9 @@ import { toast } from "react-toastify";
 import { useConfirmation } from "../context/confirmation";
 import { useAuth } from "../context/auth";
 import { commandConfirmation, commandSuccess } from "./commandFeedback";
+import { apiStatus, apiCancelled } from './apiControl';
+import { ReceiptConflictError } from './receiptSave';
+import type { Receipt } from './domain';
 
 const key = "sivet-data-v1";
 let snapshot: Database = emptyDatabase;
@@ -96,6 +99,7 @@ export function useSivet() {
   const [, render] = useState(0);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [receiptConflict, setReceiptConflict] = useState<Receipt | null>(null);
   const busy = useRef(false);
   useEffect(() => {
     const unsubscribe = subscribe(() => render((n) => n + 1));
@@ -176,7 +180,8 @@ export function useSivet() {
           });
         return true;
       } catch (reason) {
-        if (apiUrl) await refresh();
+        if (reason instanceof ReceiptConflictError) setReceiptConflict(reason.currentReceipt);
+        if (apiUrl && !command.type.startsWith('receipt.') && apiStatus(reason) !== 429 && !apiCancelled(reason)) await refresh();
         const message =
           reason instanceof Error ? reason.message : "No se pudo guardar.";
         setError(message);
@@ -202,6 +207,8 @@ export function useSivet() {
     mutate,
     refresh,
     pending,
+    receiptConflict,
+    clearReceiptConflict: () => setReceiptConflict(null),
     error: error || loadError,
     loading: !ready && !loadError,
     local: !apiUrl,

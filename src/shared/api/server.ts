@@ -1,3 +1,4 @@
+import { saveReceipt } from './receiptSave';
 import { apiClient, apiData } from "./client";
 import { getTokens, mapProfile } from "./session";
 import {
@@ -307,82 +308,8 @@ async function upload(path: string, content: string, name: string) {
   body.append("archivo", blob, name);
   await apiData(path, "POST", body);
 }
-const receiptIds = new Map<string, number>();
-const receiptVersions = new Map<string, number>();
 const catalogIds = new Map<string, string>();
 const transferIds = new Map<string, string>();
-async function saveReceipt(
-  command: Extract<Command, { type: "receipt.create" | "receipt.draft" }>,
-  db: Database,
-) {
-  const r = command.receipt;
-  const known = db.recepciones.find((receipt) => receipt.id === r.id);
-  let id = known ? numberId(known.id) : receiptIds.get(r.id);
-  const details = [];
-  for (const item of r.items) {
-    if (!item.lote.trim())
-      throw new Error(
-        "Completa el lote de cada medicamento antes de guardar el ingreso en la API.",
-      );
-    const product = numberId(item.productoId);
-    const lots = await allPages("/lotes", {
-      id_medicamento: product,
-      q: item.lote,
-    });
-    let lot = lots.find((l) => l.numero_lote === item.lote);
-    if (!lot)
-      lot = await apiData<ApiRow>("/lotes", "POST", {
-        id_medicamento: product,
-        numero_lote: item.lote,
-        fecha_vencimiento: item.vencimiento || null,
-        origen_ingreso: r.tipoIngreso || "COMPRA",
-        codigo_lote: item.codigoLote || null,
-      });
-    else if (dateOnly(lot.fecha_vencimiento) !== (item.vencimiento || null))
-      throw new Error(
-        `El vencimiento de ${item.lote} no coincide con el lote registrado.`,
-      );
-    details.push({ id_lote: lot.id_lote, cantidad: decimal(item.cantidad) });
-  }
-  const payload = {
-    tipo_ingreso: r.tipoIngreso || "COMPRA",
-    donante: r.tipoIngreso === "DONACION" ? r.donante?.trim() || null : null,
-    id_proveedor:
-      r.tipoIngreso === "DONACION"
-        ? null
-        : r.proveedorId
-          ? numberId(r.proveedorId)
-          : null,
-    total: decimal(r.total || 0),
-    numero_recepcion: known?.referencia || r.documento || r.id,
-    fecha_recepcion: r.fecha,
-    detalles: details,
-  };
-  let saved: ApiRow;
-  if (id) {
-    const current = await apiData<ApiRow>(`/recepciones/${id}`);
-    if (current.estado === "COMPLETADA") return;
-    saved = await apiData(`/recepciones/${id}`, "PATCH", {
-      ...payload,
-      version: known?.version || receiptVersions.get(r.id) || current.version,
-    });
-  } else {
-    saved = await apiData<ApiRow>("/recepciones/borradores", "POST", payload);
-    id = saved.id_recepcion;
-    receiptIds.set(r.id, id!);
-  }
-  receiptVersions.set(r.id, saved.version);
-  if (r.evidencia?.contenido.startsWith("data:"))
-    await upload(
-      `/recepciones/${id}/adjuntos`,
-      r.evidencia.contenido,
-      r.evidencia.nombre,
-    );
-  if (command.type === "receipt.create")
-    await apiData(`/recepciones/${id}/confirmar`, "POST", {
-      version: saved.version,
-    });
-}
 
 export async function executeServerCommand(
   command: Command,
@@ -455,7 +382,7 @@ export async function executeServerCommand(
     return;
   }
   if (command.type === "receipt.draft" || command.type === "receipt.create") {
-    await saveReceipt(command, db);
+    await saveReceipt(command, db, allPages, upload);
     return;
   }
   if (command.type === "receipt.cancel") {

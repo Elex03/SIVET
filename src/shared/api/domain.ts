@@ -166,6 +166,7 @@ export interface Receipt {
   estado?: "BORRADOR" | "COMPLETADO" | "CANCELADO";
   items: {
     productoId: string;
+    fabricacion?: string | null;
     codigoLote?: string;
     lote: string;
     vencimiento: string | null;
@@ -355,7 +356,7 @@ export function applyCommand(source: Database, command: Command): Database {
       );
       assert(
         r.codigo.trim() && r.unidad.trim(),
-        "Código de barras y unidad son obligatorios.",
+        "El código interno del catálogo y la unidad son obligatorios.",
       );
       assert(
         r.uxe === undefined || (Number.isInteger(r.uxe) && r.uxe > 0),
@@ -773,6 +774,9 @@ export function applyCommand(source: Database, command: Command): Database {
       notification!.leidaPor.push(command.user);
   }
   if (command.type === "receipt.create" || command.type === "receipt.draft") {
+    const keys = command.receipt.items.map(i => `${i.productoId}:${i.lote.trim().toLocaleUpperCase('es')}`);
+    assert(keys.length <= 250, "Una recepción admite como máximo 250 lotes.");
+    assert(new Set(keys).size === keys.length, "El medicamento y número de lote están repetidos. No se combinarán cantidades.");
     assert(
       command.receipt.total === undefined ||
         (Number.isFinite(command.receipt.total) && command.receipt.total >= 0),

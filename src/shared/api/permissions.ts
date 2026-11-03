@@ -27,6 +27,8 @@ export function assertPreparationPermission(
     throw new Error("Este perfil solo permite consultar información.");
   if (role === "preparador" && command.type !== "request.prepare")
     throw new Error("Este perfil solo puede preparar pedidos aprobados.");
+  if (command.type.startsWith('receipt.') && role !== 'administrador' && role !== 'bodega')
+    throw new Error('Solo Administración y Bodega pueden guardar recepciones.');
   if (
     command.type === "request.prepare" &&
     !["administrador", "bodega", "preparador"].includes(role || "")

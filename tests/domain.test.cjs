@@ -182,6 +182,13 @@ test('gráficas temporales mantienen cronología y seleccionan últimos período
 });
 const { assertCatalogPermission, canEditMedication, canWriteCatalog, canWriteApiCatalog } = require('../src/shared/api/permissions.ts');
 const { INSTITUTION_NAME, WAREHOUSE_NAME, locationLabel } = require('../src/shared/config/institution.ts');
+test('solo ADMIN y BODEGA pueden guardar recepciones en la aplicación', () => {
+  const { assertPreparationPermission } = require('../src/shared/api/permissions.ts');
+  for (const type of ['receipt.create', 'receipt.draft', 'receipt.cancel']) {
+    for (const role of ['administrador', 'bodega']) assert.doesNotThrow(() => assertPreparationPermission(role, { type }));
+    for (const role of ['farmacia', 'preparador', 'consulta', undefined]) assert.throws(() => assertPreparationPermission(role, { type }));
+  }
+});
 const { commandConfirmation, commandSuccess } = require('../src/shared/api/commandFeedback.ts');
 const { authenticateAccount, validateAccountChange } = require('../src/shared/api/accountRules.ts');
 const accounts = require('../public/data/users.json');
