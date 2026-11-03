@@ -235,6 +235,7 @@ export type Command = (
       ready: boolean;
     }
   | { type: "notification.read"; id: string; user: string }
+  | { type: "notification.readAll"; ids: string[]; user: string }
   | { type: "receipt.create"; receipt: Receipt }
   | { type: "receipt.draft"; receipt: Receipt }
   | { type: "receipt.cancel"; id: string }
@@ -773,6 +774,12 @@ export function applyCommand(source: Database, command: Command): Database {
     if (!notification!.leidaPor.includes(command.user))
       notification!.leidaPor.push(command.user);
   }
+  if (command.type === "notification.readAll") {
+    const ids = [...new Set(command.ids)];
+    assert(ids.every(id => db.notificaciones.some(n => n.id === id)), 'Un aviso ya no está disponible. Actualiza la bandeja.');
+    for (const notice of db.notificaciones.filter(n => ids.includes(n.id)))
+      if (!notice.leidaPor.includes(command.user)) notice.leidaPor.push(command.user);
+  }
   if (command.type === "receipt.create" || command.type === "receipt.draft") {
     const keys = command.receipt.items.map(i => `${i.productoId}:${i.lote.trim().toLocaleUpperCase('es')}`);
     assert(keys.length <= 250, "Una recepción admite como máximo 250 lotes.");
@@ -998,7 +1005,7 @@ export function applyCommand(source: Database, command: Command): Database {
       });
     }
   }
-  if (command.type !== "notification.read") {
+  if (command.type !== "notification.read" && command.type !== "notification.readAll") {
     const documento =
       "id" in command
         ? command.id

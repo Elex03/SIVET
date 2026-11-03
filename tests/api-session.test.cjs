@@ -62,3 +62,29 @@ test('una espera puede cancelarse con señal o globalmente sin enviar la solicit
   const waiting=waitForApi();assert.equal(getApiPause().waiting,1);cancelApiWaits();
   await assert.rejects(()=>waiting,e=>axios.isCancel(e));assert.equal(getApiPause().waiting,0);
 });
+
+test('errores indican recurso, conflicto y referencia sin incluir cuerpo enviado', () => {
+  const { apiErrorMessage } = require('../src/shared/api/apiErrors.ts');
+  const config={method:'post',url:'/lotes/resolver?private=secret',data:{password:'secret'}};
+  const error=new axios.AxiosError('Rejected','ERR_BAD_RESPONSE',config,null,{status:409,headers:{'x-request-id':'REQ-123'},data:{error:{code:'LOT_CONFLICT',message:'Fecha incompatible.'}}});
+  const message=apiErrorMessage(error);
+  assert.match(message,/los lotes/);assert.match(message,/vencimiento/);assert.match(message,/Fecha incompatible/);assert.match(message,/REQ-123/);assert.doesNotMatch(message,/secret/);
+});
+
+test('timeout de escritura pide reconciliar y timeout de lectura explica inicio del servidor', () => {
+  const { apiErrorMessage } = require('../src/shared/api/apiErrors.ts');
+  assert.match(apiErrorMessage(new axios.AxiosError('timeout','ECONNABORTED',{method:'post',url:'/recepciones/borradores'})),/Comprueba el estado del registro/);
+  assert.match(apiErrorMessage(new axios.AxiosError('timeout','ECONNABORTED',{method:'get',url:'/inventario'})),/Puede estar iniciándose/);
+});
+
+test('aviso lento distingue consultas y guardados y se limpia al terminar', () => {
+  const vm=require('node:vm');const scheduled=[];let snapshot;
+  const module={exports:{}};
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/shared/api/apiActivity.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module,exports:module.exports,require:()=>({useSyncExternalStore:(_,get)=>{snapshot=get();return snapshot;}}),setTimeout:fn=>{scheduled.push(fn);return scheduled.length;},clearTimeout:()=>{}});
+  const {startRequest,finishRequest,useApiActivity}=module.exports;
+  const read={method:'get',url:'/inventario'},write={method:'post',url:'/recepciones/borradores'};
+  startRequest(read);assert.equal(useApiActivity().slow,false);scheduled[0]();assert.equal(useApiActivity().slow,true);assert.equal(snapshot.saving,false);
+  startRequest(write);scheduled[1]();assert.equal(useApiActivity().saving,true);
+  finishRequest(write);assert.equal(useApiActivity().saving,false);assert.equal(snapshot.slow,true);
+  finishRequest(read);assert.equal(useApiActivity().slow,false);
+});

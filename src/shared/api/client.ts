@@ -1,3 +1,5 @@
+import { startRequest, finishRequest } from './apiActivity';
+import { apiErrorMessage } from './apiErrors';
 import axios from "axios";
 import { expireSession, getTokens, saveTokens, type Tokens } from "./session";
 import { pauseApi, recordApiDiagnostic, waitForApi } from './apiControl';
@@ -8,13 +10,15 @@ export const apiClient = axios.create({
   timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
-const authClient = axios.create({ baseURL: apiUrl, timeout: 15000 });
+const authClient = axios.create({ baseURL: apiUrl, timeout: 60000 });
 let renewal: Promise<void> | undefined;
-authClient.interceptors.request.use(async config => { await waitForApi(config.signal as AbortSignal | undefined); return config; });
+authClient.interceptors.request.use(async config => { await waitForApi(config.signal as AbortSignal | undefined); startRequest(config); return config; });
 authClient.interceptors.response.use(response => {
+  finishRequest(response.config);
   recordApiDiagnostic(response.config.method, response.config.url, response.status, response.headers['x-request-id']);
   return response;
 }, error => {
+  finishRequest(error.config);
   recordApiDiagnostic(error.config?.method, error.config?.url, error.response?.status, error.response?.headers?.['x-request-id']);
   if (error.response?.status === 429) pauseApi(error.response.headers?.['retry-after'], error.response.data?.error?.retryAfterSeconds);
   return Promise.reject(error);
@@ -24,17 +28,21 @@ apiClient.interceptors.request.use(async (config) => {
   if (apiUrl && getTokens() && !config.url?.startsWith("/auth/login"))
     config.headers.Authorization = `Bearer ${getTokens()!.access_token}`;
   if (config.data instanceof FormData) config.headers.delete("Content-Type");
+  if (["get", "head"].includes(config.method || "get") || config.url?.startsWith("/auth/")) config.timeout = 60000;
+  startRequest(config);
   return config;
 });
 apiClient.interceptors.response.use(
   (response) => {
-    recordApiDiagnostic(response.config.method, response.config.url, response.status, response.headers['x-request-id']);
+    finishRequest(response.config);
+  recordApiDiagnostic(response.config.method, response.config.url, response.status, response.headers['x-request-id']);
     return response;
   },
   async (error) => {
     const config = error.config as
       | (typeof error.config & { _renewed?: boolean; _rateRetries?: number })
       | undefined;
+    finishRequest(config);
     recordApiDiagnostic(config?.method, config?.url, error.response?.status, error.response?.headers?.['x-request-id']);
     if (error.response?.status === 429) {
       pauseApi(error.response.headers?.['retry-after'], error.response.data?.error?.retryAfterSeconds);
@@ -86,15 +94,7 @@ export async function apiData<T>(
       if (axios.isCancel(error)) throw error;
       if (axios.isAxiosError(error) && error.response?.status === 404 && path === '/lotes/resolver')
         throw new Error('El backend aún no publica el resolver de lotes. Actualiza su despliegue antes de guardar esta recepción.', { cause: error });
-      if (axios.isAxiosError(error))
-        throw new Error(
-          (error.response?.data?.error?.code === 'LOT_CONFLICT' ? 'Conflicto en los datos del lote. Revisa vencimiento, fabricación y código. No se modificaron los metadatos del lote existente. ' : '') + (error.response?.data?.error?.message ||
-            error.response?.data?.message ||
-            (error.response?.status === 429
-              ? "Demasiados intentos. Espera unos minutos antes de volver a intentar."
-              : "No se pudo completar la operación con la API.")),
-          { cause: error },
-        );
+      if (axios.isAxiosError(error)) throw new Error(apiErrorMessage(error), { cause: error });
       throw error;
     });
   if (response.status === 204) return undefined as T;
@@ -116,15 +116,7 @@ export async function apiRequest<T>(
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) throw error;
-    if (axios.isAxiosError(error))
-      throw new Error(
-        typeof error.response?.data?.message === "string"
-          ? error.response.data.message
-          : error.response
-            ? `No se pudo completar la operación (${error.response.status}).`
-            : "No se pudo conectar. Revisa la conexión e inténtalo de nuevo.",
-        { cause: error },
-      );
+    if (axios.isAxiosError(error)) throw new Error(apiErrorMessage(error), { cause: error });
     throw error;
   }
 }

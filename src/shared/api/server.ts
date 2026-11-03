@@ -1,4 +1,5 @@
 import { saveReceipt } from './receiptSave';
+import { readNotificationsSequentially } from './notifications';
 import { apiClient, apiData } from "./client";
 import { getTokens, mapProfile } from "./session";
 import {
@@ -48,6 +49,13 @@ export async function allPages(
 }
 export async function currentApiUser(): Promise<User> {
   return mapProfile(await apiData("/auth/me"));
+}
+export async function loadServerNotifications(user: User): Promise<Database['notificaciones']> {
+  const rows = await allPages('/notificaciones', user.role === 'administrador' ? { alcance: 'todas' } : {});
+  return rows.map(n => ({ id: String(n.id_notificacion), ownerId: n.id_usuario, categoria: n.categoria,
+    procedencia: n.procedencia, fecha: n.fecha_creacion, rol: n.bandeja === 'FARMACIA' ? 'farmacia' : 'bodega',
+    solicitudId: /solicitud/i.test(n.referencia_tipo || '') ? String(n.referencia_id) : '', titulo: n.titulo, mensaje: n.mensaje,
+    leidaPor: n.leida ? [`${user.role}:${user.username}`] : [] }));
 }
 export async function loadServerDatabase(): Promise<Database> {
   if (!getTokens()) return structuredClone(emptyDatabase);
@@ -379,6 +387,10 @@ export async function executeServerCommand(
   }
   if (command.type === "notification.read") {
     await apiData(`/notificaciones/${numberId(command.id)}/leida`, "PATCH");
+    return;
+  }
+  if (command.type === 'notification.readAll') {
+    await readNotificationsSequentially(command.ids, id => apiData(`/notificaciones/${numberId(id)}/leida`, 'PATCH'));
     return;
   }
   if (command.type === "receipt.draft" || command.type === "receipt.create") {

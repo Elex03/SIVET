@@ -11,6 +11,8 @@ async function fixture({ reloadFails = false, saveFails = false, confirmed = tru
   let loads = 0;
   let saves = 0;
   const dependencies = {
+    './apiErrors': { apiErrorMessage: error => error.message },
+    './notifications': { NotificationReadError: class NotificationReadError extends Error {} },
     './apiControl': { apiStatus: () => status, apiCancelled: () => false },
     './receiptSave': { ReceiptConflictError: class ReceiptConflictError extends Error {} },
     './permissions': { assertCatalogPermission() {}, assertPreparationPermission() {} },
@@ -155,4 +157,13 @@ test('AuthProvider sigue rechazando un 401 real', async () => {
   assert.ok(f.changes[1].includes(null));
   await assert.rejects(() => f.context.login('admin', 'secret'));
   assert.equal(f.expired(), 1);
+});
+
+test('AuthProvider conserva la sesión ante servidor dormido, desconexión o 503', async () => {
+  for (const status of [undefined,503]) {
+    const f=authFixture(status);await new Promise(setImmediate);
+    assert.equal(f.changes[1].length,0);
+    await assert.rejects(()=>f.context.login('admin','secret'));
+    assert.equal(f.expired(),0);
+  }
 });

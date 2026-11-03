@@ -134,3 +134,11 @@ test('indicaciones documentales se muestran escapadas con saltos de línea y sin
   assert.equal(html.includes('<script>'), false);
   assert.ok(renderToStaticMarkup(React.createElement(MedicationUses, { value: null })).includes('Uso no documentado'));
 });
+
+test('solo las filas con acciones ofrecen acceso mediante teclado', () => {
+  const columns=[{id:'nombre',label:'Nombre'}];const data=[{id:'1',nombre:'Registro'}];
+  const actionable=renderToStaticMarkup(React.createElement(Table,{columns,data,onView:()=>{},enableExport:false}));
+  assert.match(actionable,/<tr[^>]*tabindex="0"[^>]*title="Pulsa para ver las acciones/);
+  const plain=renderToStaticMarkup(React.createElement(Table,{columns,data,enableExport:false}));
+  assert.doesNotMatch(plain,/Pulsa para ver las acciones/);
+});

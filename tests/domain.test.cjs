@@ -539,3 +539,22 @@ test('cálculo compartido rechaza cantidades inválidas y evita redondear un exc
   assert.equal(dispatchQuantity(10,0.25,false).remaining,9.75);
   assert.equal(dispatchQuantity(0.975,195,true,200).remainingBase,0);
 });
+
+test('lectura masiva es idempotente y no modifica inventario ni otras cuentas', () => {
+  const { emptyDatabase } = require('../src/shared/api/domain.ts');
+  const db = structuredClone(emptyDatabase);
+  db.notificaciones = [{id:'1',rol:'farmacia',fecha:'2026-11-02',titulo:'Aviso',mensaje:'',solicitudId:'',leidaPor:[]}, {id:'2',rol:'farmacia',fecha:'2026-11-02',titulo:'Otro',mensaje:'',solicitudId:'',leidaPor:['farmacia:otra']}];
+  const command = {type:'notification.readAll',ids:['1','1'],user:'farmacia:ana'};
+  const result = applyCommand(applyCommand(db,command),command);
+  assert.deepEqual(result.notificaciones.map(n=>n.leidaPor),[['farmacia:ana'],['farmacia:otra']]);
+  assert.deepEqual(result.existencias, db.existencias);
+  assert.deepEqual(result.actividad, db.actividad || []);
+});
+
+test('contador personal excluye avisos de otra cuenta incluso para administradores', () => {
+  const { ownsNotification, isUnreadNotification } = require('../src/shared/api/notifications.ts');
+  const user={id:1,username:'admin',role:'administrador'};
+  assert.equal(ownsNotification({ownerId:2,rol:'bodega'},user),false);
+  assert.equal(ownsNotification({ownerId:1,rol:'bodega'},user),true);
+  assert.equal(isUnreadNotification({leidaPor:['administrador:admin']},user),false);
+});

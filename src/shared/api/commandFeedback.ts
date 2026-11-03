@@ -6,6 +6,7 @@ export function commandConfirmation(
   command: Command,
   db: Database,
 ): Confirmation {
+  if (command.type === 'notification.readAll') return { title: 'Marcar avisos como leídos', description: 'Se actualizarán solo los avisos de tu cuenta.' };
   if (command.type === "medication.delete")
     return {
       title: "¿Eliminar este medicamento?",
@@ -228,6 +229,7 @@ export function commandConfirmation(
   };
 }
 export function commandSuccess(command: Command): string {
+  if (command.type === 'notification.readAll') return `${command.ids.length} avisos marcados como leídos.`;
   if (command.type === "medication.delete")
     return "Medicamento dado de baja correctamente. Su historial se conserva.";
   if (command.type === "request.prepare")

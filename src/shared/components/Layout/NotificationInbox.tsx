@@ -1,3 +1,4 @@
+import { ownsNotification } from '../../api/notifications';
 import ContextHelp from './ContextHelp';
 import { usePreference, useTheme } from '../../context/preferences';
 import { useEffect, useRef } from 'react';
@@ -10,24 +11,24 @@ import { useAuth } from '../../context/auth';
 
 export default function NotificationInbox() {
   const state = useSivet();
-  const { local, refresh } = state;
+  const { local, refreshNotifications } = state;
   const { user } = useAuth();
   const seen = useRef<Set<string> | null>(null);
   const reader = `${user?.role}:${user?.username}`;
   const [mute] = usePreference(`sivet-mute:${reader}`, 'false'); const muted = mute === 'true'; useTheme();
   const lastReminder = useRef(0);
-  const roles = user?.role === 'administrador' ? ['bodega', 'farmacia'] : [user?.role];
+
   useEffect(() => {
     if (state.loading || !user) return;
-    const incoming = state.data.notificaciones.filter(n => user.role === 'administrador' || n.rol === user.role);
+    const incoming = state.data.notificaciones.filter(n => ownsNotification(n, user));
     if (seen.current && !muted) incoming.filter(n => !seen.current!.has(n.id) && !n.leidaPor.includes(reader)).forEach(n => toast.info(`${n.titulo}: ${n.mensaje}`, { toastId: n.id }));
     seen.current = new Set(incoming.map(n => n.id));
   }, [state.data.notificaciones, state.loading, user, reader, muted]);
   useEffect(() => {
     if (local) return;
-    const interval = window.setInterval(() => { if (!document.hidden) void refresh(); }, 30000);
+    const interval = window.setInterval(() => { if (!document.hidden) void refreshNotifications(); }, 30000);
     return () => window.clearInterval(interval);
-  }, [local, refresh]);
+  }, [local, refreshNotifications]);
   useEffect(() => {
     if (state.loading || muted || !user) return;
     const remind = () => {
@@ -40,6 +41,6 @@ export default function NotificationInbox() {
     remind(); const interval = window.setInterval(remind, 30000);
     return () => window.clearInterval(interval);
   }, [state.data, state.loading, muted, reader, user]);
-  const count = roles.reduce((total, role) => total + state.data.notificaciones.filter(n => (n.ownerId===undefined || n.ownerId===user?.id) && n.rol === role && !n.leidaPor.includes(reader)).length + inventoryAlerts(state.data, role === 'farmacia' ? 'Farmacia' : 'Bodega Central').length, 0);
+  const count = user ? state.data.notificaciones.filter(n => ownsNotification(n,user) && !n.leidaPor.includes(reader)).length : 0;
   return <div className="flex justify-end gap-2 px-3 sm:px-5 pt-3"><ContextHelp /><Link title="Notificaciones" aria-label={`Notificaciones${count ? ': ' + count + ' pendientes' : ''}`} className="relative bg-white border border-slate-200 rounded-xl p-3 text-[#304a6d]" to={user?.role==='consulta'?'/inventario':user?.role === 'administrador' ? '/notificaciones' : `/${user?.role}/notificaciones`}><Bell size={20} />{count > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-4 h-4 px-1 rounded-full text-center">{count > 99 ? '99+' : count}</span>}</Link></div>;
 }

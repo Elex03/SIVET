@@ -23,7 +23,7 @@ export function assertPreparationPermission(
   role: Role | undefined,
   command: Command,
 ) {
-  if (role === "consulta" && command.type !== "notification.read")
+  if (role === "consulta" && command.type !== "notification.read" && command.type !== "notification.readAll")
     throw new Error("Este perfil solo permite consultar información.");
   if (role === "preparador" && command.type !== "request.prepare")
     throw new Error("Este perfil solo puede preparar pedidos aprobados.");

@@ -1,3 +1,4 @@
+import Modal from '../Layout/Modal';
 import StatusBadge from './StatusBadge';
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -45,6 +46,7 @@ const Table = <Row extends object,>({
   pagination = true,
   sortable = true,
 }: TableProps<Row>) => {
+  const [actionRow, setActionRow] = useState<Row | null>(null);
   const hasActions = Boolean(onView || onEdit || onDownload);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const resize = useRef<{ id: string; x: number; width: number } | null>(null);
@@ -248,7 +250,7 @@ const Table = <Row extends object,>({
           <tbody className="divide-y divide-slate-100/80 bg-white">
             {currentData.length > 0 ? (
               currentData.map((row, index) => (
-                <tr key={typeof cellValue(row, 'id') === 'string' || typeof cellValue(row, 'id') === 'number' ? String(cellValue(row, 'id')) : index} className="group/row hover:bg-slate-50/60 transition-colors">
+                <tr key={typeof cellValue(row, 'id') === 'string' || typeof cellValue(row, 'id') === 'number' ? String(cellValue(row, 'id')) : index} tabIndex={hasActions ? 0 : undefined} title={hasActions ? "Pulsa para ver las acciones del registro" : undefined} onClick={event => { if (!hasActions || !event.currentTarget.contains(event.target as Node) || (event.target as Element).closest("button,a,input,select,textarea,label,[role=button]") || window.getSelection()?.toString()) return; setActionRow(row); }} onKeyDown={event => { if (hasActions && event.target === event.currentTarget && ["Enter", " "].includes(event.key)) { event.preventDefault(); setActionRow(row); } }} className={`group/row hover:bg-slate-50/60 transition-colors ${hasActions ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500" : ""}`}>
 
                   {activeColumnsForTable.map((col) => (
                     <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
@@ -301,6 +303,9 @@ const Table = <Row extends object,>({
         </table>
       </div>
 
+      <Modal isOpen={actionRow !== null} onClose={() => setActionRow(null)} title="Acciones del registro" subtitle={actionRow ? String(cellText(cellValue(actionRow, 'id'))) : undefined} maxWidth="max-w-md">
+        <div className="flex flex-col gap-3">{actionRow && ([['Ver detalles', onView, Eye], ['Editar', onEdit, Edit2], ['Descargar adjunto', onDownload, Download]] as const).map(([label, action, Icon]) => action && <button key={label} type="button" className="flex items-center gap-3 rounded-xl border border-blue-100 p-4 text-left text-[#304a6d] hover:bg-blue-50" onClick={() => { const row = actionRow; setActionRow(null); action(row); }}><Icon size={20} />{label}</button>)}</div>
+      </Modal>
       {/* FOOTER ESTÁTICO (Nunca se oculta ni scrollea) */}
       {pagination && <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-3 border-t border-slate-100 bg-white gap-4 flex-shrink-0 z-30">
         <div className="flex items-center gap-2 text-sm text-slate-500">

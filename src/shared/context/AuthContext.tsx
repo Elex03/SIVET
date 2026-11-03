@@ -5,7 +5,7 @@ import { readAccounts } from '../api/accounts';
 import { apiData, apiUrl } from '../api/client';
 import { expireSession, getTokens, mapProfile, saveTokens, type Tokens } from '../api/session';
 import { AuthContext } from './auth';
-import { apiCancelled, apiStatus } from '../api/apiControl';
+import { apiStatus } from '../api/apiControl';
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(() => { try { return JSON.parse(localStorage.getItem('sivet_user') || 'null'); } catch { if(apiUrl)expireSession(); return null; } });
@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (apiUrl) { if (!getTokens()) {if(live)setUser(null);return;} const profile = mapProfile(await apiData<{id_usuario:number;username:string;rol:string}>('/auth/me')); if(live && (profile.username !== user.username || profile.role !== user.role || profile.id !== user.id)) {setUser(profile);window.dispatchEvent(new Event('sivet-session'));}; return; }
         const accounts = await readAccounts();
         if (live && !accounts.some(a => a.username === user.username && a.role === user.role && a.active)) setUser(null);
-      } catch (reason) { if (live && (!apiUrl || (apiStatus(reason) !== 429 && !apiCancelled(reason)))) setUser(null); } finally { if (live) setReady(true); }
+      } catch (reason) { if (live && (!apiUrl || [401, 403].includes(apiStatus(reason) || 0))) setUser(null); } finally { if (live) setReady(true); }
     };
     void validate(); window.addEventListener('storage', validate); window.addEventListener('sivet-accounts', validate);
     return () => { live = false; window.removeEventListener('storage', validate); window.removeEventListener('sivet-accounts', validate); };
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const account = await authenticateAccount(await readAccounts(), username, password);
       if (!account) return null;
       setUser(account); return account;
-    } catch (reason) { if(apiUrl){if(apiStatus(reason)!==429 && !apiCancelled(reason))expireSession();throw reason;} return null; }
+    } catch (reason) { if(apiUrl){if([401, 403].includes(apiStatus(reason) || 0))expireSession();throw reason;} return null; }
   };
   const logout = () => { const token=getTokens()?.refresh_token; if(apiUrl && token) void apiData('/auth/logout','POST',{refresh_token:token}).catch(() => {}); expireSession(); setUser(null); window.dispatchEvent(new Event('sivet-session')); };
   useEffect(() => { const expired = () => {setUser(null); window.dispatchEvent(new Event('sivet-session'));}; window.addEventListener('sivet-session-expired',expired); return () => window.removeEventListener('sivet-session-expired',expired); }, []);
