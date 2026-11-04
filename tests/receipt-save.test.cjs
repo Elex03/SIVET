@@ -208,3 +208,73 @@ test('cantidades no representables, códigos repetidos y lotes inactivos no se c
   const inactive = setup(); inactive.lots.set('1:LOTE-0', { id_lote: 1, estado: false });
   await assert.rejects(() => inactive.save(), /inactivo/); assert.equal(inactive.commits(), 0);
 });
+
+async function persistedFixture(count=180) {
+  const f=setup(count); await f.save('receipt.draft');
+  const {mapReceipt}=require('../src/shared/api/apiMapping.ts');
+  const receipt=mapReceipt(f.getActual());f.db.recepciones=[structuredClone(receipt)];
+  f.calls.length=0;
+  return {...f,receipt,save:type=>saveReceipt({type:type||'receipt.draft',receipt},f.db,f.list,f.upload)};
+}
+test('180 líneas persistidas conservan IDs y cantidades sin resolver, incluso al cambiar cantidades',async()=>{
+  const f=await persistedFixture();
+  await f.save();
+  assert.equal(f.calls.some(c=>c.url==='/lotes/resolver'),false);
+  f.calls.length=0;
+  f.db.catalogos[0].contenidoMl=500;f.db.catalogos[0].uxe=12;
+  f.receipt.items[0].cantidad=58;f.receipt.items[1].cantidad=3;f.receipt.items[2].cantidad=34;
+  await f.save();
+  assert.equal(f.calls.filter(c=>c.url==='/lotes/resolver').length,0);
+  assert.equal(f.payload().detalles.length,180);
+  assert.deepEqual(f.payload().detalles.slice(0,3).map(d=>d.cantidad),['58','3','34']);
+  assert.deepEqual(f.payload().detalles.map(d=>d.id_lote),f.receipt.items.map(i=>i.apiLoteId));
+});
+test('añadir una línea intercalada resuelve solo ella y conserva el orden completo',async()=>{
+  const f=await persistedFixture(3);
+  f.receipt.items.splice(1,0,{productoId:'medicamentos:1',lote:'NUEVO',vencimiento:null,cantidad:99});
+  await f.save();const call=f.calls.find(c=>c.url==='/lotes/resolver');
+  assert.equal(call.body.lotes.length,1);assert.equal(call.body.lotes[0].numero_lote,'NUEVO');
+  assert.deepEqual(f.payload().detalles.map(d=>d.cantidad),['1','99','2','3']);
+  assert.deepEqual(f.payload().detalles.map(d=>d.id_lote),[1,4,2,3]);
+});
+test('cambiar medicamento invalida ID anterior y LOT_CONFLICT conserva captura sin PATCH',async()=>{
+  const f=await persistedFixture(1);f.db.catalogos.push({id:'medicamentos:2',tipo:'medicamentos',activo:true});
+  f.receipt.items[0].productoId='medicamentos:2';await f.save();
+  assert.equal(f.calls.find(c=>c.url==='/lotes/resolver').body.lotes[0].id_medicamento,2);
+  assert.notEqual(f.payload().detalles[0].id_lote,1);
+  const g=await persistedFixture(1);g.receipt.items[0].codigoLote='EDITADO';
+  const before=structuredClone(g.receipt);
+  g.setBefore(url=>{if(url==='/lotes/resolver')throw httpError(409,'LOT_CONFLICT');});
+  await assert.rejects(()=>g.save(),e=>!(e instanceof ReceiptConflictError));
+  assert.deepEqual(g.receipt,before);assert.equal(g.calls.some(c=>c.method==='PATCH'),false);
+});
+test('provisional COMPRA sin fecha y BLOQUEADO se guarda íntegro; confirmar propaga rechazo',async()=>{
+  const f=await persistedFixture(1);
+  f.getActual().tipo_ingreso='COMPRA';f.getActual().donante=null;
+  f.getActual().detalle_recepciones_id_recepcion_list[0].lotes_id_lote.estado='BLOQUEADO';
+  f.receipt.tipoIngreso='COMPRA';f.receipt.donante='';
+  await f.save();assert.equal(f.calls.some(c=>c.url==='/lotes/resolver'),false);
+  f.setBefore(url=>{if(url.endsWith('/confirmar'))throw httpError(422,'LOT_BLOCKED');});
+  await assert.rejects(()=>f.save('receipt.create'));
+  assert.equal(f.receipt.items.length,1);assert.equal(f.receipt.items[0].vencimiento,null);
+});
+test('mapper conserva fabricación, estado, código null e identidad original al clonar',async()=>{
+  const {mapReceipt}=require('../src/shared/api/apiMapping.ts');
+  const r=mapReceipt({id_recepcion:3,detalle_recepciones_id_recepcion_list:[{id_lote:29,cantidad:'58',lotes_id_lote:{id_medicamento:281,numero_lote:'7434001640058',fecha_vencimiento:'2028-01-01',fecha_fabricacion:'2026-01-01',codigo_lote:null,estado:'ACTIVO'}}]});
+  const item=structuredClone(r).items[0];assert.equal(item.apiLoteId,29);assert.equal(item.fabricacion,'2026-01-01');assert.equal(item.estadoLote,'ACTIVO');assert.equal(item.loteOriginal.codigoLote,null);assert.equal(item.codigoLote,'');assert.equal(item.cantidad,58);
+});
+test('fecha editada y 429 del resolver no descartan las ediciones',async()=>{
+  for(const status of [409,429]){
+    const f=await persistedFixture(2);f.receipt.items[1].vencimiento='2029-12-31';
+    const original=structuredClone(f.receipt);
+    f.setBefore(url=>{if(url==='/lotes/resolver')throw httpError(status,status===409?'LOT_CONFLICT':'RATE_LIMIT');});
+    await assert.rejects(()=>f.save());assert.deepEqual(f.receipt,original);
+    assert.equal(f.calls.find(c=>c.url==='/lotes/resolver').body.lotes.length,1);
+    assert.equal(f.calls.some(c=>c.method==='PATCH'),false);
+  }
+});
+test('vaciar código existente no se omite silenciosamente ni actualiza el borrador',async()=>{
+  const f=await persistedFixture(1);f.getActual().detalle_recepciones_id_recepcion_list[0].lotes_id_lote.codigo_lote='REGISTRADO';
+  f.receipt.items[0].codigoLote='';await assert.rejects(()=>f.save(),/Vaciar estos campos/);
+  assert.equal(f.calls.some(c=>c.method!=='GET'),false);
+});

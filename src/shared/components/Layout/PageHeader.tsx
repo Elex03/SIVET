@@ -4,10 +4,10 @@ import Logo49 from "../../assets/images/FSLN.png";
 
 interface PageHeaderProps {
   header: string;
-  sub?: string; university?: boolean;
+  sub?: string; university?: boolean; hideLogo?: boolean;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ header, sub, university }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ header, sub, university, hideLogo = false }) => {
   const [cardsHidden, setCardsHidden] = useState(true);
 
   return (
@@ -35,14 +35,14 @@ const PageHeader: React.FC<PageHeaderProps> = ({ header, sub, university }) => {
         ) : null}
       </div>
 
-      <div className="flex-shrink-0 flex items-center gap-3">
+      {!hideLogo && <div className="flex-shrink-0 flex items-center gap-3">
 
         <img
           src={university ? UNALogo : Logo49}
           alt={university ? "Universidad Nacional Agraria" : "Logo Evento"}
           className="h-10 sm:h-16 w-auto max-w-24 sm:max-w-none object-contain"
         />
-      </div>
+      </div>}
 
     </div>
   );

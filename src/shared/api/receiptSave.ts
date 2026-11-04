@@ -61,7 +61,20 @@ function samePayload(current: ApiRow, payload: ApiRow): boolean {
 
 export async function saveReceipt(command: Extract<Command, { type: 'receipt.create' | 'receipt.draft' }>, db: Database, list: List, upload: Upload) {
   const r = command.receipt;
-  const lotInputs = receiptLotInputs(r, db, command.type === 'receipt.create');
+  const complete = command.type === 'receipt.create';
+  if (r.items.length > 250) throw new Error('Una recepción admite como máximo 250 lotes.');
+  if (complete && !r.items.length) throw new Error('Agrega al menos un medicamento.');
+  const keys = new Set<string>(), codes = new Set<string>();
+  for (const item of r.items) {
+    const key = item.productoId + ':' + item.lote.trim().toLocaleUpperCase('es');
+    if (keys.has(key)) throw new Error('Medicamento y lote repetidos. No se combinarán cantidades.');
+    keys.add(key);
+    const code = item.codigoLote?.trim();
+    if (code && codes.has(code)) throw new Error('Un código QR/barras no puede identificar lotes diferentes.');
+    if (code) codes.add(code);
+    if (!Number.isFinite(item.cantidad) || item.cantidad < 0 || (complete && item.cantidad <= 0)) throw new Error('Revisa la cantidad de cada producto.');
+    if (Number(decimal(item.cantidad)) !== item.cantidad) throw new Error('La cantidad debe poder expresarse con hasta 12 decimales, sin redondearla.');
+  }
   const reference = r.referencia || r.documento?.trim() || r.id;
   const known = db.recepciones.find(receipt => receipt.id === r.id || receipt.referencia === reference);
   let attempt = attempts.get(r.id);
@@ -74,7 +87,7 @@ export async function saveReceipt(command: Extract<Command, { type: 'receipt.cre
   const base = { tipo_ingreso: r.tipoIngreso || 'COMPRA', donante: r.tipoIngreso === 'DONACION' ? r.donante?.trim() || null : null,
     id_proveedor: r.tipoIngreso === 'DONACION' ? null : r.proveedorId ? idOf(r.proveedorId) : null,
     total: decimal(r.total ?? 0), numero_recepcion: state.number, fecha_recepcion: r.fecha };
-  const signature = JSON.stringify({ ...base, lotes: lotInputs, cantidades: r.items.map(i => decimal(i.cantidad)) });
+  const signature = JSON.stringify({ ...base, lineas: r.items.map(i => ({ productoId: i.productoId, apiLoteId: i.apiLoteId, lote: i.lote.trim(), vencimiento: i.vencimiento || null, fabricacion: i.fabricacion || null, codigo: i.codigoLote?.trim() || null, cantidad: decimal(i.cantidad) })) });
   const readCurrent = () => apiData<ApiRow>(`/recepciones/${state.id}`);
   const remember = (saved: ApiRow) => {
     if (!Number.isSafeInteger(saved.id_recepcion) || !Number.isSafeInteger(saved.version)) throw new Error('La API no devolvió el ID y versión de la recepción. Reintenta para reconciliarla.');
@@ -89,9 +102,10 @@ export async function saveReceipt(command: Extract<Command, { type: 'receipt.cre
   if (current) {
     if (current.estado === 'COMPLETADA') {
       const lines: ApiRow[] = current.detalle_recepciones_id_recepcion_list || [];
-      const matched = r.items.map((item, index) => lines.find(line => line.lotes_id_lote?.id_medicamento === lotInputs[index].id_medicamento &&
-        line.lotes_id_lote?.numero_lote?.trim().toLocaleUpperCase('es') === lotInputs[index].numero_lote.toLocaleUpperCase('es') &&
+      const matched = r.items.map(item => lines.find(line => line.lotes_id_lote?.id_medicamento === idOf(item.productoId) &&
+        line.lotes_id_lote?.numero_lote?.trim().toLocaleUpperCase('es') === item.lote.trim().toLocaleUpperCase('es') &&
         dateOnly(line.lotes_id_lote?.fecha_vencimiento) === (item.vencimiento || null) &&
+        dateOnly(line.lotes_id_lote?.fecha_fabricacion) === (item.fabricacion || null) &&
         (!item.codigoLote?.trim() || line.lotes_id_lote?.codigo_lote === item.codigoLote.trim())));
       if (matched.every(Boolean) && samePayload(current, { ...base, detalles: matched.map((line, index) => ({ id_lote: line!.id_lote, cantidad: decimal(r.items[index].cantidad) })) })) return;
       throw conflict(current);
@@ -106,14 +120,31 @@ export async function saveReceipt(command: Extract<Command, { type: 'receipt.cre
     }
     if (current.estado !== 'BORRADOR' && current.estado !== 'COMPLETADA') throw conflict(current);
   }
-  if (state.resolvedSignature !== signature) {
+  const persisted: Receipt['items'] = current ? mapReceipt(current).items : [];
+  const plan = r.items.map(item => {
+    const saved = item.apiLoteId ? persisted.find(line => line.apiLoteId === item.apiLoteId) : undefined;
+    const sameIdentity = saved && saved.productoId === item.productoId && saved.lote.trim() === item.lote.trim();
+    if (!sameIdentity) return undefined;
+    if ((saved.codigoLote?.trim() && !item.codigoLote?.trim()) || (saved.fabricacion && !item.fabricacion)) {
+      throw new Error('El lote ' + item.lote + ' ya tiene código o fecha de fabricación registrados. Vaciar estos campos no elimina los datos del lote. Corrige sus metadatos desde el apartado de lotes; tus cambios se conservan.');
+    }
+    if ((saved.vencimiento || null) !== (item.vencimiento || null) || (saved.fabricacion || null) !== (item.fabricacion || null) || (saved.codigoLote?.trim() || null) !== (item.codigoLote?.trim() || null)) {
+      return undefined;
+    }
+    return { id_lote: saved.apiLoteId! };
+  });
+  const newItems = r.items.filter((_, index) => !plan[index]);
+  const lotInputs = receiptLotInputs({ ...r, items: newItems }, db, complete && newItems.length > 0);
+  const resolutionSignature = JSON.stringify({ signature, plan, lotInputs });
+  if (state.resolvedSignature !== resolutionSignature) {
     const lots = lotInputs.length ? await apiData<ApiRow[]>('/lotes/resolver', 'POST', { lotes: lotInputs }) : [];
     if (Array.isArray(lots) && lots.some(lot => lot.estado === false)) throw new Error('El resolver devolvió un lote inactivo. No se guardó la recepción.');
     if (!Array.isArray(lots) || lots.length !== lotInputs.length || lots.some((lot, index) =>
       !Number.isSafeInteger(lot.id_lote) || lot.id_lote < 1 || (lot.id_medicamento != null && lot.id_medicamento !== lotInputs[index].id_medicamento) ||
       (lot.numero_lote != null && lot.numero_lote.trim().toLocaleUpperCase('es') !== lotInputs[index].numero_lote.toLocaleUpperCase('es'))))
       throw new Error('La respuesta del resolver no corresponde a los lotes enviados. No se guardó el borrador.');
-    state.lots = lots; state.resolvedSignature = signature;
+    let resolvedIndex = 0;
+    state.lots = plan.map(existing => existing || lots[resolvedIndex++]); state.resolvedSignature = resolutionSignature;
   }
   const payload = { ...base, detalles: state.lots!.map((lot, index) => ({ id_lote: lot.id_lote, cantidad: decimal(r.items[index].cantidad) })) };
   // Reconcile a previously lost creation before attempting another POST.

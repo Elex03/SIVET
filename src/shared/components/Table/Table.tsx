@@ -28,6 +28,7 @@ interface TableProps<Row extends object> {
   exportSubtitle?: string;
   pagination?: boolean;
   sortable?: boolean;
+  showSortControls?: boolean;
 }
 
 const cellValue = <Row extends object,>(row: Row, id: string): unknown => row[id as keyof Row];
@@ -45,6 +46,7 @@ const Table = <Row extends object,>({
   exportSubtitle = "Listado de registros del sistema",
   pagination = true,
   sortable = true,
+  showSortControls = false,
 }: TableProps<Row>) => {
   const [rowMenu, setRowMenu] = useState<{ row: Row; x: number; y: number; trigger: HTMLTableRowElement } | null>(null);
   const rowMenuRef = useRef<HTMLDivElement>(null);
@@ -158,6 +160,10 @@ const Table = <Row extends object,>({
   return (
     <div className="data-table bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex-1 flex flex-col min-h-0 relative overflow-hidden">
 
+      {sortable && showSortControls && <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-4 py-3 text-sm text-slate-600">
+        <label className="flex items-center gap-2">Ordenar por<select className="rounded-lg border border-slate-200 bg-white px-3 py-2" value={sort?.key || ''} onChange={event => { setSort(event.target.value ? { key: event.target.value, descending: sort?.descending || false } : null); setCurrentPage(1); }}><option value="">Orden original</option>{activeColumnsForTable.filter(col => col.id !== 'imagen').map(col => <option key={col.id} value={col.id}>{col.label}</option>)}</select></label>
+        <label className="flex items-center gap-2">Dirección<select className="rounded-lg border border-slate-200 bg-white px-3 py-2 disabled:opacity-50" disabled={!sort} value={sort?.descending ? 'desc' : 'asc'} onChange={event => { if (sort) setSort({ ...sort, descending: event.target.value === 'desc' }); setCurrentPage(1); }}><option value="asc">Ascendente ↑</option><option value="desc">Descendente ↓</option></select></label>
+      </div>}
       {/* CONTENEDOR HORIZONTAL (Controla el overflow si hay demasiadas columnas) */}
       <div tabIndex={0} role="region" aria-label={`Tabla: ${exportTitle}`} className="table-scroll w-full flex-1 min-h-0 overflow-auto custom-scrollbar">
 

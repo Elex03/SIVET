@@ -166,6 +166,9 @@ export interface Receipt {
   estado?: "BORRADOR" | "COMPLETADO" | "CANCELADO";
   items: {
     productoId: string;
+    apiLoteId?: number;
+    estadoLote?: string | boolean;
+    loteOriginal?: { productoId: string; lote: string; vencimiento: string | null; fabricacion: string | null; codigoLote: string | null };
     fabricacion?: string | null;
     codigoLote?: string;
     lote: string;

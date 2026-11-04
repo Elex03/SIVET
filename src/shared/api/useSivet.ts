@@ -227,6 +227,14 @@ export function useSivet() {
     data,
     mutate,
     refreshNotifications,
+    reopenReceipt: async (id: string) => {
+      await refresh();
+      if (loadError) throw new Error(loadError);
+      const receipt = snapshot.recepciones.find(r => r.id === id);
+      if (!receipt) throw new Error('La recepción ya no está disponible. Actualiza el historial.');
+      if (receipt.estado !== 'BORRADOR') throw new Error('Esta recepción ya no es un borrador. Revisa su estado actual.');
+      return structuredClone(receipt);
+    },
     refresh,
     pending,
     receiptConflict,
