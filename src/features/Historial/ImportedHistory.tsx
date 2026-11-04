@@ -104,7 +104,7 @@ export default function ImportedHistory() {
         {error && <div role="alert" className="rounded-xl p-5 bg-rose-50 text-rose-700"><p>{error}</p><button type="button" className="mt-3 underline font-semibold" onClick={() => setReload(n => n + 1)}>Reintentar</button></div>}
         {page && !validation && <>
           <p role="status" className="text-sm text-slate-600">{page.total.toLocaleString('es-NI')} registros históricos según los filtros y el alcance de tu perfil.</p>
-          <Table pagination={false} sortable={false} enableExport={false} columns={[
+          <Table rowOffset={(query.page - 1) * query.limit} pagination={false} sortable={false} enableExport={false} columns={[
             { id: 'id', label: 'Registro' }, { id: 'fechaLabel', label: 'Fecha' }, { id: 'tipoLabel', label: 'Tipo' }, { id: 'productoLabel', label: 'Producto' },
             { id: 'cantidadLabel', label: 'Cantidad' }, { id: 'unidadLabel', label: 'Unidad' }, { id: 'ubicacionLabel', label: 'Ubicación de origen' }, { id: 'destinoLabel', label: 'Destino' },
             { id: 'origen_registro', label: 'Origen del registro' }, { id: 'estado_revision', label: 'Estado de revisión', render: (row: HistoricalMovement) => <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${row.estado_revision === 'PENDIENTE' ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-700'}`}>{row.estado_revision === 'PENDIENTE' ? 'Pendiente de revisión' : 'Validado'}</span> },

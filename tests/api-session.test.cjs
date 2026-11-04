@@ -4,7 +4,7 @@ require.extensions['.ts']=(module,filename)=>{const source=fs.readFileSync(filen
 let refreshes=0;let failRefresh=false;let mode='';let rateCalls=0;const sent=[];
 axios.defaults.adapter=async config=>{
   const response={status:200,statusText:'OK',config,headers:{},data:{data:{ok:true}}};
-  sent.push({url:config.url,time:Date.now()});
+  sent.push({url:config.url,time:Date.now(),timeout:config.timeout});
   if(config.url==='/auth/refresh' && mode==='refresh429'){refreshes++;throw new axios.AxiosError('Limited','ERR_BAD_RESPONSE',config,null,{...response,status:429,headers:{'retry-after':'0'},data:{error:{retryAfterSeconds:0}}});}
   if(config.url==='/auth/refresh'){refreshes++;await new Promise(resolve=>setTimeout(resolve,10));if(failRefresh)throw new axios.AxiosError('Expired','ERR_BAD_REQUEST',config,null,{...response,status:401});return {...response,data:{data:{access_token:'new',refresh_token:'rotated',expires_in:60,refresh_expires_in:3600}}};}
   if(config.headers.get('Authorization')!=='Bearer new')throw new axios.AxiosError('Expired','ERR_BAD_REQUEST',config,null,{...response,status:401});
@@ -93,4 +93,15 @@ test('LOT_EXPIRED conserva mensaje y no recomienda recarga por concurrencia',()=
   const {apiErrorMessage}=require('../src/shared/api/apiErrors.ts');
   const error=new axios.AxiosError('expired','ERR_BAD_RESPONSE',{method:'post',url:'/recepciones/3/confirmar'},null,{status:409,headers:{},data:{error:{code:'LOT_EXPIRED',message:'El lote ABC venció el 2020-01-01.'}}});
   const message=apiErrorMessage(error);assert.match(message,/ABC/);assert.match(message,/vencimiento|fechas/);assert.doesNotMatch(message,/Actualiza el registro|entraron en conflicto/);
+});
+
+test('lecturas, confirmación y renovación de sesión esperan sin corte de Axios', async () => {
+  active(); sent.length=0;
+  await apiData('/inventario');
+  await apiData('/recepciones/3/confirmar','POST',{version:6});
+  saveTokens({access_token:'old',refresh_token:'first',expires_in:1,refresh_expires_in:3600});
+  await apiData('/inventario');
+  assert.ok(sent.some(r=>r.url==='/auth/refresh'));
+  assert.ok(sent.some(r=>r.url==='/recepciones/3/confirmar'));
+  assert.ok(sent.every(r=>r.timeout===0));
 });

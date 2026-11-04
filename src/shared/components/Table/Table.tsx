@@ -1,3 +1,5 @@
+import { cellValue, cellText, filterTableData } from './tableFilters';
+import ColumnFilter from './ColumnFilter';
 import { createPortal } from 'react-dom';
 import StatusBadge from './StatusBadge';
 import React, { useState, useEffect, useRef } from "react";
@@ -13,6 +15,7 @@ import { generatePDFTemplate, generateExcel } from "../../utils/printUtils";
 export interface TableColumn<Row extends object = Record<string, React.ReactNode>> {
   id: string;
   label: string;
+  hiddenByDefault?: boolean;
   render?: (row: Row) => React.ReactNode;
 }
 
@@ -29,11 +32,16 @@ interface TableProps<Row extends object> {
   pagination?: boolean;
   sortable?: boolean;
   showSortControls?: boolean;
+  rowOffset?: number;
+  filterable?: boolean;
 }
 
-const cellValue = <Row extends object,>(row: Row, id: string): unknown => row[id as keyof Row];
-const cellText = (value: unknown): string | number => value == null ? '' : typeof value === 'number' ? value : Array.isArray(value) ? value.join(', ') : String(value);
-
+const columnStyle = (id: string): React.CSSProperties => {
+  const text = /producto|nombre|descripcion|proveedor|donante|medicamento|mensaje|indicacion/i.test(id);
+  const small = /^(cantidad|aptas|stock|minimo|total|lineas|unidad|uxe|dias|volumenMl)$/i.test(id);
+  const width = id === 'imagen' ? 48 : text ? 250 : small ? 104 : /fecha|vencimiento/i.test(id) ? 135 : 165;
+  return { '--cell-max': width + 'px', '--cell-min': text ? '170px' : '0px' } as React.CSSProperties;
+};
 const Table = <Row extends object,>({
   columns,
   pageSize = 10,
@@ -47,6 +55,8 @@ const Table = <Row extends object,>({
   pagination = true,
   sortable = true,
   showSortControls = false,
+  rowOffset = 0,
+  filterable = sortable,
 }: TableProps<Row>) => {
   const [rowMenu, setRowMenu] = useState<{ row: Row; x: number; y: number; trigger: HTMLTableRowElement } | null>(null);
   const rowMenuRef = useRef<HTMLDivElement>(null);
@@ -81,7 +91,7 @@ const Table = <Row extends object,>({
   // ==========================================
   // ESTADO DE VISIBILIDAD DE COLUMNAS
   // ==========================================
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>(() => columns.filter(col => col.hiddenByDefault).map(col => col.id));
   const visibleColumns = columns.map(col => col.id).filter(id => !hiddenColumns.includes(id));
 
   const toggleColumn = (colId: string) => {
@@ -95,18 +105,20 @@ const Table = <Row extends object,>({
   // ==========================================
   // ESTADOS DE PAGINACIÓN
   // ==========================================
+  const [filters, setFilters] = useState<Record<string, string[]>>({});
+  const filteredData = filterable ? filterTableData(data, filters) : data;
   const [requestedPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(pageSize);
 
 
-  const effectiveItemsPerPage = itemsPerPage === "all" ? (data.length > 0 ? data.length : 1) : itemsPerPage;
-  const totalPages = Math.ceil(data.length / effectiveItemsPerPage);
+  const effectiveItemsPerPage = itemsPerPage === "all" ? (filteredData.length > 0 ? filteredData.length : 1) : itemsPerPage;
+  const totalPages = Math.ceil(filteredData.length / effectiveItemsPerPage);
   const currentPage = Math.min(requestedPage, Math.max(1, totalPages));
 
   const startIndex = (currentPage - 1) * effectiveItemsPerPage;
-  const endIndex = itemsPerPage === "all" ? data.length : startIndex + effectiveItemsPerPage;
+  const endIndex = itemsPerPage === "all" ? filteredData.length : startIndex + effectiveItemsPerPage;
   const [sort, setSort] = useState<{ key: string; descending: boolean } | null>(null);
-  const sortedData = [...data].sort((a, b) => {
+  const sortedData = [...filteredData].sort((a, b) => {
     if (!sortable || !sort) return 0;
     const value = (row: Row) => {
       const raw = cellValue(row, sort.key);
@@ -164,21 +176,22 @@ const Table = <Row extends object,>({
         <label className="flex items-center gap-2">Ordenar por<select className="rounded-lg border border-slate-200 bg-white px-3 py-2" value={sort?.key || ''} onChange={event => { setSort(event.target.value ? { key: event.target.value, descending: sort?.descending || false } : null); setCurrentPage(1); }}><option value="">Orden original</option>{activeColumnsForTable.filter(col => col.id !== 'imagen').map(col => <option key={col.id} value={col.id}>{col.label}</option>)}</select></label>
         <label className="flex items-center gap-2">Dirección<select className="rounded-lg border border-slate-200 bg-white px-3 py-2 disabled:opacity-50" disabled={!sort} value={sort?.descending ? 'desc' : 'asc'} onChange={event => { if (sort) setSort({ ...sort, descending: event.target.value === 'desc' }); setCurrentPage(1); }}><option value="asc">Ascendente ↑</option><option value="desc">Descendente ↓</option></select></label>
       </div>}
+      {filterable && Object.keys(filters).length > 0 && <div role="status" className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-2 text-xs text-slate-500"><span>{filteredData.length} de {data.length} registros · {Object.keys(filters).length} filtros activos</span><button type="button" className="text-blue-600 font-semibold" onClick={() => { setFilters({}); setCurrentPage(1); }}>Limpiar todos los filtros</button></div>}
       {/* CONTENEDOR HORIZONTAL (Controla el overflow si hay demasiadas columnas) */}
       <div tabIndex={0} role="region" aria-label={`Tabla: ${exportTitle}`} className="table-scroll w-full flex-1 min-h-0 overflow-auto custom-scrollbar">
 
         {/* Natural content widths until the user manually resizes the columns. */}
-        <table ref={tableRef} className={`content-sized-table border-collapse text-left ${Object.keys(columnWidths).length ? 'has-custom-widths' : ''}`} style={Object.keys(columnWidths).length ? { tableLayout: 'fixed', width: activeColumnsForTable.reduce((sum, col) => sum + (columnWidths[col.id] || 140), 0) + (hasActions ? 112 : 0) + (enableExport ? 56 : 0), minWidth: '100%' } : { width: 'max-content', minWidth: '100%' }}>
-          {Object.keys(columnWidths).length > 0 && <colgroup>{activeColumnsForTable.map(col => <col key={col.id} style={{ width: columnWidths[col.id] || 140 }} />)}{hasActions && <col style={{width:112}} />}{enableExport && <col style={{width:56}} />}</colgroup>}
+        <table ref={tableRef} className={`content-sized-table border-collapse text-left ${Object.keys(columnWidths).length ? 'has-custom-widths' : ''}`} style={Object.keys(columnWidths).length ? { tableLayout: 'fixed', width: activeColumnsForTable.reduce((sum, col) => sum + (columnWidths[col.id] || 140), 0) + 44 + (hasActions ? 112 : 0) + (enableExport ? 56 : 0), minWidth: '100%' } : { width: 'max-content', minWidth: '100%' }}>
+          {Object.keys(columnWidths).length > 0 && <colgroup><col style={{ width: 44 }} />{activeColumnsForTable.map(col => <col key={col.id} style={{ width: columnWidths[col.id] || 140 }} />)}{hasActions && <col style={{width:112}} />}{enableExport && <col style={{width:56}} />}</colgroup>}
 
           {/* THEAD: Estático, fuera del scroll vertical.
               El pr-[6px] compensa visualmente el ancho del scrollbar que tendrá el tbody */}
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr className="w-full">
+            <tr className="w-full"><th scope="col" className="w-11 px-2 py-3 text-center text-xs font-medium text-slate-400" aria-label="Número de fila">N.º</th>
 
               {activeColumnsForTable.map((col) => (
-                <th key={col.id} data-column={col.id} aria-sort={!sortable ? undefined : sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="relative px-3 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
-                  {sortable ? <button type="button" className="table-column-heading flex items-center gap-2 text-left" title={col.label} aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}><span className="truncate">{col.label}</span><span className="shrink-0" aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button> : <div className="table-column-heading truncate" title={col.label}>{col.label}</div>}
+                <th key={col.id} style={columnStyle(col.id)} data-column={col.id} aria-sort={!sortable ? undefined : sort?.key === col.id ? sort.descending ? "descending" : "ascending" : "none"} className="relative px-2 py-3 text-[11.5px] font-bold text-slate-500 uppercase tracking-wider whitespace-normal">
+                  <div className="flex items-center gap-1">{sortable ? <button type="button" className="table-column-heading flex items-center gap-2 text-left" title={col.label} aria-label={'Ordenar ' + col.label + (sort?.key === col.id && !sort.descending ? ' descendente' : ' ascendente')} onClick={() => { setSort({ key: col.id, descending: sort?.key === col.id ? !sort.descending : false }); setCurrentPage(1); }}><span className="truncate">{col.label}</span><span className="shrink-0" aria-hidden="true">{sort?.key === col.id ? sort.descending ? '↓' : '↑' : '↕'}</span></button> : <div className="table-column-heading truncate" title={col.label}>{col.label}</div>}{filterable && col.id !== 'imagen' && <ColumnFilter label={col.label} values={[...new Set(data.map(row => String(cellText(cellValue(row, col.id)))))].sort((a,b) => a.localeCompare(b,'es',{numeric:true}))} selected={filters[col.id]} onChange={values => { setFilters(previous => { const next = {...previous}; if (values) next[col.id] = values; else delete next[col.id]; return next; }); setCurrentPage(1); }} />}</div>
                   <span role="separator" tabIndex={0} aria-orientation="vertical" aria-label={`Ancho de ${col.label}`} aria-valuemin={80} aria-valuemax={640} aria-valuenow={Math.round(columnWidths[col.id] || 140)} className="column-resizer" title="Arrastra para ajustar. Flechas para cambiar el ancho. Doble clic para restablecer."
                     onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); const measured = measureColumns(); setColumnWidths(measured); resize.current = {id:col.id,x:event.clientX,width:measured[col.id] || 140}; event.currentTarget.setPointerCapture(event.pointerId); }}
                     onPointerMove={event => { const active = resize.current; if (active?.id === col.id) setWidth(col.id, active.width + event.clientX - active.x); }}
@@ -277,8 +290,9 @@ const Table = <Row extends object,>({
               currentData.map((row, index) => (
                 <tr key={typeof cellValue(row, 'id') === 'string' || typeof cellValue(row, 'id') === 'number' ? String(cellValue(row, 'id')) : index} tabIndex={hasActions ? 0 : undefined} title={hasActions ? "Pulsa para ver las acciones del registro" : undefined} onClick={event => { if (!hasActions || !event.currentTarget.contains(event.target as Node) || (event.target as Element).closest("button,a,input,select,textarea,label,[role=button]") || window.getSelection()?.toString()) return; setRowMenu({ row, x: event.clientX, y: event.clientY, trigger: event.currentTarget }); }} onKeyDown={event => { if (hasActions && event.target === event.currentTarget && ["Enter", " "].includes(event.key)) { event.preventDefault(); const bounds = event.currentTarget.getBoundingClientRect(); setRowMenu({ row, x: Math.max(8, bounds.left + 16), y: bounds.bottom, trigger: event.currentTarget }); } }} className={`group/row hover:bg-slate-50/60 transition-colors ${hasActions ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500" : ""}`}>
 
+                  <td className="w-11 px-2 py-3 text-center text-xs tabular-nums text-slate-400">{rowOffset + (pagination ? startIndex : 0) + index + 1}</td>
                   {activeColumnsForTable.map((col) => (
-                    <td key={col.id} className="px-3 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
+                    <td key={col.id} style={columnStyle(col.id)} className="px-2 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
                       <div className="table-cell-content" title={!col.render ? String(cellText(cellValue(row, col.id))) : undefined}>
                         {col.id === 'estado' ? <StatusBadge value={cellValue(row, col.id)} /> : col.render ? col.render(row) : React.isValidElement(cellValue(row, col.id)) ? cellValue(row, col.id) as React.ReactElement : cellText(cellValue(row, col.id))}
                       </div>
@@ -314,7 +328,7 @@ const Table = <Row extends object,>({
               ))
             ) : (
               <tr >
-                <td colSpan={activeColumnsForTable.length + Number(hasActions) + Number(enableExport)} className="py-16 text-center border-none">
+                <td colSpan={1 + activeColumnsForTable.length + Number(hasActions) + Number(enableExport)} className="py-16 text-center border-none">
                   <div className="flex flex-col items-center justify-center text-slate-400">
                     <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                       <Inbox size={24} className="text-slate-300" />

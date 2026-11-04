@@ -118,7 +118,8 @@ body,
 .content-sized-table .table-cell-content,
 .content-sized-table .table-column-heading {
   width: max-content;
-  max-width: 320px;
+  max-width: var(--cell-max, 165px);
+  min-width: var(--cell-min, 0px);
   white-space: nowrap;
 }
 .content-sized-table .table-cell-content {
@@ -129,6 +130,7 @@ body,
 .content-sized-table.has-custom-widths .table-column-heading {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 .receipt-lines { max-height: 45dvh; overflow: auto; }
 .activity-panel { min-height: 0; max-height: 60dvh; overflow: auto; overscroll-behavior: contain; }

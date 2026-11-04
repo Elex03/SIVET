@@ -142,3 +142,16 @@ test('solo las filas con acciones ofrecen acceso mediante teclado', () => {
   const plain=renderToStaticMarkup(React.createElement(Table,{columns,data,enableExport:false}));
   assert.doesNotMatch(plain,/Pulsa para ver las acciones/);
 });
+
+test('filtros de columna combinan selecciones y vacíos antes de paginar sin modificar datos',()=>{
+  const {filterTableData}=require('../src/shared/components/Table/tableFilters.ts');
+  const rows=[{id:1,unidad:'FRASCO',cantidad:58,marca:null},{id:2,unidad:'FRASCO',cantidad:3,marca:'A'},{id:3,unidad:'UNIDAD',cantidad:58,marca:''}];
+  assert.deepEqual(filterTableData(rows,{unidad:['FRASCO'],cantidad:['58']}),[rows[0]]);
+  assert.deepEqual(filterTableData(rows,{marca:['']}),[rows[0],rows[2]]);
+  assert.deepEqual(filterTableData(rows,{unidad:[]}),[]);
+  assert.deepEqual(filterTableData(rows,{}),rows);assert.equal(rows.length,3);
+});
+test('volumen oculto por defecto y numeración remota conserva desplazamiento',()=>{
+  const html=renderToStaticMarkup(React.createElement(Table,{columns:[{id:'nombre',label:'Producto'},{id:'volumenMl',label:'Volumen registrado',hiddenByDefault:true}],data:[{nombre:'Frasco',volumenMl:29000}],pagination:false,sortable:false,enableExport:false,rowOffset:20}));
+  assert.doesNotMatch(html,/Volumen registrado|29000/);assert.match(html,/>21<\/td>/);assert.match(html,/Número de fila/);
+});

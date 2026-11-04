@@ -7,10 +7,10 @@ export const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 export const apiClient = axios.create({
   baseURL: apiUrl || import.meta.env.BASE_URL,
   withCredentials: true,
-  timeout: 15000,
+  timeout: 0, // Esperar la respuesta sin un corte por duración en Axios.
   headers: { "Content-Type": "application/json" },
 });
-const authClient = axios.create({ baseURL: apiUrl, timeout: 60000 });
+const authClient = axios.create({ baseURL: apiUrl, timeout: 0 });
 let renewal: Promise<void> | undefined;
 authClient.interceptors.request.use(async config => { await waitForApi(config.signal as AbortSignal | undefined); startRequest(config); return config; });
 authClient.interceptors.response.use(response => {
@@ -28,7 +28,6 @@ apiClient.interceptors.request.use(async (config) => {
   if (apiUrl && getTokens() && !config.url?.startsWith("/auth/login"))
     config.headers.Authorization = `Bearer ${getTokens()!.access_token}`;
   if (config.data instanceof FormData) config.headers.delete("Content-Type");
-  if (["get", "head"].includes(config.method || "get") || config.url?.startsWith("/auth/")) config.timeout = 60000;
   startRequest(config);
   return config;
 });
