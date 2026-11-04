@@ -18,12 +18,12 @@ export default function ConfirmationProvider({ children }: { children: ReactNode
   const finish = (result: boolean) => { const resolve = resolver.current; resolver.current = null; setOptions(null); resolve?.(result); };
   useEffect(() => () => { resolver.current?.(false); resolver.current = null; }, []);
   return <ConfirmationContext.Provider value={confirm}>{children}
-    <Modal isOpen={!!options} onClose={() => finish(false)} title={options?.title || 'Confirmar acción'} maxWidth="max-w-lg">
+    <Modal isOpen={!!options} onClose={() => finish(false)} title={options?.title || 'Confirmar acción'} maxWidth="max-w-lg" footer={options && (<div className="modal-actions flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100"><button autoFocus className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50" onClick={() => finish(false)}>Volver</button><button className={options.danger ? 'rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2.5 text-sm font-bold text-white' : buttonClass} onClick={() => finish(true)}>{options.confirmLabel || 'Confirmar'}</button></div>)}>
       {options && <div className="flex flex-col gap-5">
         <div className={`confirmation-emblem w-14 h-14 rounded-2xl flex items-center justify-center ${options.danger ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-[#304a6d]'}`}>{options.danger ? <AlertTriangle /> : <ShieldCheck />}</div>
         <p className="text-sm text-slate-600 leading-relaxed">{options.description}</p>
-        {!!options.details?.length && <ul className="bg-slate-50 rounded-2xl p-5 text-sm text-slate-700 space-y-2">{options.details.map((detail, index) => <li className="break-words" key={index}>{detail}</li>)}</ul>}
-        <div className="modal-actions flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100"><button autoFocus className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50" onClick={() => finish(false)}>Volver</button><button className={options.danger ? 'rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2.5 text-sm font-bold text-white' : buttonClass} onClick={() => finish(true)}>{options.confirmLabel || 'Confirmar'}</button></div>
+        {!!options.details?.length && <ul tabIndex={0} aria-label="Resumen de la operación" className="h-[min(320px,35dvh)] min-h-0 overflow-y-auto overscroll-contain shrink-0 bg-slate-50 rounded-2xl p-5 text-sm text-slate-700 space-y-2 custom-scrollbar">{options.details.map((detail, index) => <li className="break-words" key={index}>{detail}</li>)}</ul>}
+
       </div>}
     </Modal>
   </ConfirmationContext.Provider>;

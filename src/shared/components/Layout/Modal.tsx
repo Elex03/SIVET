@@ -9,14 +9,16 @@ interface ModalProps {
   subtitle?: string;
   children: React.ReactNode;
   maxWidth?: string;
+  footer?: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  subtitle, 
-  children, 
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  subtitle,
+  children,
+  footer,
   maxWidth = "max-w-3xl" // Actualizado a 3xl por defecto para tablas
 }) => {
   const panel = useRef<HTMLDivElement>(null);
@@ -53,15 +55,15 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div className="modal-layer fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6">
-      
+
       {/* Overlay con desenfoque acorde a la línea gráfica */}
-      <div 
+      <div
         className="modal-backdrop absolute inset-0 bg-slate-900/40 backdrop-blur-sm" aria-hidden="true"
         onClick={onClose}
       ></div>
-      
+
       {/* Contenedor principal con los mismos bordes y sombras de las tarjetas */}
-      <div 
+      <div
         ref={panel} role="dialog" aria-modal="true" aria-labelledby={heading} aria-describedby={subtitle ? description : undefined} tabIndex={-1}
         className={`modal-panel relative bg-white rounded-3xl shadow-xl w-full ${maxWidth} flex flex-col max-h-[94dvh] overflow-hidden z-10`}
       >
@@ -77,7 +79,7 @@ const Modal: React.FC<ModalProps> = ({
               </p>
             )}
           </div>
-          <button 
+          <button
             type="button"
             data-tour-close
             onClick={onClose}
@@ -92,6 +94,7 @@ const Modal: React.FC<ModalProps> = ({
         <div className="modal-body overflow-y-auto px-5 sm:px-7 py-5 sm:py-6 bg-white flex-1 min-h-0 custom-scrollbar">
           {children}
         </div>
+        {footer && <div className="shrink-0 px-5 sm:px-7 pb-5 sm:pb-6 bg-white">{footer}</div>}
       </div>
     </div>,
     document.body
