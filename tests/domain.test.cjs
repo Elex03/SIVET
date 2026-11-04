@@ -75,7 +75,7 @@ test('donación sin vencimiento ingresa stock físico una sola vez y queda fuera
 test('donaciones validan donante y vencimiento; compras siguen exigiendo fecha', () => {
   const receipt = donationReceipt();
   for (const patch of [{ donante: '' }]) assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, ...patch } }), /donante/);
-  for (const vencimiento of ['', '2000-01-01', 'sin fecha']) assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, items: [{ ...receipt.items[0], vencimiento }] } }), /vencimiento/);
+  for (const vencimiento of ['', 'sin fecha']) assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, items: [{ ...receipt.items[0], vencimiento }] } }), /vencimiento/);
   assert.throws(() => applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, tipoIngreso: 'COMPRA', proveedorId: fixtures.catalogos.find(p => p.tipo === 'proveedores').id } }), /vencimiento/);
   const db = applyCommand(fixtures, { type: 'receipt.create', receipt: { ...receipt, items: [{ ...receipt.items[0], vencimiento: '2099-12-31' }] } });
   assert.equal(availableStock(db, db.existencias.find(s => s.lote === 'DON-TEST-LOTE').id), 12);
@@ -557,4 +557,13 @@ test('contador personal excluye avisos de otra cuenta incluso para administrador
   assert.equal(ownsNotification({ownerId:2,rol:'bodega'},user),false);
   assert.equal(ownsNotification({ownerId:1,rol:'bodega'},user),true);
   assert.equal(isUnreadNotification({leidaPor:['administrador:admin']},user),false);
+});
+
+test('donación vencida registra stock sin despacho y compra vencida se rechaza',()=>{
+  const receipt=donationReceipt();receipt.items[0].vencimiento='2000-01-01';
+  const db=applyCommand(fixtures,{type:'receipt.create',receipt});
+  const stock=db.existencias.find(s=>s.lote===receipt.items[0].lote);
+  assert.equal(stock.cantidad,12);assert.equal(stock.vencimiento,'2000-01-01');assert.equal(availableStock(db,stock.id),0);
+  assert.throws(()=>applyCommand(fixtures,{type:'receipt.create',receipt:{...receipt,tipoIngreso:'COMPRA',proveedorId:fixtures.catalogos.find(p=>p.tipo==='proveedores').id}}),/vencimiento/);
+  for(const estadoLote of ['BLOQUEADO','AGOTADO']) assert.throws(()=>applyCommand(fixtures,{type:'receipt.create',receipt:{...receipt,items:[{...receipt.items[0],estadoLote}]}}),/bloqueado|agotado/);
 });

@@ -306,3 +306,14 @@ body,
 :root[data-theme="dark"] .dispatch-intro { background:linear-gradient(120deg,#26354b,#1e293b); }
 :root[data-theme="dark"] .dispatch-balance { background:#26354b; }
 :root[data-theme="dark"] .dispatch-table td { border-color:#40516a; }
+
+/* Keep long receipt captures and their summary inside the viewport. */
+@media screen {
+  .receipt-form { min-width: 0; }
+  .screen-page .receipt-form .receipt-lines { max-height: 55dvh; overflow: auto; }
+  .receipt-summary { overflow-wrap: anywhere; }
+  .receipt-summary > fieldset > section { min-width: 0; flex-shrink: 0; }
+}
+@media screen and (min-width: 1280px) {
+  .receipt-summary { max-height: 78dvh; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+}

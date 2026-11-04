@@ -13,6 +13,7 @@ export function apiErrorMessage(error: unknown): string {
     : status === 401 ? 'La sesión no pudo validarse. Vuelve a iniciar sesión.'
     : status === 403 ? 'Tu cuenta no tiene permiso para esta operación.'
     : status === 404 ? 'El registro o servicio solicitado ya no está disponible. Actualiza los datos.'
+    : data?.error?.code === 'LOT_EXPIRED' ? 'Revisa las fechas y el tipo de ingreso. Las compras no admiten lotes vencidos. Tus cambios se conservan.'
     : status === 409 ? 'Los datos entraron en conflicto. Actualiza el registro y revisa los cambios antes de guardar.'
     : status === 413 ? 'El archivo supera el tamaño permitido. Selecciona uno más pequeño.'
     : status === 429 ? 'El servidor limitó las solicitudes. Espera el tiempo indicado antes de continuar.'

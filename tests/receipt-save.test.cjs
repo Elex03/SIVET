@@ -278,3 +278,18 @@ test('vaciar código existente no se omite silenciosamente ni actualiza el borra
   f.receipt.items[0].codigoLote='';await assert.rejects(()=>f.save(),/Vaciar estos campos/);
   assert.equal(f.calls.some(c=>c.method!=='GET'),false);
 });
+
+test('cambiar a DONACION se guarda antes de confirmar con la versión devuelta',async()=>{
+  const f=await persistedFixture(1);f.receipt.tipoIngreso='DONACION';f.receipt.donante='UNA';f.receipt.items[0].vencimiento='2000-01-01';
+  f.getActual().tipo_ingreso='COMPRA';f.getActual().donante=null;f.getActual().detalle_recepciones_id_recepcion_list[0].lotes_id_lote.fecha_vencimiento='2000-01-01';
+  await f.save('receipt.create');
+  assert.equal(f.calls.some(c=>c.url==='/lotes/resolver'),false);
+  const patch=f.calls.find(c=>c.method==='PATCH');const confirm=f.calls.find(c=>c.url.endsWith('/confirmar'));
+  assert.equal(patch.body.tipo_ingreso,'DONACION');assert.equal(patch.body.donante,'UNA');assert.deepEqual(confirm.body,{version:2});
+});
+test('LOT_EXPIRED no se trata como conflicto de versión ni inicia reconciliación',async()=>{
+  const f=await persistedFixture(1);f.setBefore(url=>{if(url.endsWith('/confirmar'))throw httpError(409,'LOT_EXPIRED');});
+  const before=structuredClone(f.receipt);
+  await assert.rejects(()=>f.save('receipt.create'),e=>!(e instanceof ReceiptConflictError));
+  assert.equal(f.calls.at(-1).url,'/recepciones/900/confirmar');assert.deepEqual(f.receipt,before);
+});

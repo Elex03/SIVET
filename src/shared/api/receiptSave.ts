@@ -1,5 +1,5 @@
 import { apiData } from './client';
-import { apiCancelled, apiStatus } from './apiControl';
+import { apiCancelled, apiStatus, apiCause } from './apiControl';
 import { dateOnly, decimal, mapReceipt, type ApiRow } from './apiMapping';
 import type { Command, Database, Receipt } from './domain';
 
@@ -22,6 +22,8 @@ const idOf = (value: string) => {
   return id;
 };
 const uncertain = (reason: unknown) => {
+  const cause = apiCause(reason) as { response?: { data?: { error?: { code?: string } } } };
+  if (cause?.response?.data?.error?.code === 'LOT_EXPIRED') return false;
   const status = apiStatus(reason);
   return !apiCancelled(reason) && (status === undefined || [409, 429].includes(status) || status >= 500);
 };

@@ -88,3 +88,9 @@ test('aviso lento distingue consultas y guardados y se limpia al terminar', () =
   finishRequest(write);assert.equal(useApiActivity().saving,false);assert.equal(snapshot.slow,true);
   finishRequest(read);assert.equal(useApiActivity().slow,false);
 });
+
+test('LOT_EXPIRED conserva mensaje y no recomienda recarga por concurrencia',()=>{
+  const {apiErrorMessage}=require('../src/shared/api/apiErrors.ts');
+  const error=new axios.AxiosError('expired','ERR_BAD_RESPONSE',{method:'post',url:'/recepciones/3/confirmar'},null,{status:409,headers:{},data:{error:{code:'LOT_EXPIRED',message:'El lote ABC venció el 2020-01-01.'}}});
+  const message=apiErrorMessage(error);assert.match(message,/ABC/);assert.match(message,/vencimiento|fechas/);assert.doesNotMatch(message,/Actualiza el registro|entraron en conflicto/);
+});

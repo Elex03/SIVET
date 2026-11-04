@@ -37,6 +37,7 @@ export interface CatalogRecord {
   imagen?: string;
 }
 export interface Stock {
+  estadoLote?: string | boolean;
   virtual?: boolean;
   apiLoteId?: number;
   apiDisponible?: number;
@@ -283,6 +284,7 @@ export function availableStock(
       0,
     );
   const stock = db.existencias.find((s) => s.id === stockId);
+  if (stock && (!stock.vencimiento || stock.vencimiento <= today() || stock.estadoLote === false || ["BLOQUEADO", "AGOTADO", "INACTIVO"].includes(String(stock.estadoLote)))) return 0;
   if (stock?.apiDisponible !== undefined && !excludeRequest)
     return stock.vencimiento ? stock.apiDisponible : 0;
   if (
@@ -843,6 +845,7 @@ export function applyCommand(source: Database, command: Command): Database {
       "Revisa fecha y productos de la recepción.",
     );
     for (const item of receipt.items) {
+      assert(item.estadoLote !== false && !["BLOQUEADO", "AGOTADO", "INACTIVO"].includes(String(item.estadoLote)), "El lote está bloqueado, agotado o inactivo y no permite confirmar el ingreso.");
       assert(
         db.catalogos.some(
           (c) =>
@@ -856,7 +859,7 @@ export function applyCommand(source: Database, command: Command): Database {
             (!!item.vencimiento &&
               /^\d{4}-\d{2}-\d{2}$/.test(item.vencimiento) &&
               Number.isFinite(Date.parse(item.vencimiento)) &&
-              item.vencimiento > today())) &&
+              (receipt.tipoIngreso === "DONACION" || item.vencimiento > today()))) &&
           Number.isInteger(item.cantidad) &&
           item.cantidad > 0,
         "Revisa lote, vencimiento y cantidad de cada producto.",
