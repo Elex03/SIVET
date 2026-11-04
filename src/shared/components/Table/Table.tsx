@@ -294,7 +294,7 @@ const Table = <Row extends object,>({
                   {activeColumnsForTable.map((col) => (
                     <td key={col.id} style={columnStyle(col.id)} className="px-2 py-3 text-sm text-slate-600 group-hover/row:text-slate-900">
                       <div className="table-cell-content" title={!col.render ? String(cellText(cellValue(row, col.id))) : undefined}>
-                        {col.id === 'estado' ? <StatusBadge value={cellValue(row, col.id)} /> : col.render ? col.render(row) : React.isValidElement(cellValue(row, col.id)) ? cellValue(row, col.id) as React.ReactElement : cellText(cellValue(row, col.id))}
+                        {col.render ? col.render(row) : col.id === 'estado' ? <StatusBadge value={cellValue(row, col.id)} /> : React.isValidElement(cellValue(row, col.id)) ? cellValue(row, col.id) as React.ReactElement : cellText(cellValue(row, col.id))}
                       </div>
                     </td>
                   ))}

@@ -28,7 +28,7 @@ const key = "sivet-data-v1";
 let snapshot: Database = emptyDatabase;
 let ready = false;
 let loadError = "";
-let loading: Promise<void> | undefined;
+let loading: Promise<boolean> | undefined;
 let sessionGeneration = 0;
 let notificationRevision = 0;
 let pollingNotifications = false;
@@ -64,24 +64,27 @@ async function refresh() {
         : persisted
           ? JSON.parse(persisted)
           : (await apiClient.get<Database>("data/sivet.json")).data;
-      if (generation !== sessionGeneration) return;
+      if (generation !== sessionGeneration) return false;
       snapshot = parseDatabase(saved);
       loadError = "";
       ready = true;
+      return true;
     } catch (error) {
       if (generation === sessionGeneration) {
         loadError =
           apiErrorMessage(error);
         toast.error(loadError, { toastId: "sivet-load-error" });
       }
+      return false;
     } finally {
       if (generation === sessionGeneration) loading = undefined;
       emit();
     }
   })();
-  await loading;
+  const success = await loading;
   // Local reads complete synchronously inside the async body.
   if (generation === sessionGeneration) loading = undefined;
+  return success;
 }
 window.addEventListener("sivet-session", () => {
   sessionGeneration++;
@@ -137,6 +140,7 @@ export function useSivet() {
       activeMutations++;
       setPending(true);
       setError("");
+      const mutationGeneration = sessionGeneration;
       let notification: ReturnType<typeof toast.loading> | undefined;
       try {
         if (
@@ -166,16 +170,21 @@ export function useSivet() {
             return false;
           notification = toast.loading("Guardando cambios…");
         }
+        if (mutationGeneration !== sessionGeneration) return false;
         if (apiUrl) {
           const savedId = await executeServerCommand(command, snapshot);
+          if (mutationGeneration !== sessionGeneration) return false;
           if (savedId && command.type === "catalog.save")
             command.record.id = savedId;
           // A failed reload must not turn a committed save into a failed submission.
           // Forms use this result to close and must not invite duplicate creations.
           try {
-            snapshot = command.type === "notification.read" || command.type === "notification.readAll" ? applyCommand(snapshot, command) : parseDatabase(await loadServerDatabase());
+            const updated = command.type === "notification.read" || command.type === "notification.readAll" ? applyCommand(snapshot, command) : parseDatabase(await loadServerDatabase());
+            if (mutationGeneration !== sessionGeneration) return false;
+            snapshot = updated;
             loadError = "";
           } catch {
+            if (mutationGeneration !== sessionGeneration) return false;
             loadError = "Los cambios se guardaron, pero no se pudieron actualizar los datos. Actualiza antes de continuar.";
             toast.warning(loadError, { toastId: "sivet-load-error" });
           }
@@ -215,6 +224,7 @@ export function useSivet() {
         else toast.error(message);
         return false;
       } finally {
+        if (mutationGeneration !== sessionGeneration && notification !== undefined) toast.dismiss(notification);
         notificationRevision++;
         activeMutations--;
         busy.current = false;

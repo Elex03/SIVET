@@ -35,12 +35,12 @@ export default function NotificationInbox() {
       if (document.hidden || Date.now() - lastReminder.current < 300000) return;
       const places = user.role === 'administrador' ? ['Bodega Central', 'Farmacia'] : [user.role === 'farmacia' ? 'Farmacia' : 'Bodega Central'];
       const alerts = places.reduce((n, p) => n + inventoryAlerts(state.data, p).length, 0);
-      const pending = state.data.notificaciones.filter(n => (user.role === 'administrador' || n.rol === user.role) && !n.leidaPor.includes(reader)).length;
+      const pending = state.data.notificaciones.filter(n => ownsNotification(n, user) && !n.leidaPor.includes(reader)).length;
       if (alerts + pending) { lastReminder.current = Date.now(); toast.warning(`Recordatorio: ${alerts} alertas de inventario y ${pending} avisos sin leer. Revisa tu panel de notificaciones.`, { toastId: 'inventory-reminder', autoClose: 10000 }); }
     };
     remind(); const interval = window.setInterval(remind, 30000);
     return () => window.clearInterval(interval);
   }, [state.data, state.loading, muted, reader, user]);
   const count = user ? state.data.notificaciones.filter(n => ownsNotification(n,user) && !n.leidaPor.includes(reader)).length : 0;
-  return <div className="flex justify-end gap-2 px-3 sm:px-5 pt-3"><ContextHelp /><Link title="Notificaciones" aria-label={`Notificaciones${count ? ': ' + count + ' pendientes' : ''}`} className="relative bg-white border border-slate-200 rounded-xl p-3 text-[#304a6d]" to={user?.role==='consulta'?'/inventario':user?.role === 'administrador' ? '/notificaciones' : `/${user?.role}/notificaciones`}><Bell size={20} />{count > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-4 h-4 px-1 rounded-full text-center">{count > 99 ? '99+' : count}</span>}</Link></div>;
+  return <div className="flex justify-end gap-2 px-3 sm:px-5 pt-3"><ContextHelp />{user?.role !== 'consulta' && <Link title="Notificaciones" aria-label={`Notificaciones${count ? ': ' + count + ' pendientes' : ''}`} className="relative bg-white border border-slate-200 rounded-xl p-3 text-[#304a6d]" to={user?.role === 'administrador' ? '/notificaciones' : `/${user?.role}/notificaciones`}><Bell size={20} />{count > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-4 h-4 px-1 rounded-full text-center">{count > 99 ? '99+' : count}</span>}</Link>}</div>;
 }

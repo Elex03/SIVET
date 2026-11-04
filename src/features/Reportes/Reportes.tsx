@@ -73,8 +73,9 @@ export default function Reportes() {
   async function generate() {
     if (invalidDates) return;
     setGenerating(true);
-    await state.refresh();
+    const refreshed = await state.refresh();
     setGenerating(false);
+    if (!refreshed) { setGenerated(false); return; }
     setLoadedAt(new Date().toLocaleString('es-NI'));
     setGenerated(true);
     setTab('charts');

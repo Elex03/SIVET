@@ -8,6 +8,7 @@ const { test } = require('node:test');
 async function fixture({ reloadFails = false, saveFails = false, confirmed = true, status, saveGate } = {}) {
   const database = { catalogos: [] };
   const notices = [];
+  const events = {};
   let loads = 0;
   let saves = 0;
   const dependencies = {
@@ -41,6 +42,7 @@ async function fixture({ reloadFails = false, saveFails = false, confirmed = tru
     './domain': { emptyDatabase: database },
     'react-toastify': { toast: {
       loading: () => 'saving',
+      dismiss() {},
       update: (_, options) => notices.push(options.type),
       warning: () => notices.push('warning'),
       error: () => notices.push('error'),
@@ -54,16 +56,16 @@ async function fixture({ reloadFails = false, saveFails = false, confirmed = tru
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   vm.runInNewContext(source, {
-    module, exports: module.exports,
+    structuredClone, module, exports: module.exports,
     require: name => {
       assert.ok(name in dependencies, `Unexpected import: ${name}`);
       return dependencies[name];
     },
-    window: { addEventListener() {} },
+    window: { addEventListener: (name, handler) => { events[name] = handler; } },
   });
   const state = module.exports.useSivet();
   await state.refresh();
-  return { state, notices, saves: () => saves, loads: () => loads };
+  return { state, notices, changeSession: () => events["sivet-session"](), saves: () => saves, loads: () => loads };
 }
 
 test('el guardado confirmado permite cerrar el panel y conserva el ID del servidor', async () => {
@@ -166,4 +168,14 @@ test('AuthProvider conserva la sesión ante servidor dormido, desconexión o 503
     await assert.rejects(()=>f.context.login('admin','secret'));
     assert.equal(f.expired(),0);
   }
+});
+
+test('refresh comunica un fallo para no presentar reportes antiguos como actualizados',async()=>{
+  const f=await fixture({reloadFails:true});assert.equal(await f.state.refresh(),false);
+  const ok=await fixture();assert.equal(await ok.state.refresh(),true);
+});
+test('un guardado pendiente no publica éxito ni datos después de cambiar de sesión',async()=>{
+  let release;const saveGate=new Promise(resolve=>{release=resolve;});const f=await fixture({saveGate});
+  const saving=f.state.mutate({type:'receipt.create',receipt:{}});f.changeSession();release();
+  assert.equal(await saving,false);assert.equal(f.notices.includes('success'),false);
 });

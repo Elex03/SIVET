@@ -155,3 +155,8 @@ test('volumen oculto por defecto y numeración remota conserva desplazamiento',(
   const html=renderToStaticMarkup(React.createElement(Table,{columns:[{id:'nombre',label:'Producto'},{id:'volumenMl',label:'Volumen registrado',hiddenByDefault:true}],data:[{nombre:'Frasco',volumenMl:29000}],pagination:false,sortable:false,enableExport:false,rowOffset:20}));
   assert.doesNotMatch(html,/Volumen registrado|29000/);assert.match(html,/>21<\/td>/);assert.match(html,/Número de fila/);
 });
+
+test('el render explícito del estado tiene prioridad sobre el badge automático',()=>{
+  const html=renderToStaticMarkup(React.createElement(Table,{columns:[{id:'estado',label:'Estado',render:()=>React.createElement('span',null,'Crítico')}],data:[{id:1}],enableExport:false}));
+  assert.match(html,/Crítico/);assert.doesNotMatch(html,/Sin estado/);
+});

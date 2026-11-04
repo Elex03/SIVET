@@ -138,12 +138,12 @@ const Dashboard: React.FC = () => {
         <StatCard title="Próximos a vencer" value={kpis.vencimientos} icon={Clock} tone="amber" detail="Lotes con existencias que vencen en 90 días o ya vencieron" />
       </div>
 
-      <div className="@container/dashboard w-full min-w-0">
+      <div className="@container/dashboard w-full min-w-0 shrink-0">
         <div className="grid grid-cols-1 @[950px]/dashboard:grid-cols-5 gap-5 items-stretch">
           <section className="@[950px]/dashboard:col-span-3 min-w-0 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-base font-bold text-[#304a6d]"><Layers size={18} className="inline mr-2 text-blue-500" />Flujo por Categorías</h3>
             <p className="text-xs text-slate-500 mt-1 mb-5">Entradas y salidas finales por familia.</p>
-            <ReportChart report="existencias" metric="flujo" type="bar" data={catData.map(d => ({ ...d, name: d.categoria }))} />
+            <ReportChart plotHeight={320} report="existencias" metric="flujo" type="bar" data={catData.map(d => ({ ...d, name: d.categoria }))} />
           </section>
           <section className="@[950px]/dashboard:col-span-2 min-w-0 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-base font-bold text-[#304a6d]"><Package size={18} className="inline mr-2 text-blue-500" />Acción Terapéutica</h3>
@@ -156,7 +156,7 @@ const Dashboard: React.FC = () => {
         <div className="flex flex-wrap gap-3 justify-between"><h3 className="font-bold text-[#304a6d]"><ArrowDownToLine size={18} className="inline mr-2 text-blue-500" />Salida de productos por área</h3><button className="text-sm text-[#304a6d] font-bold" onClick={() => navigate('/reportes?tipo=salidas_area')}>Ver reporte →</button></div>
         <p className="text-xs text-slate-500 mt-1 mb-4">Despachos finales del período, ordenados de mayor a menor. Se suman cantidades en la unidad de cada producto; los traslados internos no se cuentan.</p>
         {!!areaData.length && <p className="text-sm text-[#304a6d] mb-4">Mayor salida: <strong>{areaData[0].area}</strong> · {areaData[0].total} unidades registradas</p>}
-        <ReportChart report="salidas_area" metric="total" type="bar" data={areaData.map(d => ({ ...d, name: d.area }))} />
+        <ReportChart plotHeight={320} report="salidas_area" metric="total" type="bar" data={areaData.map(d => ({ ...d, name: d.area }))} />
         <Table columns={[{ id: 'area', label: 'Área' }, { id: 'total', label: 'Total' }]} data={areaData.map(a => ({ ...a, id: a.area }))} exportTitle="Salidas por área" />
       </section>
       {/* TABLAS INFERIORES */}
