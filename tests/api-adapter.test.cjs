@@ -62,3 +62,27 @@ test('lectura masiva secuencial conserva éxitos y se detiene al primer fallo', 
   assert.deepEqual(calls.map(c=>c.url), ['/notificaciones/1/leida','/notificaciones/2/leida']);
   assert.ok(calls.every(c=>c.method==='PATCH'));
 });
+
+test('disponibilidad del servidor no excluye fecha null ni estado BLOQUEADO',()=>{
+  const {availableStock}=require('../src/shared/api/domain.ts');const db=fixture();
+  db.existencias=[mapStock({id_inventario:1,id_lote:11,ubicacion:'FARMACIA',cantidad:'10',cantidad_dispensable:'8',cantidad_disponible:'0',lotes_id_lote:{id_medicamento:1,numero_lote:'A',fecha_vencimiento:null,estado:'BLOQUEADO'}})];
+  assert.equal(availableStock(db,'1'),8);
+});
+test('BASE y ML envían cantidad original y reintento conserva UUID',async()=>{
+  reply=async()=>({});const db=fixture();
+  for(const unidadSalida of ['BASE','ML']) {
+    calls.length=0; const command={type:'pharmacy.dispatch',id:'SAL-same-id',area:'Consulta',nota:'',items:[{stockId:'1',cantidad:1,unidadSalida,destino:'CASA'}]};
+    await executeServerCommand(command,db);await executeServerCommand(command,db);
+    assert.equal(calls[0].data.detalles[0].cantidad,'1');assert.equal(calls[0].data.detalles[0].unidad_salida,unidadSalida);
+    assert.equal(calls[0].data.id_operacion,calls[1].data.id_operacion);
+  }
+  calls.length=0;
+  await assert.rejects(()=>executeServerCommand({type:'pharmacy.dispatch',id:'SAL-fraction',area:'Consulta',nota:'',items:[{stockId:'1',cantidad:1.5,unidadSalida:'BASE'}]},db),/entera/);
+  assert.equal(calls.length,0);
+});
+test('preparación envía vencimiento desconocido como null',async()=>{
+  const db=fixture();db.solicitudes=[{id:'7',approvedItems:[{stockId:'2',cantidad:3}],preparacion:{version:1,lines:[{stockId:'2',requestedStockId:'2',apiAsignacionId:42,apiDetalleId:43,apiCantidadAsignada:3}],lista:false}}];
+  calls.length=0;reply=async()=>({version:2});
+  await executeServerCommand({type:'request.prepare',id:'7',version:1,ready:false,lines:[{stockId:'2',requestedStockId:'2',apiAsignacionId:42,apiDetalleId:43,cantidad:3,lote:'B',vencimiento:null,comentario:'',lista:true}]},db);
+  assert.equal(calls[0].data.detalles[0].vencimiento_observado,null);
+});

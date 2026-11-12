@@ -6,9 +6,9 @@ import { buttonClass, inputClass } from '../../shared/styles/formStyles';
 export default function ReceiptVerification({ request, db, pending, onVerify }: { request: SupplyRequest; db: Database; pending: boolean; onVerify: (checks: ReceiptCheck[], note: string, mode: 'confirm' | 'report' | 'return') => Promise<void> }) {
   const [checks, setChecks] = useState(() => request.items.map(i => ({ stockId: i.stockId, cantidad: '', lote: '', vencimiento: '', conforme: false })));
   const [note, setNote] = useState('');
-  const allMatch = checks.every(c => { const item = request.items.find(i => i.stockId === c.stockId)!; const s = db.existencias.find(s => s.id === c.stockId); return c.cantidad !== '' && Number(c.cantidad) === item.cantidad && c.lote === s?.lote && c.vencimiento === s.vencimiento && c.conforme; });
+  const allMatch = checks.every(c => { const item = request.items.find(i => i.stockId === c.stockId)!; const s = db.existencias.find(s => s.id === c.stockId); return c.cantidad !== '' && Number(c.cantidad) === item.cantidad && c.lote === s?.lote && (c.vencimiento || null) === (s?.vencimiento || null) && c.conforme; });
   const allCounted = checks.every(c => c.cantidad.trim() !== '' && Number.isFinite(Number(c.cantidad)) && Number(c.cantidad) >= 0);
-  const submit = (mode: 'confirm' | 'report' | 'return') => allCounted ? onVerify(checks.map(c => ({ ...c, cantidad: Number(c.cantidad) })), note, mode) : Promise.resolve();
+  const submit = (mode: 'confirm' | 'report' | 'return') => allCounted ? onVerify(checks.map(c => ({ ...c, vencimiento: c.vencimiento || null, cantidad: Number(c.cantidad) })), note, mode) : Promise.resolve();
   return <section data-tour-area="verify-delivery" className="rounded-2xl border border-blue-100 bg-blue-50/30 p-4 flex flex-col gap-4">
     <h3 className="font-bold text-[#304a6d]">Verificar recepción física</h3>
     <p className="text-sm text-slate-600">Cuenta los productos recibidos y compara lote y vencimiento. El inventario de Farmacia se acredita al confirmar la conformidad de todas las líneas.</p>
@@ -20,11 +20,11 @@ export default function ReceiptVerification({ request, db, pending, onVerify }: 
       const update = (value: Partial<typeof check>) => setChecks(checks.map((c, i) => i === index ? { ...c, ...value } : c));
       return <fieldset key={check.stockId} className="border border-slate-200 rounded-xl p-4 bg-white grid sm:grid-cols-3 gap-3">
         <legend className="font-bold text-sm text-[#304a6d] px-2">{product?.nombre}</legend>
-        <label className="sm:col-span-3 flex gap-3 items-center p-3 rounded-xl bg-emerald-50 text-emerald-800 text-sm"><input type="checkbox" checked={check.conforme && check.cantidad === String(item.cantidad) && check.lote === stock.lote && check.vencimiento === stock.vencimiento} onChange={e => update(e.target.checked ? { cantidad: String(item.cantidad), lote: stock.lote, vencimiento: stock.vencimiento || '', conforme: true } : { conforme: false })} />Verifiqué este medicamento: recibí todo, con lote, vencimiento y estado correctos.</label>
-        <p className="sm:col-span-3 text-xs text-slate-500">Enviado: {item.cantidad} {product?.unidad} · Lote {stock.lote} · Vence {stock.vencimiento}</p>
+        <label className="sm:col-span-3 flex gap-3 items-center p-3 rounded-xl bg-emerald-50 text-emerald-800 text-sm"><input type="checkbox" checked={check.conforme && check.cantidad === String(item.cantidad) && check.lote === stock.lote && (check.vencimiento || null) === (stock.vencimiento || null)} onChange={e => update(e.target.checked ? { cantidad: String(item.cantidad), lote: stock.lote, vencimiento: stock.vencimiento || '', conforme: true } : { conforme: false })} />Verifiqué este medicamento: recibí todo, con lote, vencimiento y estado correctos.</label>
+        <p className="sm:col-span-3 text-xs text-slate-500">Enviado: {item.cantidad} {product?.unidad} · Lote {stock.lote} · Vence {stock.vencimiento || 'Desconocido'}</p>
         <label className="text-sm">Cantidad recibida<NumberInput className={inputClass} type="number" min={0} step={0.001} value={check.cantidad} onChange={e => update({ cantidad: e.target.value })} placeholder="Cantidad contada" /></label>
         <label className="text-sm">Lote recibido<input className={inputClass} value={check.lote} onChange={e => update({ lote: e.target.value.trim() })} /></label>
-        <label className="text-sm">Vencimiento recibido<input className={inputClass} type="date" value={check.vencimiento} onChange={e => update({ vencimiento: e.target.value })} /></label>
+        <label className="text-sm">Vencimiento recibido<input className={inputClass} type="date" aria-label="Vencimiento recibido; dejar vacío si es desconocido" value={check.vencimiento} onChange={e => update({ vencimiento: e.target.value })} /></label>
         <label className="sm:col-span-3 flex gap-2 items-center text-sm"><input type="checkbox" checked={check.conforme} onChange={e => update({ conforme: e.target.checked })} />Producto, presentación y estado físico correctos</label>
       </fieldset>;
     })}

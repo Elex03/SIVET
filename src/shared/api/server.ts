@@ -255,6 +255,7 @@ export async function loadServerDatabase(): Promise<Database> {
           db.existencias.push({
             id: `lot:${lot.id_lote}`,
             apiLoteId: lot.id_lote,
+            estadoLote: lot.estado,
             productoId: `medicamentos:${product}`,
             lote: lot.numero_lote,
             codigoLote: lot.codigo_lote || "",
@@ -408,6 +409,10 @@ export async function executeServerCommand(
     return;
   }
   if (command.type === "pharmacy.dispatch") {
+    for (const item of command.items) {
+      if ((!item.unidadSalida || item.unidadSalida === 'BASE') && (!Number.isInteger(item.cantidad) || item.cantidad <= 0))
+        throw new Error('Indica una cantidad entera positiva de unidades completas.');
+    }
     const uuid = command.id.replace(/^SAL-/, "");
     await apiData("/movimientos", "POST", {
       id_operacion: uuid,

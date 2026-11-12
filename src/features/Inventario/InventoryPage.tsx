@@ -29,7 +29,7 @@ export default function InventoryPage({ location = '' }: { location?: string }) 
     const p = state.data.catalogos.find(p => p.id === s.productoId);
     const days = Math.ceil((Date.parse(s.vencimiento || '') - Date.parse(today())) / 86400000);
     const blocked = s.estadoLote === false || ['BLOQUEADO', 'AGOTADO', 'INACTIVO'].includes(String(s.estadoLote));
-    const aptas = p?.activo && !blocked && days > 0 ? availableStock(state.data, s.id) : 0;
+    const aptas = availableStock(state.data, s.id);
     return { ...s, aptas, estadoLoteTexto: s.estadoLote === false ? 'INACTIVO' : typeof s.estadoLote === 'string' ? s.estadoLote : s.estadoLote === true ? 'ACTIVO' : 'No informado', vencimiento: s.vencimiento || 'Desconocido', imagen: p?.imagen, volumenMl: p?.contenidoMl ? Number((s.cantidad * p.contenidoMl).toFixed(3)) : undefined, producto: p?.nombre, codigo: p?.codigo, categoria: p?.categoria, unidad: p?.unidad, minimo: p?.minimo || 0, dias: days,
       estado: !p?.activo ? 'Medicamento inactivo' : blocked ? 'Lote no habilitado' : !s.vencimiento ? 'Vencimiento desconocido' : days <= 0 ? 'Vencido' : days <= 90 ? 'Por vencer' : s.cantidad === 0 ? 'Sin stock' : s.cantidad < (p?.minimo || 0) ? 'Bajo stock' : 'Disponible' };
   }).filter(s => (!location || s.ubicacion === location) && (!place || s.ubicacion === place));

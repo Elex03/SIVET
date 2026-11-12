@@ -68,7 +68,7 @@ export interface PreparationLine extends RequestItem {
   apiCantidadAsignada?: number;
   requestedStockId: string;
   lote: string;
-  vencimiento: string;
+  vencimiento: string | null;
   comentario: string;
   lista: boolean;
 }
@@ -83,7 +83,7 @@ export interface ReceiptCheck {
   stockId: string;
   cantidad: number;
   lote: string;
-  vencimiento: string;
+  vencimiento: string | null;
   conforme: boolean;
 }
 export interface SupplyRequest {
@@ -284,15 +284,14 @@ export function availableStock(
       0,
     );
   const stock = db.existencias.find((s) => s.id === stockId);
-  if (stock && (!stock.vencimiento || stock.vencimiento <= today() || stock.estadoLote === false || ["BLOQUEADO", "AGOTADO", "INACTIVO"].includes(String(stock.estadoLote)))) return 0;
   if (stock?.apiDisponible !== undefined && !excludeRequest)
-    return stock.vencimiento ? stock.apiDisponible : 0;
+    return Math.max(0, stock.apiDisponible);
   if (
     stock?.apiSolicitudId === excludeRequest &&
     stock.apiDisponible !== undefined
   )
     return stock.apiDisponible;
-  return stock?.vencimiento ? Math.max(0, stock.cantidad - reserved) : 0;
+  return stock ? Math.max(0, stock.cantidad - reserved) : 0;
 }
 
 /** Pure transaction: validation completes before the caller persists the returned state. */
@@ -401,12 +400,12 @@ export function applyCommand(source: Database, command: Command): Database {
         (s) => s.id === item.stockId && s.ubicacion === "Bodega Central",
       );
       assert(
-        stock && stock.vencimiento && stock.vencimiento > today(),
-        "El lote no está disponible o está vencido.",
+        stock,
+        "El lote no existe en Bodega.",
       );
       assert(
-        db.catalogos.some((p) => p.id === stock?.productoId && p.activo),
-        "El producto está inactivo.",
+        db.catalogos.some((p) => p.id === stock?.productoId),
+        "El producto no existe.",
       );
       assert(
         Number.isInteger(item.cantidad) &&
@@ -460,12 +459,12 @@ export function applyCommand(source: Database, command: Command): Database {
           (s) => s.id === item.stockId && s.ubicacion === "Bodega Central",
         );
         assert(
-          stock && stock.vencimiento && stock.vencimiento > today(),
-          "El lote no está disponible o está vencido. No se aprobó la solicitud.",
+          stock,
+          "El lote no existe en Bodega. No se aprobó la solicitud.",
         );
         assert(
-          db.catalogos.some((p) => p.id === stock?.productoId && p.activo),
-          "Hay un producto inactivo en la solicitud.",
+          db.catalogos.some((p) => p.id === stock?.productoId),
+          "Hay un producto inexistente en la solicitud.",
         );
         assert(
           availableStock(db, item.stockId, request.id) >= item.cantidad,
@@ -482,8 +481,8 @@ export function applyCommand(source: Database, command: Command): Database {
       for (const item of request.items) {
         const stock = db.existencias.find((s) => s.id === item.stockId);
         assert(
-          stock && stock.vencimiento && stock.vencimiento > today(),
-          "No se puede entregar un lote vencido.",
+          stock,
+          "No se encontró el lote.",
         );
         if (command.estado === "ENVIADO") {
           assert(
@@ -602,17 +601,13 @@ export function applyCommand(source: Database, command: Command): Database {
           "Completa la cantidad aprobada antes de marcar el medicamento preparado.",
         );
         assert(
-          stock!.vencimiento && stock!.vencimiento > today(),
-          "El lote seleccionado está vencido.",
-        );
-        assert(
           line.lote.trim() === stock!.lote &&
-            line.vencimiento === stock!.vencimiento,
+            (line.vencimiento || null) === (stock!.vencimiento || null),
           "El lote o vencimiento capturado no coincide con el inventario.",
         );
         assert(
-          db.catalogos.some((p) => p.id === stock!.productoId && p.activo),
-          "El medicamento está inactivo.",
+          db.catalogos.some((p) => p.id === stock!.productoId),
+          "El medicamento no existe.",
         );
         assert(
           availableStock(db, stock!.id, request!.id) >= line.cantidad,
@@ -677,14 +672,12 @@ export function applyCommand(source: Database, command: Command): Database {
           check.conforme &&
             check.cantidad === expected!.cantidad &&
             check.lote === transit!.lote &&
-            check.vencimiento === transit!.vencimiento,
+            (check.vencimiento || null) === (transit!.vencimiento || null),
           "Hay diferencias. Repórtalas a Bodega antes de confirmar la recepción.",
         );
         assert(
-          transit!.vencimiento &&
-            transit!.vencimiento > today() &&
-            transit!.cantidad >= check.cantidad,
-          "El lote está vencido o no tiene la cantidad enviada.",
+          transit!.cantidad >= check.cantidad,
+          "El lote no tiene la cantidad enviada.",
         );
         let pharmacy = db.existencias.find(
           (s) => s.id === `farmacia-${check.stockId}`,
@@ -963,10 +956,8 @@ export function applyCommand(source: Database, command: Command): Database {
       );
       assert(
         stock &&
-          stock.vencimiento &&
-          stock.vencimiento > today() &&
-          db.catalogos.some((p) => p.id === stock.productoId && p.activo),
-        "Producto inactivo, vencido o no disponible en Farmacia.",
+          db.catalogos.some((p) => p.id === stock.productoId),
+        "Producto o lote no encontrado en Farmacia.",
       );
       const product = db.catalogos.find((p) => p.id === stock!.productoId)!;
       assert(
@@ -979,7 +970,7 @@ export function applyCommand(source: Database, command: Command): Database {
         "Registra el contenido en ml del frasco antes de convertir.",
       );
       const calculation = dispatchQuantity(
-        stock!.cantidad,
+        availableStock(db, stock!.id),
         item.cantidad,
         item.unidadSalida === "ML",
         product.contenidoMl,
@@ -990,7 +981,7 @@ export function applyCommand(source: Database, command: Command): Database {
         "Indica la modalidad de cada medicamento.",
       );
       assert(!calculation.error, calculation.error);
-      stock!.cantidad = calculation.remainingBase;
+      stock!.cantidad = Math.round((stock!.cantidad - calculation.baseQuantity) * 1e9) / 1e9;
       db.movimientos.push({
         id: newId(),
         fecha: new Date().toISOString(),

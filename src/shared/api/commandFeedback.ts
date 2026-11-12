@@ -59,7 +59,7 @@ export function commandConfirmation(
     return {
       title: "¿Confirmar ingreso por donación?",
       description:
-        "Se registrará el ingreso físico en Bodega. Los lotes sin vencimiento conocido no estarán disponibles para despacho.",
+        "Se registrará el ingreso físico en Bodega. Se conservarán las fechas registradas, incluido el vencimiento desconocido.",
       details: [
         command.receipt.donante || "",
         command.receipt.documento || "",
