@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, ScanEye } from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface ModalProps {
   children: React.ReactNode;
   maxWidth?: string;
   footer?: React.ReactNode;
+  variant?: 'default' | 'preview';
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -19,6 +20,7 @@ const Modal: React.FC<ModalProps> = ({
   subtitle,
   children,
   footer,
+  variant = 'default',
   maxWidth = "max-w-3xl" // Actualizado a 3xl por defecto para tablas
 }) => {
   const panel = useRef<HTMLDivElement>(null);
@@ -65,11 +67,12 @@ const Modal: React.FC<ModalProps> = ({
       {/* Contenedor principal con los mismos bordes y sombras de las tarjetas */}
       <div
         ref={panel} role="dialog" aria-modal="true" aria-labelledby={heading} aria-describedby={subtitle ? description : undefined} tabIndex={-1}
-        className={`modal-panel relative bg-white rounded-3xl shadow-xl w-full ${maxWidth} flex flex-col max-h-[94dvh] overflow-hidden z-10`}
+        className={`modal-panel ${variant === 'preview' ? 'preview-panel' : ''} relative bg-white rounded-3xl shadow-xl w-full ${maxWidth} flex flex-col max-h-[94dvh] overflow-hidden z-10`}
       >
         {/* Cabecera del Modal */}
         <div className="modal-heading flex justify-between items-start gap-4 px-5 sm:px-7 py-5 sm:py-6 flex-shrink-0">
-          <div>
+          <div className="min-w-0 break-words">
+            {variant === 'preview' && <p className="preview-eyebrow"><ScanEye size={14} aria-hidden="true" />Vista de detalle</p>}
             <h2 id={heading} className="text-[1.15rem] font-semibold text-[#304a6d] leading-tight">
               {title}
             </h2>
@@ -85,6 +88,7 @@ const Modal: React.FC<ModalProps> = ({
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
             title="Cerrar ventana"
+            aria-label="Cerrar ventana"
           >
             <X size={20} />
           </button>
@@ -94,7 +98,7 @@ const Modal: React.FC<ModalProps> = ({
         <div className="modal-body overflow-y-auto px-5 sm:px-7 py-5 sm:py-6 bg-white flex-1 min-h-0 custom-scrollbar">
           {children}
         </div>
-        {footer && <div className="shrink-0 px-5 sm:px-7 pb-5 sm:pb-6 bg-white">{footer}</div>}
+        {(footer || variant === 'preview') && <div className="modal-footer shrink-0 px-5 sm:px-7 py-4 bg-white">{footer || <div className="flex justify-end"><button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-[#304a6d] hover:bg-slate-50">Cerrar vista</button></div>}</div>}
       </div>
     </div>,
     document.body

@@ -1,3 +1,4 @@
+import { PreviewSection, PreviewDetails } from '../../shared/components/PreviewDetails';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiUrl } from '../../shared/api/client';
@@ -29,7 +30,7 @@ function HistoricalRecord({ row }: { row: HistoricalDetail }) {
   ];
   return <div className="space-y-6 text-sm text-slate-600">
     <p className="rounded-xl bg-blue-50 p-4">Importado desde Excel · Solo lectura · No afecta el stock actual.</p>
-    <dl className="grid sm:grid-cols-2 gap-4">{fields.map(([label, value]) => <div key={label}><dt className="font-semibold text-slate-500">{label}</dt><dd className="whitespace-pre-wrap break-words mt-1">{documented(value)}</dd></div>)}</dl>
+    <PreviewSection title="Datos del registro importado"><PreviewDetails items={fields.map(([label,value]) => ({label,value:documented(value)}))} /></PreviewSection>
     <MedicationUses value={row.medicamento?.indicaciones} />
     <Evidence title="Datos originales del archivo" values={row.original} />
     <Evidence title="Datos normalizados" values={row.normalizado} />
@@ -117,7 +118,7 @@ export default function ImportedHistory() {
         </>}
       </>}
     </div>
-    <Modal isOpen={selected !== null} onClose={() => setSelected(null)} title={`Histórico importado · HIST-${selected ?? ''}`}>
+    <Modal variant="preview" isOpen={selected !== null} onClose={() => setSelected(null)} title={`Histórico importado · HIST-${selected ?? ''}`}>
       {detail.key !== detailKey ? <p role="status">Cargando detalle…</p> : detail.error ? <div role="alert"><p>{detail.error}</p><button type="button" className="underline mt-3" onClick={() => setDetailReload(n => n + 1)}>Reintentar detalle</button></div> : detail.row && <HistoricalRecord row={detail.row} />}
     </Modal>
   </div>;

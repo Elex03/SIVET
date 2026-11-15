@@ -182,3 +182,19 @@ test('arrastre con Solo salidas conserva gráficas compatibles y filas filtradas
   const invalid=renderToStaticMarkup(React.createElement(Canvas,{...props,widgets:[{...widgets[0],metric:'stock'}]}));
   assert.ok(invalid.includes('data-chart-error') && invalid.includes('no es compatible'));
 });
+
+test('detalles compartidos conservan ceros, escapan texto y distinguen datos ausentes',()=>{
+  const {PreviewDetails}=require('../src/shared/components/PreviewDetails.tsx');
+  const html=renderToStaticMarkup(React.createElement(PreviewDetails,{items:[{label:'Saldo',value:0},{label:'Nota',value:'<script>no</script>'},{label:'Código',value:null}]}));
+  assert.ok(html.includes('<dd>0</dd>'));
+  assert.ok(html.includes('Sin registrar'));
+  assert.ok(html.includes('&lt;script&gt;'));
+});
+test('visor compartido ofrece controles completos sin saturar la vista compacta',()=>{
+  const MediaPreview=require('../src/shared/components/MediaPreview.tsx').default;
+  const full=renderToStaticMarkup(React.createElement(MediaPreview,{url:'blob:test',name:'Producto'}));
+  assert.ok(full.includes('Ampliar imagen') && full.includes('Reducir imagen') && full.includes('Descargar Producto'));
+  const compact=renderToStaticMarkup(React.createElement(MediaPreview,{url:'blob:test',name:'Evidencia',pdf:true,compact:true}));
+  assert.ok(compact.includes('media-preview-compact') && compact.includes('application/pdf'));
+  assert.equal(compact.includes('Ampliar imagen'),false);
+});

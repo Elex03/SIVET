@@ -1,3 +1,4 @@
+import { PreviewSection, PreviewDetails } from '../../shared/components/PreviewDetails';
 import { requestGuidePurpose } from '../../shared/components/Layout/pageGuides';
 import NumberInput from '../../shared/components/NumberInput';
 import { useState } from 'react';
@@ -59,8 +60,8 @@ export default function Solicitudes({ bodega = false }: { bodega?: boolean }) {
         <label>Instrucciones de envío (opcional)<textarea className={inputClass} value={note} onChange={e => setNote(e.target.value)} /></label>{state.error && <p role="alert" className="text-rose-600">{state.error}</p>}<button disabled={state.pending || !items.length} className={buttonClass}>{state.pending ? 'Guardando…' : 'Enviar solicitud'}</button>
       </form>
     </Modal>
-    <Modal isOpen={!!request} onClose={() => !state.pending && setSelected('')} title="Detalle de solicitud">
-      {request && <div className="flex flex-col gap-5"><div className="rounded-xl bg-slate-50 p-4 text-sm space-y-2"><p className="break-all font-mono">{request.id}</p><p><b>{request.area}</b> · {request.solicitante}</p><p>{request.estado} · {request.prioridad}</p><p>{request.nota || 'Sin observaciones de Farmacia.'}</p>{request.despachado && <p>Despachado: {new Date(request.despachado).toLocaleString('es-NI')}</p>}</div>
+    <Modal variant="preview" isOpen={!!request} onClose={() => !state.pending && setSelected('')} title="Detalle de solicitud">
+      {request && <div className="flex flex-col gap-5"><PreviewSection title="Resumen de la solicitud"><PreviewDetails items={[{label:'Solicitud',value:request.id},{label:'Localidad',value:request.area},{label:'Solicitante',value:request.solicitante},{label:'Estado',value:request.estado},{label:'Prioridad',value:request.prioridad},{label:'Despachado',value:request.despachado ? new Date(request.despachado).toLocaleString('es-NI') : 'Pendiente'}]} /></PreviewSection><PreviewSection title="Observaciones de Farmacia"><p className="text-sm whitespace-pre-wrap">{request.nota || 'Sin observaciones.'}</p></PreviewSection>
         <Table enableExport={false} columns={[{ id: 'producto', label: 'Producto' }, { id: 'lote', label: 'Lote' }, { id: 'cantidad', label: 'Cantidad' }, { id: 'unidad', label: 'Unidad' }, ...(bodega ? [{ id: 'stock', label: 'Stock físico' }, { id: 'disponible', label: 'Disponible sin otras reservas' }, { id: 'vencimiento', label: 'Vencimiento' }] : [])]} data={request.items.map(i => ({ ...i, id: i.stockId, ...describe(i.stockId) }))} />
         {bodega && (next[request.estado] || request.estado === 'EN PREPARACION') ? <label>Observación de Bodega<textarea className={inputClass} value={observation} onChange={e => setObservation(e.target.value)} /></label> : <p className="text-sm">{request.observacion}</p>}
         {bodega && next[request.estado] && <p className={verifiedStock ? 'text-sm text-emerald-700' : 'text-sm text-rose-600'}>{verifiedStock ? 'Existencias verificadas: todos los lotes tienen cantidades suficientes, descontando reservas de otras solicitudes.' : 'No se puede aprobar o enviar: faltan productos o existencias suficientes.'}</p>}

@@ -1,3 +1,4 @@
+import { PreviewSection, PreviewDetails } from '../../shared/components/PreviewDetails';
 import { canEditMedication, canWriteCatalog } from '../../shared/api/permissions';
 import { useAuth } from '../../shared/context/auth';
 import NumberInput from '../../shared/components/NumberInput';
@@ -204,8 +205,8 @@ export default function CatalogManager() {
           />
         </section>
       </div>
-      <Modal isOpen={!!viewing} onClose={() => setViewing(null)} title={viewing?.nombre || 'Detalle del medicamento'}>
-        {viewing && <div className="space-y-5"><MedicationImage preview src={viewing.imagen} name={viewing.nombre} /><p className="text-sm text-slate-600">Código: {viewing.codigo} · Origen del registro: {viewing.origen_registro || 'No documentado'}</p><MedicationUses value={viewing.indicaciones} /><div><h3 className="font-bold text-[#304a6d] mb-2">Descripción de catálogo</h3><p className="whitespace-pre-line text-sm text-slate-600">{viewing.descripcion || 'No documentado'}</p></div></div>}
+      <Modal variant="preview" isOpen={!!viewing} onClose={() => setViewing(null)} title={viewing?.nombre || 'Detalle del medicamento'}>
+        {viewing && <div className="space-y-5"><MedicationImage preview src={viewing.imagen} name={viewing.nombre} /><PreviewSection title="Identificación y presentación"><PreviewDetails items={[{label:'Código interno',value:viewing.codigo},{label:'Marca',value:viewing.marca},{label:'Unidad',value:viewing.unidad},{label:'Presentación',value:viewing.presentacion},{label:'Categoría',value:viewing.categoria},{label:'Acción terapéutica',value:viewing.accion},{label:'Estado',value:viewing.activo ? 'Activo' : 'Inactivo'},{label:'Origen del registro',value:viewing.origen_registro}]} /></PreviewSection><MedicationUses value={viewing.indicaciones} /><PreviewSection title="Descripción de catálogo"><p className="whitespace-pre-line text-sm text-slate-600">{viewing.descripcion || 'No documentado'}</p></PreviewSection></div>}
       </Modal>
       <Modal
         isOpen={!!record && record.tipo !== "medicamentos"}
