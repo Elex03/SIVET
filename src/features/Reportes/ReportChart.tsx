@@ -1,11 +1,11 @@
 import { chartRows, palettes } from './chartOptions';
 import type { ChartOptions } from './chartOptions';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { ComposedChart, Area, Line, LabelList, BarChart, Bar, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { ChartType, ReportType } from './reportDefinitions';
 
 export type ChartDatum = { name: string; [key: string]: string | number };
-export function ReportChart({ report, metric, type, data: sourceData, plotHeight, options = {} }: { report: ReportType; metric: string; type: ChartType; data: ChartDatum[]; plotHeight?: number; options?: ChartOptions }) {
+export const ReportChart = memo(function ReportChart({ report, metric, type, data: sourceData, plotHeight, options = {} }: { report: ReportType; metric: string; type: ChartType; data: ChartDatum[]; plotHeight?: number; options?: ChartOptions }) {
   const colors = palettes[options.palette || 'blue']; const data = chartRows(sourceData, metric, options, report === 'movimientos');
   const [width, setWidth] = useState(400);
   const series = metric === 'flujo' ? [{ key: 'entradas', label: 'Entradas' }, { key: 'salidas', label: 'Salidas finales' }]
@@ -27,7 +27,7 @@ export function ReportChart({ report, metric, type, data: sourceData, plotHeight
   const height = Math.max(plotHeight || 0, temporal ? 340 : Math.max(300, data.length * (series.length > 1 && metric !== 'destino' ? 60 : 44) + 50));
   const labelWidth = Math.max(72, Math.min(145, width * 0.3));
   const shorten = (name: string) => name.length > (width < 420 ? 16 : 24) ? `${name.slice(0, width < 420 ? 14 : 22)}…` : name;
-  return <div data-chart-scroll style={{ maxHeight: plotHeight ? plotHeight + 40 : undefined, overflowY: "auto" }} className="min-w-0 w-full">
+  return <div data-chart-scroll style={{ maxHeight: plotHeight ? plotHeight + 40 : undefined, overflowY: "auto", overflowX: "hidden", scrollbarGutter: 'stable' }} className="min-w-0 w-full">
     {options.legend !== false && <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 px-2 pb-3">{series.map((s, i) => <span key={s.key} className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors[i] }} />{s.label}</span>)}</div>}
     <div style={{ height }} className="w-full min-w-0">
       <ResponsiveContainer width="100%" height="100%" minWidth={0} onResize={next => setWidth(next)}>
@@ -36,4 +36,4 @@ export function ReportChart({ report, metric, type, data: sourceData, plotHeight
       </ResponsiveContainer>
     </div>
   </div>;
-}
+});

@@ -160,3 +160,25 @@ test('el render explícito del estado tiene prioridad sobre el badge automático
   const html=renderToStaticMarkup(React.createElement(Table,{columns:[{id:'estado',label:'Estado',render:()=>React.createElement('span',null,'Crítico')}],data:[{id:1}],enableExport:false}));
   assert.match(html,/Crítico/);assert.doesNotMatch(html,/Sin estado/);
 });
+
+test('arrastre con Solo salidas conserva gráficas compatibles y filas filtradas',()=>{
+  const Canvas=require('../src/features/Reportes/ReportCanvas.tsx').default;
+  const {filteredCharts}=require('../src/features/Reportes/filteredCharts.ts');
+  const {filterTableData}=require('../src/shared/components/Table/tableFilters.ts');
+  const {readChartDrop}=require('../src/features/Reportes/chartDrag.ts');
+  const rows=filterTableData([{fecha:'2026-11-15',tipo:'ENTRADA',cantidad:20},{fecha:'2026-11-15',tipo:'SALIDA',cantidad:3}],{tipo:['SALIDA']});
+  const data=filteredCharts('movimientos',rows);
+  assert.deepEqual(data,[{name:'2026-11-15',entradas:0,salidas:3,traslados:0}]);
+  const widgets=[{id:'a',slot:0,metric:'flujo',chartType:'area',isFullWidth:false},{id:'b',slot:1,metric:'flujo',chartType:'bar',isFullWidth:false}];
+  const props={report:'movimientos',data,widgets,count:4,selected:0,onDrop(){},onUpdate(){},onRemove(){},onSelect(){},onAddSlot(){}};
+  for(const dataset of [data,[]]) for(const arranged of [widgets,[{...widgets[1],slot:0},{...widgets[0],slot:1}]]) {
+    const html=renderToStaticMarkup(React.createElement(Canvas,{...props,data:dataset,widgets:arranged}));
+    assert.equal((html.match(/data-report-chart=/g)||[]).length,2);
+    assert.equal(html.includes('incompatible'),false);
+  }
+  assert.deepEqual(readChartDrop(JSON.stringify({kind:'widget',id:'a'}),'movimientos',widgets),{kind:'widget',id:'a'});
+  for(const raw of ['', 'null','{}',JSON.stringify({kind:'widget',id:'otro'}),JSON.stringify({kind:'template',metric:'stock',chartType:'pie'})]) assert.equal(readChartDrop(raw,'movimientos',widgets),null);
+  assert.ok(readChartDrop(JSON.stringify({kind:'template',metric:'flujo',chartType:'pie'}),'movimientos',widgets));
+  const invalid=renderToStaticMarkup(React.createElement(Canvas,{...props,widgets:[{...widgets[0],metric:'stock'}]}));
+  assert.ok(invalid.includes('data-chart-error') && invalid.includes('no es compatible'));
+});

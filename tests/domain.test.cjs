@@ -606,3 +606,25 @@ test('UXE 100 no multiplica las existencias de guantes',()=>{
     assert.equal(updated.existencias.find(s=>s.id==='GLOVES').cantidad,left);
   }
 });
+
+test('filtros de columnas alimentan agregados y documentos con las mismas filas',()=>{
+  const {filterTableData}=require('../src/shared/components/Table/tableFilters.ts');
+  const {filteredCharts}=require('../src/features/Reportes/filteredCharts.ts');
+  const data=[{productoId:'a',producto:'A',lote:'1',stock:10},{productoId:'a',producto:'A',lote:'2',stock:20},{productoId:'b',producto:'B',lote:'1',stock:5}];
+  const rows=filterTableData(data,{lote:['1']});
+  assert.deepEqual(filteredCharts('existencias',rows),[{name:'A',stock:10},{name:'B',stock:5}]);
+  assert.deepEqual(filteredCharts('existencias',filterTableData(data,{lote:[]})),[]);
+  assert.equal(data.length,3);
+  assert.deepEqual(filteredCharts('movimientos',[{fecha:'2026-11-15',tipo:'SALIDA',cantidad:3},{fecha:'2026-11-15',tipo:'ENTRADA',cantidad:4}]),[{name:'2026-11-15',entradas:4,salidas:3,traslados:0}]);
+  assert.deepEqual(filteredCharts('donaciones',[{donante:'UNA',cantidad:2,sinFecha:2},{donante:'una',cantidad:3,sinFecha:0}]),[{name:'UNA',cantidad:5,sinFecha:2}]);
+});
+test('las siete gráficas se reconstruyen desde sus detalles sin cambiar totales',()=>{
+  const {filteredCharts}=require('../src/features/Reportes/filteredCharts.ts');
+  const reports=selectReports(fixtures,'custom','2000-01-01','2100-01-01','todas','todas');
+  for(const report of Object.keys(reports.tables)) {
+    const actual=filteredCharts(report,reports.tables[report].data);
+    const expected=reports.charts[report];
+    const normalize=rows=>rows.map(row=>{const {area,...values}=row;return values;}).sort((a,b)=>a.name.localeCompare(b.name));
+    assert.deepEqual(normalize(actual),normalize(expected),report);
+  }
+});

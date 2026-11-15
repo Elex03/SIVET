@@ -2,6 +2,7 @@ import { reportRows } from './reportLayout';
 interface ReportTable { columns: { id: string; label: string }[]; data: object[] }
 /** Export every row, independent of preview pagination, and each configured chart. */
 export async function exportReport(title: string, subtitle: string, table: ReportTable, includeCharts = true) {
+  if (includeCharts && document.querySelector('[data-chart-error]')) throw new Error('Hay una gráfica que no se pudo mostrar. Reinténtala o quítala antes de generar el PDF.');
   const [{ default: jsPDF }, { toPng }] = await Promise.all([import('jspdf'), import('html-to-image')]);
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const margin = 12;

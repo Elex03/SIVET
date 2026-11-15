@@ -34,6 +34,8 @@ interface TableProps<Row extends object> {
   showSortControls?: boolean;
   rowOffset?: number;
   filterable?: boolean;
+  columnFilters?: Record<string, string[]>;
+  onColumnFiltersChange?: (filters: Record<string, string[]>) => void;
 }
 
 const columnStyle = (id: string): React.CSSProperties => {
@@ -57,6 +59,8 @@ const Table = <Row extends object,>({
   showSortControls = false,
   rowOffset = 0,
   filterable = sortable,
+  columnFilters,
+  onColumnFiltersChange,
 }: TableProps<Row>) => {
   const [rowMenu, setRowMenu] = useState<{ row: Row; x: number; y: number; trigger: HTMLTableRowElement } | null>(null);
   const rowMenuRef = useRef<HTMLDivElement>(null);
@@ -105,7 +109,13 @@ const Table = <Row extends object,>({
   // ==========================================
   // ESTADOS DE PAGINACIÓN
   // ==========================================
-  const [filters, setFilters] = useState<Record<string, string[]>>({});
+  const [localFilters, setLocalFilters] = useState<Record<string, string[]>>({});
+  const filters = columnFilters ?? localFilters;
+  const setFilters = (update: React.SetStateAction<Record<string, string[]>>) => {
+    const next = typeof update === 'function' ? update(filters) : update;
+    if (columnFilters === undefined) setLocalFilters(next);
+    onColumnFiltersChange?.(next);
+  };
   const filteredData = filterable ? filterTableData(data, filters) : data;
   const [requestedPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(pageSize);

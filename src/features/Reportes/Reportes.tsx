@@ -1,6 +1,8 @@
+import { filterTableData } from '../../shared/components/Table/tableFilters';
+import { filteredCharts } from './filteredCharts';
 import PageSkeleton from '../../shared/components/Layout/PageSkeleton';
 import { locationLabel, WAREHOUSE_NAME } from '../../shared/config/institution';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Download, FileSearch, GripVertical, Layout, Settings2 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -44,9 +46,13 @@ export default function Reportes() {
   const [slotCount, setSlotCount] = useState(4);
   const [selectedSlot, setSelectedSlot] = useState(0);
   const count = Math.max(slotCount, ...widgets.map(w => w.slot + 2));
-  const reports = selectReports(state.data, period, from, to, place, category);
+  const [filtersByReport, setFiltersByReport] = useState<Partial<Record<ReportType, Record<string, string[]>>>>({});
+  const filters = filtersByReport[report] || {};
+  const reports = useMemo(() => selectReports(state.data, period, from, to, place, category), [state.data, period, from, to, place, category]);
   const table = reports.tables[report];
-  const chartData = reports.charts[report] as ChartDatum[];
+  const filteredData = filterTableData<object>(table.data, filters);
+  const filteredTable = { ...table, data: filteredData };
+  const chartData = Object.keys(filters).length ? filteredCharts(report, filteredData) : reports.charts[report] as ChartDatum[];
   const temporal = report === 'donaciones' || report === 'movimientos' || report === 'salidas_area' || report === 'auditoria';
   const invalidDates = temporal && period === 'custom' && (!from || !to || from > to);
   const dates = temporal ? period === 'custom' ? `${from} al ${to}` : `Últimos ${period} días` : `Existencias actuales · ${today()}`;
@@ -62,7 +68,7 @@ export default function Reportes() {
     setSelectedSlot(slot);
   }
   function dropChart(payload: ChartDrop, slot: number) {
-    if (!payload || slot < 0 || slot >= count) return;
+    if (!payload || !Number.isInteger(slot) || slot < 0 || slot >= count) return;
     if (payload.kind === 'template') { addChart(payload, slot); return; }
     if (payload.kind !== 'widget') return;
     const source = widgets.find(w => w.id === payload.id);
@@ -83,12 +89,12 @@ export default function Reportes() {
   }
   async function download() {
     setExporting(true);
-    const notice = toast.loading(view === 'table' ? 'Generando PDF de todos los registros…' : 'Generando PDF con las gráficas y todos los registros…');
+    const notice = toast.loading(view === 'table' ? 'Generando PDF de los registros filtrados…' : 'Generando PDF con las gráficas y todos los registros…');
     try {
-      await exportReport(definition.title, subtitle, table, view !== 'table');
+      await exportReport(definition.title, subtitle, filteredTable, view !== 'table');
       toast.update(notice, { render: 'Reporte generado correctamente.', type: 'success', isLoading: false, autoClose: 4500, closeButton: true });
-    } catch {
-      toast.update(notice, { render: 'No se pudo generar el PDF. Inténtalo nuevamente.', type: 'error', isLoading: false, autoClose: 6000, closeButton: true });
+    } catch (error) {
+      toast.update(notice, { render: error instanceof Error && error.message.startsWith('Hay una gráfica') ? error.message : 'No se pudo generar el PDF. Inténtalo nuevamente.', type: 'error', isLoading: false, autoClose: 6000, closeButton: true });
     } finally { setExporting(false); }
   }
 
@@ -117,12 +123,13 @@ export default function Reportes() {
         </div>}
       </aside>
       <main aria-label="Vista previa del reporte" tabIndex={0} className="report-preview min-w-0 bg-white rounded-2xl border border-slate-100 p-3 sm:p-5">
-        {generating ? <PageSkeleton /> : generated ? <><div className="report-result-toolbar flex flex-wrap items-center justify-between gap-3 mb-5"><div className="flex flex-wrap gap-2" role="group" aria-label="Contenido del reporte">{([['both','Resumen completo'],['charts','Solo gráficas'],['table','Solo tabla']] as const).map(([id,label]) => <button key={id} aria-pressed={view === id} onClick={() => setView(id)} className={'px-3 py-2 rounded-xl text-sm ' + (view === id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-500 hover:bg-slate-50')}>{label}</button>)}</div><button className="text-sm font-semibold text-blue-600 px-3 py-2" onClick={() => setFocused(!focused)}>{focused ? 'Mostrar herramientas' : 'Ampliar área de trabajo'}</button></div><div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-4 mb-5"><div className="min-w-0"><h2 className="font-bold text-lg text-[#304a6d]">{definition.title}</h2><p className="text-xs text-slate-500 mt-1 break-words">{subtitle}</p></div><button disabled={exporting || !table.data.length} onClick={() => void download()} className="self-start flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 text-sm font-bold"><Download size={16} />{exporting ? 'Exportando…' : view === 'table' ? 'Tabla en PDF' : 'PDF completo'}</button></div>
+        {generating ? <PageSkeleton /> : generated ? <><div className="report-result-toolbar flex flex-wrap items-center justify-between gap-3 mb-5"><div className="flex flex-wrap gap-2" role="group" aria-label="Contenido del reporte">{([['both','Resumen completo'],['charts','Solo gráficas'],['table','Solo tabla']] as const).map(([id,label]) => <button key={id} aria-pressed={view === id} onClick={() => setView(id)} className={'px-3 py-2 rounded-xl text-sm ' + (view === id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-500 hover:bg-slate-50')}>{label}</button>)}</div><button className="text-sm font-semibold text-blue-600 px-3 py-2" onClick={() => setFocused(!focused)}>{focused ? 'Mostrar herramientas' : 'Ampliar área de trabajo'}</button></div><div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-4 mb-5"><div className="min-w-0"><h2 className="font-bold text-lg text-[#304a6d]">{definition.title}</h2><p className="text-xs text-slate-500 mt-1 break-words">{subtitle}</p></div><button disabled={exporting || !filteredData.length} onClick={() => void download()} className="self-start flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 text-sm font-bold"><Download size={16} />{exporting ? 'Exportando…' : view === 'table' ? 'Tabla en PDF' : 'PDF completo'}</button></div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6"><div className="report-summary"><span>Registros encontrados</span><strong>{table.data.length.toLocaleString('es-NI')}</strong></div><div className="report-summary"><span>Gráficas en el informe</span><strong>{widgets.length}</strong></div><div className="report-summary col-span-2 lg:col-span-1"><span>Última consulta</span><p className="font-semibold text-sm mt-3">{loadedAt}</p></div></div>
           {!table.data.length && <p role="status" className="p-5 rounded-xl bg-blue-50 text-sm text-[#304a6d] mb-5">No hay registros con estos filtros. Cambia el período, la ubicación o la categoría para ampliar la consulta.</p>}
           <div className="flex flex-wrap gap-3 mb-5"><button disabled={generating} onClick={() => void generate()} className="text-sm font-semibold text-blue-600">{generating ? 'Actualizando…' : 'Actualizar datos'}</button>{view !== 'table' && <button className="text-sm text-slate-500" onClick={async () => { if (await confirm({title:'¿Restablecer gráficas recomendadas?',description:'Se reemplazará la distribución de este reporte. Los filtros y los datos se conservan.',confirmLabel:'Restablecer'})) setWidgets(() => definition.templates.slice(0,2).map((t,slot) => ({id:newId(),slot,metric:t.metric,chartType:t.chartType,isFullWidth:false}))); }}>{widgets.length ? 'Restablecer gráficas recomendadas' : 'Agregar gráficas recomendadas'}</button>}</div>
+          {Object.keys(filters).length > 0 && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-blue-50 p-3 text-sm text-[#304a6d]"><span>Filtros de tabla aplicados a gráficas y PDF: {filteredData.length} de {table.data.length} registros.</span><button type="button" className="font-semibold" onClick={() => setFiltersByReport(previous => ({ ...previous, [report]: {} }))}>Limpiar filtros de tabla</button></div>}
           <div hidden={view === 'table'}><ReportCanvas key={report} report={report} data={chartData} widgets={widgets} count={count} selected={selectedSlot} onSelect={slot => { setSelectedSlot(slot); setTab('charts'); }} onDrop={dropChart} onUpdate={(id, updates) => setWidgets(previous => previous.map(w => w.id === id ? { ...w, ...updates } : w))} onRemove={async id => { if (await confirm({ title: '¿Quitar esta gráfica?', description: 'La gráfica se retirará y las demás se acomodarán automáticamente.', confirmLabel: 'Quitar gráfica' })) { setWidgets(previous => previous.filter(w => w.id !== id)); toast.info('Gráfica retirada del reporte.'); } }} onAddSlot={() => { setSlotCount(count + 1); setSelectedSlot(count); }} />
-          </div><div hidden={view === 'charts'} className="report-data"><h3 className="font-bold text-[#304a6d] mt-8 mb-4">Detalle de los registros</h3><p className="text-xs text-slate-500 mb-3">Ordena las columnas para comparar registros. Desde el menú de la tabla puedes exportar los datos.</p><Table<(typeof table.data)[number]> key={report} showSortControls columns={table.columns} data={table.data} exportTitle={definition.title} exportSubtitle={subtitle} /></div>
+          </div><div hidden={view === 'charts'} className="report-data"><h3 className="font-bold text-[#304a6d] mt-8 mb-4">Detalle de los registros</h3><p className="text-xs text-slate-500 mb-3">Los filtros de columna se aplican a la tabla, las gráficas y el PDF. Ordena las columnas para comparar registros. Desde el menú de la tabla puedes exportar los datos.</p><Table<(typeof table.data)[number]> key={report} showSortControls columnFilters={filters} onColumnFiltersChange={next => setFiltersByReport(previous => ({ ...previous, [report]: next }))} columns={table.columns} data={table.data} exportTitle={definition.title} exportSubtitle={subtitle} /></div>
         </> : <div className="min-h-[400px] flex flex-col justify-center items-center gap-4 text-center p-5"><FileSearch size={40} className="text-slate-300" /><h2 className="font-bold text-[#304a6d]">Tu información, lista para analizar</h2><p className="text-sm text-slate-500 max-w-md">Selecciona el reporte y sus filtros. Mostraremos el detalle de los registros. Agrega únicamente las gráficas que necesites desde la biblioteca.</p></div>}
       </main>
     </div>
