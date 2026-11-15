@@ -11,6 +11,7 @@ import {
   Package, AlertTriangle, Clock,
   RefreshCw, Calendar, Building2, Layers, ArrowDownToLine
 } from "lucide-react";
+import DashboardChart from './DashboardChart';
 import { ReportChart } from '../Reportes/ReportChart';
 
 import PageHeader from "../../shared/components/Layout/PageHeader";
@@ -34,6 +35,9 @@ const Dashboard: React.FC = () => {
   const state = useDashboard();
   const navigate = useNavigate();
   const { catData, terapeuticaData, areaData, kpis, stockBajoData, proximosVencerData } = selectDashboard(state.data, dateFilter, fechaInicio, fechaFin, bodega, categoria);
+  const therapeuticRanking = [...terapeuticaData].filter(d => d.cantidad > 0).sort((a, b) => b.cantidad - a.cantidad);
+  const therapeuticSummary = therapeuticRanking.slice(0, 5).map(d => ({ name: d.accion, cantidad: d.cantidad }));
+  if (therapeuticRanking.length > 5) therapeuticSummary.push({ name: 'Otras acciones (agrupadas)', cantidad: therapeuticRanking.slice(5).reduce((total, d) => total + d.cantidad, 0) });
   const handleRecargar = async () => { setIsRefreshing(true); await state.refresh(); setIsRefreshing(false); };
 
   const stockBajoColumns: TableColumn<typeof stockBajoData[number]>[] = [
@@ -142,13 +146,14 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 @[950px]/dashboard:grid-cols-5 gap-5 items-stretch">
           <section className="@[950px]/dashboard:col-span-3 min-w-0 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-base font-bold text-[#304a6d]"><Layers size={18} className="inline mr-2 text-blue-500" />Flujo por Categorías</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-5">Entradas y salidas finales por familia.</p>
-            <ReportChart plotHeight={320} report="existencias" metric="flujo" type="bar" data={catData.map(d => ({ ...d, name: d.categoria }))} />
+            <p className="text-xs text-slate-500 mt-1 mb-5">Entradas y salidas finales por familia.</p><button className="text-xs font-semibold text-[#304a6d] mb-4" onClick={() => navigate('/reportes?tipo=movimientos')}>Ver reporte de movimientos →</button>
+            <DashboardChart metric="flujo" data={catData.map(d => ({ ...d, name: d.categoria }))} />
           </section>
           <section className="@[950px]/dashboard:col-span-2 min-w-0 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-base font-bold text-[#304a6d]"><Package size={18} className="inline mr-2 text-blue-500" />Acción Terapéutica</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-3">Distribución del inventario · {terapeuticaData.reduce((n, d) => n + d.cantidad, 0).toLocaleString('es-NI')} unidades registradas</p>
-            <ReportChart report="existencias" metric="cantidad" type="pie" data={terapeuticaData.map(d => ({ ...d, name: d.accion }))} />
+            <p className="text-xs text-slate-500 mt-1 mb-3">Distribución del inventario · {terapeuticaData.reduce((n, d) => n + d.cantidad, 0).toLocaleString('es-NI')} unidades registradas</p><button className="text-xs font-semibold text-[#304a6d] mb-4" onClick={() => navigate('/reportes?tipo=existencias')}>Ver inventario completo →</button>
+            {therapeuticRanking.length > 5 && <p className="text-xs text-slate-500 mb-2">Las cinco principales y el resto agrupado en Otras.</p>}
+            <ReportChart report="existencias" metric="cantidad" type="pie" plotHeight={260} options={{ palette: 'mixed' }} data={therapeuticSummary} />
           </section>
         </div>
       </div>
@@ -156,8 +161,7 @@ const Dashboard: React.FC = () => {
         <div className="flex flex-wrap gap-3 justify-between"><h3 className="font-bold text-[#304a6d]"><ArrowDownToLine size={18} className="inline mr-2 text-blue-500" />Salida de productos por área</h3><button className="text-sm text-[#304a6d] font-bold" onClick={() => navigate('/reportes?tipo=salidas_area')}>Ver reporte →</button></div>
         <p className="text-xs text-slate-500 mt-1 mb-4">Despachos finales del período, ordenados de mayor a menor. Se suman cantidades en la unidad de cada producto; los traslados internos no se cuentan.</p>
         {!!areaData.length && <p className="text-sm text-[#304a6d] mb-4">Mayor salida: <strong>{areaData[0].area}</strong> · {areaData[0].total} unidades registradas</p>}
-        <ReportChart plotHeight={320} report="salidas_area" metric="total" type="bar" data={areaData.map(d => ({ ...d, name: d.area }))} />
-        <Table columns={[{ id: 'area', label: 'Área' }, { id: 'total', label: 'Total' }]} data={areaData.map(a => ({ ...a, id: a.area }))} exportTitle="Salidas por área" />
+        <DashboardChart metric="total" data={areaData.map(d => ({ ...d, name: d.area }))} />
       </section>
       {/* TABLAS INFERIORES */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

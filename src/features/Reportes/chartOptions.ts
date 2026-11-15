@@ -3,7 +3,7 @@ export interface ChartOptions {
   orientation?: 'horizontal' | 'vertical';
   sort?: 'default' | 'asc' | 'desc' | 'name';
   limit?: number;
-  palette?: 'blue' | 'teal' | 'warm';
+  palette?: 'blue' | 'teal' | 'warm' | 'mixed';
   legend?: boolean;
   values?: boolean;
   stacked?: boolean;
@@ -11,6 +11,7 @@ export interface ChartOptions {
   curve?: 'monotone' | 'linear' | 'step';
 }
 export const palettes = {
+  mixed: ['#466e68', '#b39a6a', '#995d66', '#355b7c', '#756581', '#a8b7c6'],
   blue: ['#355b7c', '#718ba2', '#505e6d', '#a8b7c6', '#577975', '#9292a6'],
   teal: ['#466e68', '#77968d', '#547b8a', '#9fb6bc', '#777c57', '#afb496'],
   warm: ['#896839', '#b39a6a', '#995d66', '#c49b9e', '#756581', '#aca0b6'],
