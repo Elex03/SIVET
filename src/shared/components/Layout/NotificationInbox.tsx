@@ -3,7 +3,7 @@ import ContextHelp from './ContextHelp';
 import { usePreference, useTheme } from '../../context/preferences';
 import { useEffect, useRef } from 'react';
 import { inventoryAlerts } from '../../api/alerts';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSivet } from '../../api/useSivet';
@@ -11,6 +11,7 @@ import { useAuth } from '../../context/auth';
 
 export default function NotificationInbox() {
   const state = useSivet();
+  const onInbox = useLocation().pathname.endsWith('/notificaciones');
   const { local, refreshNotifications } = state;
   const { user } = useAuth();
   const seen = useRef<Set<string> | null>(null);
@@ -21,15 +22,20 @@ export default function NotificationInbox() {
   useEffect(() => {
     if (state.loading || !user) return;
     const incoming = state.data.notificaciones.filter(n => ownsNotification(n, user));
-    if (seen.current && !muted) incoming.filter(n => !seen.current!.has(n.id) && !n.leidaPor.includes(reader)).forEach(n => toast.info(`${n.titulo}: ${n.mensaje}`, { toastId: n.id }));
+    if (seen.current && !muted && !onInbox) {
+      const fresh = incoming.filter(n => !seen.current!.has(n.id) && !n.leidaPor.includes(reader));
+      if (fresh.length > 1) toast.info(fresh.length + ' avisos nuevos. Consúltalos agrupados en Notificaciones.', { toastId: 'new-notifications' });
+      else if (fresh.length === 1) { const n = fresh[0]; toast.info(n.titulo === n.mensaje ? n.titulo : n.titulo + ': ' + n.mensaje, { toastId: n.id }); }
+    }
     seen.current = new Set(incoming.map(n => n.id));
-  }, [state.data.notificaciones, state.loading, user, reader, muted]);
+  }, [state.data.notificaciones, state.loading, user, reader, muted, onInbox]);
   useEffect(() => {
     if (local) return;
     const interval = window.setInterval(() => { if (!document.hidden) void refreshNotifications(); }, 30000);
     return () => window.clearInterval(interval);
   }, [local, refreshNotifications]);
   useEffect(() => {
+    if (onInbox) { toast.dismiss('inventory-reminder'); toast.dismiss('new-notifications'); return; }
     if (state.loading || muted || !user) return;
     const remind = () => {
       if (document.hidden || Date.now() - lastReminder.current < 300000) return;
@@ -40,7 +46,7 @@ export default function NotificationInbox() {
     };
     remind(); const interval = window.setInterval(remind, 30000);
     return () => window.clearInterval(interval);
-  }, [state.data, state.loading, muted, reader, user]);
+  }, [state.data, state.loading, muted, reader, user, onInbox]);
   const count = user ? state.data.notificaciones.filter(n => ownsNotification(n,user) && !n.leidaPor.includes(reader)).length : 0;
   return <div className="flex justify-end gap-2 px-3 sm:px-5 pt-3"><ContextHelp />{user?.role !== 'consulta' && <Link title="Notificaciones" aria-label={`Notificaciones${count ? ': ' + count + ' pendientes' : ''}`} className="relative bg-white border border-slate-200 rounded-xl p-3 text-[#304a6d]" to={user?.role === 'administrador' ? '/notificaciones' : `/${user?.role}/notificaciones`}><Bell size={20} />{count > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-4 h-4 px-1 rounded-full text-center">{count > 99 ? '99+' : count}</span>}</Link>}</div>;
 }

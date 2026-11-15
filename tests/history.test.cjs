@@ -198,3 +198,18 @@ test('visor compartido ofrece controles completos sin saturar la vista compacta'
   assert.ok(compact.includes('media-preview-compact') && compact.includes('application/pdf'));
   assert.equal(compact.includes('Ampliar imagen'),false);
 });
+
+test('bandeja inicia en avisos propios y agrupa repeticiones sin exponer otras cuentas',()=>{
+  const user={id:1,username:'admin',role:'administrador'};
+  const base={rol:'bodega',solicitudId:'',titulo:'Envío recibido',mensaje:'Envío recibido',fecha:'2026-11-15T12:00:00Z',leidaPor:[],ownerId:1};
+  const data={catalogos:[],existencias:[],solicitudes:[],notificaciones:[{...base,id:'1'},{...base,id:'2'},{...base,id:'3',ownerId:2,titulo:'Aviso de otra cuenta'}]};
+  require.cache[path.resolve('src/shared/api/useSivet.ts')]={exports:{useSivet:()=>({data,loading:false,error:'',pending:false,local:true,refresh:async()=>{},mutate:async()=>true})}};
+  require.cache[path.resolve('src/shared/context/auth.ts')]={exports:{useAuth:()=>({user})}};
+  require.extensions['.png']=(module)=>{module.exports='logo.png';};
+  const Page=require('../src/features/Farmacia/NotificationsPage.tsx').default;
+  const {MemoryRouter}=require('react-router-dom');
+  const html=renderToStaticMarkup(React.createElement(MemoryRouter,null,React.createElement(Page,{combined:true})));
+  assert.ok(html.includes('2 avisos en 1 grupo'));
+  assert.equal(html.includes('Aviso de otra cuenta'),false);
+  assert.ok(html.includes('Marcar visibles como leídos (2)'));
+});

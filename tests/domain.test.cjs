@@ -628,3 +628,17 @@ test('las siete gráficas se reconstruyen desde sus detalles sin cambiar totales
     assert.deepEqual(normalize(actual),normalize(expected),report);
   }
 });
+
+test('avisos se agrupan por solicitud y cuenta sin perder eventos ni lectura',()=>{
+  const {groupNotifications}=require('../src/shared/api/notifications.ts');
+  const user={id:1,username:'admin',role:'administrador'};
+  const base={rol:'bodega',solicitudId:'SOL-1',titulo:'Envío recibido',mensaje:'Envío recibido',fecha:'2026-11-15T12:00:00Z',leidaPor:[],ownerId:1};
+  const rows=[{...base,id:'1',leidaPor:['administrador:admin']},{...base,id:'2',fecha:'2026-11-15T13:00:00Z'},{...base,id:'3',ownerId:2},{...base,id:'4',solicitudId:'SOL-2',leidaPor:['administrador:admin']}];
+  const groups=groupNotifications(rows,user);
+  assert.equal(groups.length,3);
+  assert.deepEqual(groups[0].notices.map(n=>n.id),['2','1']);
+  assert.equal(groups[0].unread,1);
+  assert.equal(groups.reduce((n,g)=>n+g.notices.length,0),4);
+  assert.equal(rows[0].id,'1');
+  assert.equal(groupNotifications([{...base,id:'a',solicitudId:''},{...base,id:'b',solicitudId:'',fecha:'2026-11-16T13:00:00Z'}],user).length,2);
+});

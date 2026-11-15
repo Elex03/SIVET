@@ -10,6 +10,21 @@ export function notificationCategory(notice: Notification): 'Incidencias' | 'Tra
   return /incidencia|devol|diferencia|rechaz/i.test(text) ? 'Incidencias'
     : /env[ií]|traslad|recep|recibid|entrega/i.test(text) ? 'Traslados' : 'Solicitudes';
 }
+export function groupNotifications(notices: Notification[], user: User) {
+  const groups = new Map<string, { id: string; title: string; category: string; role: string; latest: string; unread: number; notices: Notification[] }>();
+  for (const notice of [...notices].sort((a, b) => b.fecha.localeCompare(a.fecha))) {
+    const category = notificationCategory(notice);
+    const date = new Date(notice.fecha).toLocaleDateString('en-CA', { timeZone: 'America/Managua' });
+    // Never merge unrelated requests or accounts, and retain every event inside the group.
+    const owner = notice.ownerId === undefined ? 'role' : String(notice.ownerId);
+    const key = JSON.stringify([notice.rol, owner, notice.solicitudId || [category, date, notice.titulo]]);
+    const group = groups.get(key) || { id: key, title: notice.solicitudId ? `Solicitud ${notice.solicitudId}` : notice.titulo, category, role: notice.rol, latest: notice.fecha, unread: 0, notices: [] };
+    group.notices.push(notice);
+    if (ownsNotification(notice, user) && isUnreadNotification(notice, user)) group.unread++;
+    groups.set(key, group);
+  }
+  return [...groups.values()].sort((a, b) => Number(b.unread > 0) - Number(a.unread > 0) || b.latest.localeCompare(a.latest));
+}
 export class NotificationReadError extends Error {
   completedIds: string[];
   constructor(completedIds: string[], total: number, cause: unknown) {
